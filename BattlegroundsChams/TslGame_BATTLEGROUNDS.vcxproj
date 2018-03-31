@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\</OutDir>
+    <OutDir>$(ProjectDir)$(Configuration)</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <IncludePath>N:\Detours Pro v3.0.316\include\;$(IncludePath)</IncludePath>
     <LibraryPath>O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\;N:\Detours Pro v3.0.316\lib.X86;$(LibraryPath)</LibraryPath>
@@ -160,7 +160,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64\d3d9.lib;M:\XpSetuped\Microsoft DirectX SDK (March 2008)\Lib\x64\d3dx9.lib;O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64\d3d11.lib;N:\BattlegroundsChams-master\d3dx11.lib;O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64\d3dcompiler.lib;n:\Detours Pro v3.0.316\lib.X64\detours.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64\d3d9.lib;M:\XpSetuped\Microsoft DirectX SDK (March 2008)\Lib\x64\d3dx9.lib;O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64\d3d11.lib;.\d3dx11.lib;O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64\d3dcompiler.lib;n:\Detours Pro v3.0.316\lib.X64\detours.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>

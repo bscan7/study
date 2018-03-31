@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01Subliminal Fortnite", "d3d11hook.vcxproj", "{119F3BCC-4D4E-4FDA-877E-A708963BB87A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01Subliminal Fortnite", "Subliminal-Fortnite\d3d11hook.vcxproj", "{119F3BCC-4D4E-4FDA-877E-A708963BB87A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00TslGame_BATTLEGROUNDS", "..\BattlegroundsChams-master\TslGame_BATTLEGROUNDS.vcxproj", "{A10735E8-909A-42E7-805B-B1B3BD3BE762}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00TslGame_BATTLEGROUNDS", "BattlegroundsChams\TslGame_BATTLEGROUNDS.vcxproj", "{A10735E8-909A-42E7-805B-B1B3BD3BE762}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
