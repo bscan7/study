@@ -5,12 +5,13 @@
 #include <strsafe.h>
 #include <list>
 #include ".\mainxxx.h"
+#include <d3dx11async.h>
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  10
 
-ID3D11DepthStencilState *ppDepthStencilStateNew;
-ID3D11DepthStencilState *ppDepthStencilStateOld;
+ID3D11DepthStencilState *ppDepthStencilState__New;
+ID3D11DepthStencilState *ppDepthStencilState__Old;
 UINT pStencilRef = 0;
 extern HWND g_hWnd;
 extern RECT g_lpRect;
@@ -55,15 +56,16 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  tD3D11DrawInstancedIndirect Hooks::oDrawInstancedIndirect = NULL;
  tD3D11DrawIndexedInstancedIndirect Hooks::oDrawIndexedInstancedIndirect = NULL;
 
+
 HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, float r, float g, float b)
 {
 	char szCast[] = "struct VS_OUT"
 		"{"
 		" float4 Position : SV_Position;"
-		" float4 Color : COLOR0;"
+		" float4 Color : COLOR;"
 		"};"
 
-		"float4 main( VS_OUT input ) : SV_Target"
+		"float4 ColorPixelShader( VS_OUT input ) : SV_Target"
 		"{"
 		" float4 fake;"
 		" fake.a = 1.0f;"
@@ -79,15 +81,57 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 
 	ID3DBlob* d3dErrorMsgBlob;
 
-	HRESULT hr = D3DCompile(szPixelShader, sizeof(szPixelShader), "shader", NULL, NULL, "main", "ps_4_0", NULL, NULL, &pBlob, &d3dErrorMsgBlob);
+	HRESULT hr = D3DCompile(szPixelShader, 
+		sizeof(szPixelShader), 
+		"shader", 
+		NULL, NULL, 
+		"ColorPixelShader",
+		"ps_5_0",
+		NULL, NULL,
+		&pBlob, &d3dErrorMsgBlob);
 
 	if (FAILED(hr))
+	{
+		MyTraceA("D3DCompile error 111");
 		return hr;
+	}
+	/*
+	ID3D10Blob* errorMessage;
+	//ID3D10Blob* vertexShaderBuffer;
+	//ID3D10Blob* pixelShaderBuffer;
+	// 编译ps.
+	HRESULT hr = D3DX11CompileFromFileA("Color.ps", 
+		NULL, NULL, 
+		"ColorPixelShader", 
+		"ps_5_0", 
+		D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL,
+		&pBlob, &errorMessage, NULL);
+	if (FAILED(hr))
+	{
+			MessageBoxA(NULL, "Color errorMessage", "errorMessage", MB_OK);
+		WinExec("cmd /K CD ", SW_SHOW);
+		// 如果ps编译失败，输出错误信息.
+		if (errorMessage)
+		{
+		}
+		// 如果没有任何错误消息，可能是shader文件丢失.
+		else
+		{
+			MessageBoxA(NULL, "Color.ps", "Missing Shader File", MB_OK);
+		}
+
+		return false;
+	}
+	*/
 
 	hr = pD3DDevice->CreatePixelShader((DWORD*)pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, pShader);
 
 	if (FAILED(hr))
+	{
+		MyTraceA("D3DCompile CreatePixelShader error 222");
 		return hr;
+	}
+
 
 	return S_OK;
 }
@@ -250,7 +294,7 @@ bool bUp = false;
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	bUp = !bUp;
-	MyTraceA("hkD3D11Present+++++++-----------------------------------------------------------------");
+	MyTraceA("hkD3D11Present+++++++----------------------------------------------------------------- bUp = %d", bUp);
 	if (GetAsyncKeyState(VK_LEFT) & 1)
 	{
 		iPos++;
@@ -267,8 +311,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (GetAsyncKeyState(VK_DELETE) & 1)
 	{
-		ppDepthStencilStateOld = NULL;
-		ppDepthStencilStateNew = NULL;
+		ppDepthStencilState__Old = NULL;
+		ppDepthStencilState__New = NULL;
 	}
 
 	if (GetAsyncKeyState(VK_RETURN) & 1)
@@ -759,6 +803,7 @@ int iC24e = 3234;
 int bRed = true;
 int iRed = 0;
 DWORD gggg = 0;
+DWORD cover = 0;
 
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
 {
@@ -781,6 +826,12 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	}
 	else
 		bRed = true;
+
+	if (cover != timeGetTime() / INTVL)
+	{
+		bUp = !bUp;
+		cover = timeGetTime() / INTVL;
+	}
 
 	SYSTEMTIME st = { 0 };
 	GetLocalTime(&st);
@@ -844,6 +895,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	if ((
 		((Stride == 24) /*|| (Stride == 12)*/)
 		&& bRed
+		//&& bUp
 		
 		&& (IndexCount >200)
 		&& (IndexCount != 69)
@@ -890,9 +942,9 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			MyTraceA("hkD3D11 DrawIndexed**********透明了****iPos=%d  Stride=%d  IndexCount=%d red24.size=%d", iPos, Stride, IndexCount, red24.size());
 
 			//return;
-			//if (ppDepthStencilStateOld == NULL)
+			//if (ppDepthStencilState__Old == NULL)
 			{
-				pContext->OMGetDepthStencilState(&ppDepthStencilStateOld, &pStencilRef);
+				pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 			}
 
 			if (bUp)
@@ -904,17 +956,34 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 				//if (ppDepthStencilStateNew == NULL)
 				{
 					D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-					ppDepthStencilStateOld->GetDesc(&depthStencilDesc);
+					ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
 					//depthStencilDesc.DepthEnable = 0;
 					//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 					depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
 					ID3D11Device *ppDevice;
 					pContext->GetDevice(&ppDevice);
-					ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilStateNew);
+					ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 				}
 				//// Set the depth stencil state.
-				pContext->OMSetDepthStencilState(ppDepthStencilStateNew, pStencilRef);
+				pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+
 			}
+			//else
+			//{
+			//	{
+			//		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+			//		ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+			//		//depthStencilDesc.DepthEnable = 0;
+			//		//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+			//		depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+			//		ID3D11Device *ppDevice;
+			//		pContext->GetDevice(&ppDevice);
+			//		ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+			//	}
+			//	//// Set the depth stencil state.
+			//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+			//}
+				pContext->PSSetShader(psG, NULL, NULL);
 			//if (
 			//	(IndexCount == 1128)
 			//	|| (IndexCount == 1728)
@@ -930,7 +999,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			//}
 			//else
 			{
-				pContext->PSSetShader(psG, NULL, NULL);
+				//pContext->PSSetShader(psG, NULL, NULL);
 			}
 				//&& (IndexCount != 1128)
 				//&& (IndexCount != 1728)
@@ -974,7 +1043,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			//pContext->OMSetDepthStencilState(myDepthStencilStates[ENABLED], 1);
 
 			// Set the depth stencil state.
-			pContext->OMSetDepthStencilState(ppDepthStencilStateOld, pStencilRef);
+			pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
 			//ppDepthStencilStateNew->Release();
 			//AddModel(pContext);//w2s
 
@@ -995,7 +1064,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			//m_deviceContext->RSSetViewports(1, &viewport);
 		}
 	}
-	else if ((NULL != ppDepthStencilStateOld) && (Stride == 24))
+	else if ((NULL != ppDepthStencilState__Old) && (Stride == 24))
 	{
 		//pContext->OMSetDepthStencilState(ppDepthStencilStateOld, pStencilRef);
 	}

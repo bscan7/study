@@ -5,7 +5,7 @@
 
 ID3D11Device *CCheat::pDevice = NULL;
 ID3D11DeviceContext *CCheat::pContext = NULL;
-IDXGISwapChain* CCheat::pSwapChain = NULL;
+IDXGISwapChain* CCheat::pSwapChain = NULL; 
 
 HWND _EnumChildWindows(HWND hParent, char* pCap)
 {
