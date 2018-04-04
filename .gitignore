@@ -1,0 +1,17 @@
+
+*.tlog
+*.iobj
+*.obj
+*.log
+*.ipch
+*.pdb
+*.ipdb
+*.exp
+*.db
+*.idb
+*.ps
+*.vs
+*.pch
+*.lastbuildstate
+*.unsuccessfulbuild
+*.opendb
