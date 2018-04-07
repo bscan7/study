@@ -229,8 +229,8 @@ void CCheat::Initialise()
 		&CCheat::pDevice, NULL, &CCheat::pContext
 	)))
 	{
-		//Helpers::LogError("D3D11CreateDevice");
-		//return;
+		Helpers::LogError("D3D11CreateDevice Error Error Error*****************************");
+		return;
 	}
 
 	// GET VTABLE POINTERS
