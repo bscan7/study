@@ -2,10 +2,53 @@
 #include "CCheat.h"
 #include "Helpers.h"
 #include "Hooks.h"
+#include <process.h>
+//#include "mainxxx.h"
 
 ID3D11Device *CCheat::pDevice = NULL;
 ID3D11DeviceContext *CCheat::pContext = NULL;
 IDXGISwapChain* CCheat::pSwapChain = NULL; 
+
+HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
+bool bStoped = false;
+
+void AutoShootIfCenter(PVOID param);
+void Thread_AutoShootIfCenter(PVOID param)
+{
+	while (!bStoped)
+	{
+		DWORD res = WaitForSingleObject(g_Event_Shoot, 50);
+		//MyTraceA("/////////////////////////////////////////////////////////2");
+
+		//if (!c.socket_.is_open())
+		//{
+		//	break;
+		//}
+		switch (res)
+		{
+		case WAIT_OBJECT_0:
+			AutoShootIfCenter(NULL);
+
+			break;
+		case WAIT_TIMEOUT:
+			break;
+		case WAIT_ABANDONED:
+			break;
+		case WAIT_FAILED:
+			printf("\nOL_ The function has failed. To get extended error information, callGetLastError.\n");
+			break;
+		default:
+			break;
+
+		}
+	}
+	bStoped = false;
+}
+
+void Thread_ExitHook(PVOID param)
+{
+	CCheat::Release();
+}
 
 HWND _EnumChildWindows(HWND hParent, char* pCap)
 {
@@ -36,9 +79,12 @@ HWND _EnumChildWindows(HWND hParent, char* pCap)
 
 	return NULL;
 }
+
 int HotKeyId;
 HWND g_hWnd = NULL;
 RECT g_lpRect;
+
+void InitForHook(IDXGISwapChain* pSwapChain);
 
 void CCheat::Initialise()
 {
@@ -50,7 +96,7 @@ void CCheat::Initialise()
 	freopen("CON", "w", stdout);
 	SetConsoleTitle(L"SleekHook");
 
-	Helpers::Log("Cheat Initialised");
+	Helpers::Log("\r\nCheat Initialising");
 
 	//MessageBoxA(NULL, "如果需要请附加进程先，再点确定!", "uBoos?", MB_ICONINFORMATION);
 
@@ -100,6 +146,19 @@ void CCheat::Initialise()
 			g_hWnd = _EnumChildWindows(g_hWnd, "");
 		}
 	}
+	if (!g_hWnd)
+	{
+		g_hWnd = FindWindowA(NULL, "绝地求生 全军出击 - MuMu模拟器");
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+			//return;
+		}
+		else
+		{
+			g_hWnd = _EnumChildWindows(g_hWnd, "");
+		}
+	}
 
 	if (!g_hWnd)
 	{
@@ -119,9 +178,13 @@ void CCheat::Initialise()
 	if (!g_hWnd)
 	{
 		//MessageBoxA(NULL, "Not found child HWND!", "uBoos?", MB_ICONINFORMATION);
+		Helpers::Log("没找到游戏主窗口！！！！！");
+
 		return;
 	}
 	::GetWindowRect(g_hWnd, &g_lpRect);
+
+	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC
 	DXGI_SWAP_CHAIN_DESC scd;
@@ -210,9 +273,18 @@ void CCheat::Initialise()
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstancedIndirect),			Hooks::hkD3D11DrawInstancedIndirect);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstancedIndirect),	Hooks::hkD3D11DrawIndexedInstancedIndirect);
 
+	//InitForHook(CCheat::pSwapChain);
+	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
+
 }
 void CCheat::Release()
 {
+	Helpers::Log("DLL抽离主进程。。。");
+	bStoped = true;
+	while (bStoped)
+	{
+		Sleep(10);
+	}
 	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 	//FreeConsole();
 
@@ -236,6 +308,7 @@ void CCheat::Release()
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstanced), Hooks::hkD3D11DrawIndexedInstanced);
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstancedIndirect), Hooks::hkD3D11DrawInstancedIndirect);
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstancedIndirect), Hooks::hkD3D11DrawIndexedInstancedIndirect);
+	Helpers::Log("DLL抽离主进程。。。Done");
 }
 
 

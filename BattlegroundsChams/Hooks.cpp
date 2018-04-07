@@ -6,6 +6,7 @@
 #include <list>
 #include ".\mainxxx.h"
 #include <d3dx11async.h>
+#include <process.h>
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  10
@@ -15,6 +16,8 @@ ID3D11DepthStencilState *ppDepthStencilState__Old;
 UINT pStencilRef = 0;
 extern HWND g_hWnd;
 extern RECT g_lpRect;
+extern HANDLE  g_Event_Shoot;
+void Thread_ExitHook(PVOID param);
 
 ////    对应Unicode的调试输出  
 //inline void MyTraceW(LPCTSTR strFormat, ...)
@@ -56,6 +59,77 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  tD3D11DrawInstancedIndirect Hooks::oDrawInstancedIndirect = NULL;
  tD3D11DrawIndexedInstancedIndirect Hooks::oDrawIndexedInstancedIndirect = NULL;
 
+ void InitForHook(IDXGISwapChain* pSwapChain)
+ {
+	 Helpers::Log("DLL InitForHook。。。");
+
+	 if (SUCCEEDED(pSwapChain->GetDevice(__uuidof(ID3D11Device), (void **)&CCheat::pDevice)))
+	 {
+		 pSwapChain->GetDevice(__uuidof(CCheat::pDevice), (void**)&CCheat::pDevice);
+		 CCheat::pDevice->GetImmediateContext(&CCheat::pContext);
+	 }
+
+	 D3D11_DEPTH_STENCIL_DESC  stencilDesc;
+	 stencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	 stencilDesc.StencilEnable = true;
+	 stencilDesc.StencilReadMask = 0xFF;
+	 stencilDesc.StencilWriteMask = 0xFF;
+	 stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	 stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	 stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	 stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	 stencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	 stencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	 stencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	 stencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	 stencilDesc.DepthEnable = true;
+	 stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::ENABLED)]);
+
+	 stencilDesc.DepthEnable = false;
+	 stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::DISABLED)]);
+
+	 stencilDesc.DepthEnable = false;
+	 stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	 stencilDesc.StencilEnable = false;
+	 stencilDesc.StencilReadMask = UINT8(0xFF);
+	 stencilDesc.StencilWriteMask = 0x0;
+	 CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::NO_READ_NO_WRITE)]);
+
+	 stencilDesc.DepthEnable = true;
+	 stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 stencilDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	 stencilDesc.StencilEnable = false;
+	 stencilDesc.StencilReadMask = UINT8(0xFF);
+	 stencilDesc.StencilWriteMask = 0x0;
+
+	 stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
+	 stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
+	 stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	 stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+
+	 stencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
+	 stencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
+	 stencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_ZERO;
+	 stencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_NEVER;
+	 CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::READ_NO_WRITE)]);
+
+	 D3D11_RASTERIZER_DESC rwDesc;
+	 CCheat::pContext->RSGetState(&rwState);
+	 rwState->GetDesc(&rwDesc);
+	 rwDesc.FillMode = D3D11_FILL_WIREFRAME;
+	 rwDesc.CullMode = D3D11_CULL_NONE;
+	 CCheat::pDevice->CreateRasterizerState(&rwDesc, &rwState);
+
+	 D3D11_RASTERIZER_DESC rsDesc;
+	 CCheat::pContext->RSGetState(&rsState);
+	 rsState->GetDesc(&rsDesc);
+	 rsDesc.FillMode = D3D11_FILL_SOLID;
+	 rsDesc.CullMode = D3D11_CULL_NONE;
+	 CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
+ }
 
 HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, float r, float g, float b)
 {
@@ -74,25 +148,41 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 		" fake.b = %f;"
 		" return fake;"
 		"}";
-	ID3D10Blob* pBlob;
+	ID3D10Blob* pBlob = NULL;
 	char szPixelShader[1000];
 
 	sprintf_s(szPixelShader, szCast, r, g, b);
 
-	ID3DBlob* d3dErrorMsgBlob;
+	ID3DBlob* d3dErrorMsgBlob = NULL;
 
-	HRESULT hr = D3DCompile(szPixelShader, 
-		sizeof(szPixelShader), 
-		"shader", 
-		NULL, NULL, 
-		"ColorPixelShader",
-		"ps_5_0",
-		NULL, NULL,
-		&pBlob, &d3dErrorMsgBlob);
+	HRESULT	hr = D3DCompile(szPixelShader,
+			sizeof(szPixelShader),
+			"shader",
+			NULL, NULL,
+			"ColorPixelShader",
+			"ps_5_0",
+			NULL, NULL,
+			&pBlob, &d3dErrorMsgBlob);
 
 	if (FAILED(hr))
 	{
+		Helpers::LogAddress("D3DCompile hr = ", hr);
+		MyTraceA("D3DCompile hr = %x d3dErrorMsgBlob = %x", hr, d3dErrorMsgBlob);
+		// 如果ps编译失败，输出错误信息.
+		if (d3dErrorMsgBlob)
+		{
+			Helpers::Log("D3DCompile error 。。。");
+		}
+		// 如果没有任何错误消息，可能是shader文件丢失.
+		else
+		{
+			Helpers::Log("Missing Shader File?????????????????????????????");
+		}
+
 		MyTraceA("D3DCompile error 111");
+
+		//_beginthread(Thread_ExitHook, 0, NULL);
+		//Sleep(100);
 		return hr;
 	}
 	/*
@@ -128,14 +218,27 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 
 	if (FAILED(hr))
 	{
+		Helpers::Log("D3DCompile error CreatePixelShader error 222。。。");
 		MyTraceA("D3DCompile CreatePixelShader error 222");
 		return hr;
 	}
 
-
+	Helpers::Log("Done GenerateShader。。。");
 	return S_OK;
 }
-
+/*
+D3D11_ERROR_FILE_NOT_FOUND	The file was not found.
+D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS	There are too many unique instances of a particular type of state object.
+D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS	There are too many unique instances of a particular type of view object.
+D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD	The first call to ID3D11DeviceContext::Map after either ID3D11Device::CreateDeferredContext or ID3D11DeviceContext::FinishCommandList per Resource was not D3D11_MAP_WRITE_DISCARD.
+D3DERR_INVALIDCALL(replaced with DXGI_ERROR_INVALID_CALL)	The method call is invalid.For example, a method's parameter may not be a valid pointer.
+D3DERR_WASSTILLDRAWING(replaced with DXGI_ERROR_WAS_STILL_DRAWING)	The previous blit operation that is transferring information to or from this surface is incomplete.
+E_FAIL	Attempted to create a device with the debug layer enabled and the layer is not installed.
+E_INVALIDARG	An invalid parameter was passed to the returning function.
+E_OUTOFMEMORY	Direct3D could not allocate sufficient memory to complete the call.
+E_NOTIMPL	The method call isn't implemented with the passed parameter combination.
+S_FALSE	Alternate success value, indicating a successful but nonstandard completion(the precise meaning depends on context).
+S_OK*/
 //ID3D11RasterizerState * rwState;
 //ID3D11RasterizerState * rsState;
 //
@@ -150,10 +253,10 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 
 ID3D11PixelShader* psCrimson = NULL;
 ID3D11PixelShader* psYellow = NULL;
-ID3D11PixelShader* psc = NULL;
+ID3D11PixelShader* psGreen0 = NULL;
 ID3D11PixelShader* psd = NULL;
-ID3D11PixelShader* pse = NULL;
-ID3D11PixelShader* psG = NULL;
+ID3D11PixelShader* psBlue = NULL;
+ID3D11PixelShader* psRed0 = NULL;
 ID3D11ShaderResourceView* ShaderResourceView;
 
 //ID3D11DepthStencilState* myDepthStencilStates[static_cast<int>(eDepthState::_DEPTH_COUNT)];
@@ -163,9 +266,26 @@ ID3D11ShaderResourceView* ShaderResourceView;
 //	CCheat::pContext->OMSetDepthStencilState(myDepthStencilStates[aState], 1);
 //}
 
-HBITMAP CopyScreenToBitmap(LPRECT lpRect, BOOL bSave)
+#define SHOOT_AREA  2
+
+//HBITMAP AutoShootIfCenter(BOOL bSave = false)
+void AutoShootIfCenter(PVOID param)
 //lpRect 代表选定区域
 {
+	return;
+	::GetWindowRect(g_hWnd, &g_lpRect);
+
+	RECT lpRect;
+	int iW = g_lpRect.right - g_lpRect.left;
+	int iH = g_lpRect.bottom - g_lpRect.top;
+	int iCenterX = iW / 2 + g_lpRect.left;
+	int iCenterY = iH /2 + g_lpRect.top;
+
+	lpRect.top = iCenterY - SHOOT_AREA;
+	lpRect.bottom = iCenterY + SHOOT_AREA;
+	lpRect.left = iCenterX - SHOOT_AREA;
+	lpRect.right = iCenterX + SHOOT_AREA;
+
 	HDC       hScrDC, hMemDC;
 	// 屏幕和内存设备描述表
 	HBITMAP    hBitmap, hOldBitmap;
@@ -175,8 +295,8 @@ HBITMAP CopyScreenToBitmap(LPRECT lpRect, BOOL bSave)
 	int       nWidth, nHeight;
 
 	// 确保选定区域不为空矩形
-	if (IsRectEmpty(lpRect))
-		return NULL;
+	if (IsRectEmpty(&lpRect))
+		return /*NULL*/;
 	//为屏幕创建设备描述表
 	hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
 
@@ -184,10 +304,10 @@ HBITMAP CopyScreenToBitmap(LPRECT lpRect, BOOL bSave)
 	//为屏幕设备描述表创建兼容的内存设备描述表
 	hMemDC = CreateCompatibleDC(hScrDC);
 	// 获得选定区域坐标
-	nX = lpRect->left;
-	nY = lpRect->top;
-	nX2 = lpRect->right;
-	nY2 = lpRect->bottom;
+	nX = lpRect.left;
+	nY = lpRect.top;
+	nX2 = lpRect.right;
+	nY2 = lpRect.bottom;
 
 
 	//确保选定区域是可见的
@@ -246,12 +366,14 @@ HBITMAP CopyScreenToBitmap(LPRECT lpRect, BOOL bSave)
 	for (int i = ((nWidth * nHeight) - 1); i >= 0; i--)
 	{
 		ptPixels[i]; //0xff 29 27 21 红绿蓝
-		MyTraceA("+-+-+-+-%x", ptPixels[i]);
 		//if (ptPixels[i] == 0xff800000)
 
-		if (ptPixels[i] == 0xff800000)
+		if( (ptPixels[i] == 0xff000080) 
+			||(ptPixels[i] == 0xff800000)
+			)
 		{
-			::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
+			MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
 			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 
@@ -265,7 +387,7 @@ HBITMAP CopyScreenToBitmap(LPRECT lpRect, BOOL bSave)
 	DeleteDC(hScrDC);
 	DeleteDC(hMemDC);
 	// 返回位图句柄
-	if (bSave)
+	if (0/*bSave*/)
 	{
 
 		if (OpenClipboard(NULL))
@@ -279,7 +401,7 @@ HBITMAP CopyScreenToBitmap(LPRECT lpRect, BOOL bSave)
 			CloseClipboard();
 		}
 	}
-	return hBitmap;
+	return /*hBitmap*/;
 }
 std::vector<int> aaa;
 std::vector<int> bbb;
@@ -289,12 +411,12 @@ std::vector<int> lst24;
 std::vector<int> red24;
 int iPos = 0;
 
-bool bUp = false;
+bool bFlashIt = false;
 
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
-	bUp = !bUp;
-	MyTraceA("hkD3D11Present+++++++----------------------------------------------------------------- bUp = %d", bUp);
+	bFlashIt = !bFlashIt;
+	MyTraceA("hkD3D11Present+++++++----------------------------------------------------------------- bUp = %d", bFlashIt);
 	if (GetAsyncKeyState(VK_LEFT) & 1)
 	{
 		iPos++;
@@ -333,16 +455,16 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		//input.read((char*)(&i2), sizeof(i2)); //读取
 	}
 
-	RECT lpRect;
-	int iW = g_lpRect.right - g_lpRect.left;
-	int iH = g_lpRect.bottom - g_lpRect.top;
-	int iCenterX = iW / 2 + g_lpRect.left;
-	int iCenterY = iH /2 + g_lpRect.top;
+	//RECT lpRect;
+	//int iW = g_lpRect.right - g_lpRect.left;
+	//int iH = g_lpRect.bottom - g_lpRect.top;
+	//int iCenterX = iW / 2 + g_lpRect.left;
+	//int iCenterY = iH /2 + g_lpRect.top;
 
-	lpRect.top = iCenterY - 20;
-	lpRect.bottom = iCenterY + 20;
-	lpRect.left = iCenterX - 20;
-	lpRect.right = iCenterX + 20;
+	//lpRect.top = iCenterY - 20;
+	//lpRect.bottom = iCenterY + 20;
+	//lpRect.left = iCenterX - 20;
+	//lpRect.right = iCenterX + 20;
 	static bool bOnce = false;
 	//MyTraceA("hkD3D11Present+++++++------------------------------------------------------------------= key=0X%x", ((GetAsyncKeyState(VK_RETURN) & 1)));
 
@@ -359,72 +481,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (!bOnce)
 	{
-		if (SUCCEEDED(pSwapChain->GetDevice(__uuidof(ID3D11Device), (void **)&CCheat::pDevice)))
-		{
-			pSwapChain->GetDevice(__uuidof(CCheat::pDevice), (void**)&CCheat::pDevice);
-			CCheat::pDevice->GetImmediateContext(&CCheat::pContext);
-		}
-
-		D3D11_DEPTH_STENCIL_DESC  stencilDesc;
-		stencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-		stencilDesc.StencilEnable = true;
-		stencilDesc.StencilReadMask = 0xFF;
-		stencilDesc.StencilWriteMask = 0xFF;
-		stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		stencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		stencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-		stencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		stencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		stencilDesc.DepthEnable = true;
-		stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::ENABLED)]);
-
-		stencilDesc.DepthEnable = false;
-		stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::DISABLED)]);
-
-		stencilDesc.DepthEnable = false;
-		stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-		stencilDesc.StencilEnable = false;
-		stencilDesc.StencilReadMask = UINT8(0xFF);
-		stencilDesc.StencilWriteMask = 0x0;
-		CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::NO_READ_NO_WRITE)]);
-
-		stencilDesc.DepthEnable = true;
-		stencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		stencilDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
-		stencilDesc.StencilEnable = false;
-		stencilDesc.StencilReadMask = UINT8(0xFF);
-		stencilDesc.StencilWriteMask = 0x0;
-
-		stencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
-		stencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
-		stencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		stencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
-
-		stencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_ZERO;
-		stencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
-		stencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_ZERO;
-		stencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_NEVER;
-		CCheat::pDevice->CreateDepthStencilState(&stencilDesc, &myDepthStencilStates[static_cast<int>(eDepthState::READ_NO_WRITE)]);
-
-		D3D11_RASTERIZER_DESC rwDesc;
-		CCheat::pContext->RSGetState(&rwState); 
-		rwState->GetDesc(&rwDesc); 
-		rwDesc.FillMode = D3D11_FILL_WIREFRAME;
-		rwDesc.CullMode = D3D11_CULL_NONE;
-		CCheat::pDevice->CreateRasterizerState(&rwDesc, &rwState);
-
-		D3D11_RASTERIZER_DESC rsDesc;
-		CCheat::pContext->RSGetState(&rsState); 
-		rsState->GetDesc(&rsDesc); 
-		rsDesc.FillMode = D3D11_FILL_SOLID;
-		rsDesc.CullMode = D3D11_CULL_NONE;
-		CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
+		InitForHook(pSwapChain);
 
 		aaa.push_back(12);
 		bbb.push_back(702);
@@ -552,6 +609,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		bbb.push_back(6);
 
 		Helpers::Log("D3D11Present initialised");
+
+
 		bOnce = true;
 
 	}
@@ -566,17 +625,16 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psYellow)
 		GenerateShader(CCheat::pDevice, &psYellow, 1.f, 0.6f, 0);
 
-	if (!psc)
-		GenerateShader(CCheat::pDevice, &psc, 0.2f, 0.6f, 0.2f);
+	if (!psRed)
+		GenerateShader(CCheat::pDevice, &psRed, 0.5f, 0.0f, 0.0f);
+	if (!psGreen)
+		GenerateShader(CCheat::pDevice, &psGreen, 0.0f, 0.5f, 0.0f);
+	if (!psBlue)
+		GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 
 	if (!psd)
 		GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
-	if (!pse)
-		GenerateShader(CCheat::pDevice, &pse, 0.2f, 0.2f, 0.2f);
-
-	if (!psG)
-		GenerateShader(CCheat::pDevice, &psG, 0.5f, 0.0f, 0.0f);
 
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(1, &RenderTargetView, NULL);
@@ -804,12 +862,18 @@ int bRed = true;
 int iRed = 0;
 DWORD gggg = 0;
 DWORD cover = 0;
+bool bShoot = false;
 
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
 {
 	if (GetAsyncKeyState(VK_RIGHT) & 1)
 	{
 		iRed = iRed++ % 3;;
+	}
+
+	if (GetAsyncKeyState('Q') & 1)
+	{
+		bShoot = !bShoot;
 	}
 
 	if (iRed == 1)
@@ -829,8 +893,13 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 	if (cover != timeGetTime() / INTVL)
 	{
-		bUp = !bUp;
+		bFlashIt = !bFlashIt;
 		cover = timeGetTime() / INTVL;
+	}
+
+	if (bShoot)
+	{
+		SetEvent(g_Event_Shoot);
 	}
 
 	SYSTEMTIME st = { 0 };
@@ -841,6 +910,16 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 	MyTraceA("hkD3D11DrawIndexed**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
+
+	if ((Stride == 12) && (IndexCount > 7000) && (IndexCount < 10000))
+	{
+
+		MyTraceA("hkD3D11DrawIndexedBIGBIG**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
+//		if (!bRed)
+//			return;
+	}
+
+
 	//if (/*(Stride == iStride  && IndexCount == 2514)
 	//	|| (Stride == iStride  && IndexCount == 2682)
 	//	|| (Stride == iStride  && IndexCount == 2514)
@@ -892,28 +971,36 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		}
 	}
 
-	if ((
-		((Stride == 24) /*|| (Stride == 12)*/)
-		&& bRed
-		//&& bUp
+	if (
+		(
+			((Stride == 24) /*|| (Stride == 12)*/)
+			&& bRed
+			//&& bUp
 		
-		&& (IndexCount >200)
-		&& (IndexCount != 69)
-		&& (IndexCount != 96)
-		&& (IndexCount != 192)
-		&& (IndexCount != 876)
+			&& (IndexCount >200)
+			&& (IndexCount != 69)
+			&& (IndexCount != 96)
+			&& (IndexCount != 192)
+			&& (IndexCount != 876)
 
-		&& (IndexCount != 1128)
-		&& (IndexCount != 1728)
-		&& (IndexCount != 1842)
-		&& (IndexCount != 1932)
-		&& (IndexCount != 2556)
-		&& (IndexCount != 3228)
-		&& (IndexCount != 3234)
-		&& (IndexCount != 5124)
+			&& (IndexCount != 1128)
+			&& (IndexCount != 1728)
+			&& (IndexCount != 1842)
+			&& (IndexCount != 1932)
+			&& (IndexCount != 2556)
+			&& (IndexCount != 3228)
+			&& (IndexCount != 3234)
+			&& (IndexCount != 5124)
 		)
-		//||
-		//(
+		||	(Stride == 12 && IndexCount == 2637) // 三级盔 近处
+		|| (Stride == 12 && IndexCount == 1116) // 2级盔 近处
+		|| (Stride == 12 && IndexCount == 816) // ？盔 远处
+		//|| (Stride == 12 && IndexCount == 192) // ？盔 远处
+		//|| (Stride == 12 && IndexCount == 156) // ？盔 远处
+		//|| (Stride == 12 && IndexCount == 180) // ？盔 远处
+		//|| (Stride == 12 && IndexCount == 276) // ？盔 远处
+		//|| (Stride == 12 && IndexCount == 294) // ？盔 远处
+											   //(
 		////(Stride == 12 && IndexCount > 3800) ||
 		//	(Stride == 12 && IndexCount == 2838) ||// 胳臂
 		//	(Stride == 12 && IndexCount == 2877) ||// 头发
@@ -947,8 +1034,11 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 				pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 			}
 
-			if (bUp)
+			if (bFlashIt)
 			{
+				//AutoShootIfCenter();
+				//SetEvent(g_Event_Shoot);
+
 				//pContext->PSSetShader(psYellow, NULL, NULL);
 				//ppDepthStencilState->GetDesc(&depthStencilDesc);
 
@@ -983,7 +1073,10 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			//	//// Set the depth stencil state.
 			//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
 			//}
-				pContext->PSSetShader(psG, NULL, NULL);
+			if (Stride == 12)
+				pContext->PSSetShader(psBlue, NULL, NULL);
+			if (Stride == 24)
+				pContext->PSSetShader(psRed, NULL, NULL);
 			//if (
 			//	(IndexCount == 1128)
 			//	|| (IndexCount == 1728)
