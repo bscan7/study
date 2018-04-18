@@ -3,7 +3,7 @@
 //    对应Unicode的调试输出  
 inline void MyTraceW(LPCTSTR strFormat, ...)
 {
-	const int BUFFER_SIZE = 128;
+	const int BUFFER_SIZE = 1280;
 	va_list args = NULL;
 	va_start(args, strFormat);
 	TCHAR szBuffer[BUFFER_SIZE] = { 0 };
@@ -14,7 +14,7 @@ inline void MyTraceW(LPCTSTR strFormat, ...)
 //    对应ASCII的调试输出  
 inline void MyTraceA(const char* strFormat, ...)
 {
-	const int BUFFER_SIZE = 128;
+	const int BUFFER_SIZE = 1280;
 	char   szBuffer[BUFFER_SIZE] = { 0 };
 	va_list args = NULL;
 
@@ -28,6 +28,8 @@ inline void MyTraceA(const char* strFormat, ...)
 	// The va_end macro just zeroes out pArgList for no good reason  
 	va_end(args);
 	::OutputDebugStringA(szBuffer);
+	//Helpers::LogAddress(szBuffer);
+
 }
 
 

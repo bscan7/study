@@ -5,7 +5,7 @@
 
 namespace Helpers
 {
-	void LogAddress(char* szName, LONGLONG iAddress);
+	void LogAddress(char* szName, LONGLONG iAddress = 0x1111);
 	void LogError(char* szMessage);
 	void Log(char* szMessage);
 	void HookFunction(PVOID *oFunction, PVOID pDetour);

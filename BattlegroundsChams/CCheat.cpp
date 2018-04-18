@@ -243,13 +243,25 @@ void CCheat::Initialise()
 	pContextVT = reinterpret_cast<DWORD_PTR*>(pContextVT[0]);
 
 	Helpers::LogAddress("pSwapChainVT", reinterpret_cast<int64_t>(pSwapChainVT));
+	Helpers::LogAddress("D3D11PRESENT", pSwapChainVT[8]);
+
 	Helpers::LogAddress("pDeviceVT", reinterpret_cast<int64_t>(pDeviceVT));
+	Helpers::LogAddress("D3D11CreateQuery", pDeviceVT[24]);
+
 	Helpers::LogAddress("pContextVT", reinterpret_cast<int64_t>(pContextVT));
 
-	Helpers::LogAddress("D3D11PRESENT", pSwapChainVT[8]);
-	Helpers::LogAddress("D3D11DRAWINDEXED", pContextVT[12]);
-	Helpers::LogAddress("D3D11DRAWINDEXED", pContextVT[12]);
-	Helpers::LogAddress("D3D11CreateQuery", pDeviceVT[24]);
+	Helpers::LogAddress("tD3D11VSSetConstantBuffers", pContextVT[7]);
+	Helpers::LogAddress("-=", pContextVT[7]- reinterpret_cast<int64_t>(pContextVT));
+	Helpers::LogAddress("tD3D11DrawIndexed", pContextVT[12]);
+	Helpers::LogAddress("-=", pContextVT[12] - pContextVT[7]);
+	Helpers::LogAddress("tD3D11DrawIndexedInstanced", pContextVT[20]);
+	Helpers::LogAddress("-=", pContextVT[20] - pContextVT[12]);
+	Helpers::LogAddress("tD3D11DrawInstanced", pContextVT[21]);
+	Helpers::LogAddress("-=", pContextVT[21] - pContextVT[20]);
+	Helpers::LogAddress("tD3D11DrawIndexedInstancedIndirect", pContextVT[39]);
+	Helpers::LogAddress("-=", pContextVT[39] - pContextVT[21]);
+	Helpers::LogAddress("tD3D11DrawInstancedIndirect", pContextVT[40]);
+	Helpers::LogAddress("-=", pContextVT[40] - pContextVT[39]);
 
 	// GET FUNCTIONS
 	Hooks::oPresent = reinterpret_cast<tD3D11Present>(pSwapChainVT[8]/*D3D11PRESENT*/);

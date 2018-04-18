@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Helpers.h"
-
+#include "iostream"
+#include "fstream"
+using namespace std;
 //HOOKING
 void Helpers::HookFunction(PVOID *oFunction, PVOID pDetour)
 {
@@ -24,6 +26,17 @@ void Helpers::Log(char* szMessage)
 }
 void Helpers::LogAddress(char* szName, int64_t iAddress)
 {
+	ofstream outfile;
+	outfile.open(".\\LogAddress.txt", ios::app);
+	if (!outfile)
+	{
+		std::cout << "打开LogAddress.txt文件失败！" << endl;
+	}
+	else
+	{
+		outfile << "[+] " << szName << ": 0x" << std::hex << iAddress << std::endl;
+		outfile.close();
+	}
 	std::cout << "[+] " << szName << ": 0x" << std::hex << iAddress << std::endl;
 }
 void Helpers::LogError(char* szMessage)
