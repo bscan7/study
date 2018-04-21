@@ -191,7 +191,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  DWORD cover = 0;
  bool bShoot = false;
 
- void __stdcall CheatIt(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
+ void __stdcall CheatIt(ID3D11DeviceContext* pContext, UINT IndexCount, UINT IndexCountPerInstance, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
  {
 	 if (ppDepthStencilState__New != NULL)
 	 {
@@ -226,7 +226,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 
 	 if (cover != timeGetTime() / INTVL)
 	 {
-		 bFlashIt = !bFlashIt;
+		// bFlashIt = !bFlashIt;
 		 cover = timeGetTime() / INTVL;
 	 }
 
@@ -381,21 +381,46 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 					 D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 					 ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
 					 
-					 depthStencilDesc.DepthEnable = TRUE;
-					 depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+					  //depthStencilDesc.DepthEnable = TRUE;
+					 //depthStencilDesc.DepthEnable = FALSE;
+					 //depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 					 depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-
-					 depthStencilDesc.StencilEnable = TRUE;
-
+					 //depthStencilDesc.StencilEnable = FALSE;
 					 ID3D11Device *ppDevice;
 					 pContext->GetDevice(&ppDevice);
 					 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+					 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+					 pContext->PSSetShader(psBlue, NULL, NULL);
 				 }
 				 //// Set the depth stencil state.
-				 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+				 //pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+				 //pContext->PSSetShader(psBlue, NULL, NULL);
+				 //Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+				 //Hooks::oDrawIndexedInstanced(pContext, IndexCount, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
+				 //{
+					// D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+					// ppDepthStencilState__New->GetDesc(&depthStencilDesc);
+
+					// //depthStencilDesc.DepthEnable = TRUE;
+					// //depthStencilDesc.DepthEnable = FALSE;
+					// //depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+					// depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+					// //depthStencilDesc.StencilEnable = FALSE;
+					// ID3D11Device *ppDevice;
+					// pContext->GetDevice(&ppDevice);
+					// ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+					// pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+					// pContext->PSSetShader(psRed, NULL, NULL);
+				 //}
+				 //// Set the depth stencil state.
+				 //pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+				 //pContext->PSSetShader(psBlue, NULL, NULL);
+				 //Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+				 //Hooks::oDrawIndexedInstanced(pContext, IndexCount, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 			 }
-			 //else
+			 else
+				 pContext->PSSetShader(psRed, NULL, NULL);
 			 //{
 			 //	{
 			 //		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -410,10 +435,10 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 			 //	//// Set the depth stencil state.
 			 //	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
 			 //}
-			 if (Stride == 12)
-				 pContext->PSSetShader(psBlue, NULL, NULL);
-			 if (Stride == 24)
-				 pContext->PSSetShader(psRed, NULL, NULL);
+			 //if (Stride == 12)
+				// pContext->PSSetShader(psBlue, NULL, NULL);
+			 //if (Stride == 24)
+				// pContext->PSSetShader(psRed, NULL, NULL);
 			 //if (
 			 //	(IndexCount == 1128)
 			 //	|| (IndexCount == 1728)
@@ -428,9 +453,9 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 			 //	pContext->PSSetShader(psc, NULL, NULL);
 			 //}
 			 //else
-			 {
-				 //pContext->PSSetShader(psG, NULL, NULL);
-			 }
+			 //{
+				// //pContext->PSSetShader(psG, NULL, NULL);
+			 //}
 			 //&& (IndexCount != 1128)
 			 //&& (IndexCount != 1728)
 			 //&& (IndexCount != 1842)
@@ -464,17 +489,15 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 			 //	//pContext->PSSetShader(pse, NULL, NULL); //MY HEAD
 			 //}
 			 //else
-			 {
-				 //pContext->PSSetShader(psG, NULL, NULL); //ENEMY
-			 }
+			 //{
+				// //pContext->PSSetShader(psG, NULL, NULL); //ENEMY
+			 //}
 			 //pContext->PSSetShaderResources(0, 1, &ShaderResourceView);
 
 			 //Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 			 //pContext->OMSetDepthStencilState(myDepthStencilStates[ENABLED], 1);
-
 			 // Set the depth stencil state.
 			 //pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
-
 			 //ppDepthStencilStateNew->Release();
 			 //AddModel(pContext);//w2s
 
@@ -484,13 +507,9 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 			 //UINT numViewports = 1; 
 			 //D3D11_VIEWPORT mViewport;
 			 //pContext->RSGetViewports(&numViewports, &mViewport);
-
 			 //mViewport.MinDepth = 0.0f;
 			 //mViewport.MaxDepth = 0.1f;
-
 			 //pContext->RSSetViewports(1, &mViewport);
-
-
 			 // Create the viewport.
 			 //m_deviceContext->RSSetViewports(1, &viewport);
 		 //}
@@ -1229,7 +1248,7 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexed++++++++++++++++++++*===");
-	CheatIt(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+	CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
 
 	Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 
@@ -1305,7 +1324,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	else
 		bHideTrees = false;
 
-	CheatIt(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
 
 	if (! (bHideTrees && Stride==12 && IndexCountPerInstance<15000))
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
