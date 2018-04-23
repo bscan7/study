@@ -17,7 +17,7 @@ void Thread_AutoShootIfCenter(PVOID param)
 {
 	while (!bStoped)
 	{
-		DWORD res = WaitForSingleObject(g_Event_Shoot, 50);
+		DWORD res = WaitForSingleObject(g_Event_Shoot, 500);
 		//MyTraceA("/////////////////////////////////////////////////////////2");
 
 		//if (!c.socket_.is_open())
@@ -292,11 +292,11 @@ void CCheat::Initialise()
 void CCheat::Release()
 {
 	Helpers::Log("DLL抽离主进程。。。");
-	bStoped = true;
-	while (bStoped)
-	{
-		Sleep(10);
-	}
+	Sleep(300);
+	//bStoped = true;
+	//while (bStoped)
+	//{
+	//}
 	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 	//FreeConsole();
 
