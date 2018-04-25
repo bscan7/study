@@ -206,7 +206,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 
 	 if (GetAsyncKeyState('Q') & 1)
 	 {
-		 bShoot = !bShoot;
+		 //bShoot = !bShoot;
 	 }
 
 	 if (iRed == 1)
@@ -228,11 +228,6 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 	 {
 		// bFlashIt = !bFlashIt;
 		 cover = timeGetTime() / INTVL;
-	 }
-
-	 if (bShoot)
-	 {
-		 SetEvent(g_Event_Shoot);
 	 }
 
 	 SYSTEMTIME st = { 0 };
@@ -768,13 +763,14 @@ S_OK*/
 //	CCheat::pContext->OMSetDepthStencilState(myDepthStencilStates[aState], 1);
 //}
 
-#define SHOOT_AREA  2
+#define SHOOT_AREA  5
+static BOOL bDoneOnShoot = false;
 
 //HBITMAP AutoShootIfCenter(BOOL bSave = false)
 void AutoShootIfCenter(PVOID param)
 //lpRect 代表选定区域
 {
-	return;
+	//return;
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
 	RECT lpRect;
@@ -863,25 +859,42 @@ void AutoShootIfCenter(PVOID param)
 	// 转换 COLORREF 为 RGB  
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
-
 	// 替换颜色  
 	for (int i = ((nWidth * nHeight) - 1); i >= 0; i--)
 	{
-		ptPixels[i]; //0xff 29 27 21 红绿蓝
+		if (!ptPixels)
+		{
+			break;
+		}
+		//ptPixels[i]; //0xff 29 27 21 红绿蓝
 		//if (ptPixels[i] == 0xff800000)
 
-		if( (ptPixels[i] == 0xff000080) 
-			||(ptPixels[i] == 0xff800000)
+		if( /*(ptPixels[i] == 0xff000080) 
+			||*/(ptPixels[i] == 0xff800000)
 			)
 		{
-			MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
 			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-
+			Sleep(10);
+			//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+			Sleep(10);
+			//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+			Sleep(10);
+			bDoneOnShoot = false;
 			break;
 		}
 		//	ptPixels[i] = cNewColor;
+		bDoneOnShoot = true;
+	}
+
+	if (bDoneOnShoot)
+	{
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 	}
 	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
 	//得到屏幕位图的句柄
@@ -921,7 +934,13 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (GetAsyncKeyState(VK_ADD) & 1)
 	{
-		red24.push_back(lst24[iPos]);
+		bShoot = !bShoot;
+		//red24.push_back(lst24[iPos]);
+	}
+
+	if (bShoot)
+	{
+		SetEvent(g_Event_Shoot);
 	}
 
 	if (GetAsyncKeyState(VK_DELETE) & 1)
