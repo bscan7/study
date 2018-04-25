@@ -124,7 +124,7 @@ void CTopDlg::OnPaint()
 	GetClientRect(&rc);
 	dc.SetBkMode(TRANSPARENT);
 	dc.SetTextColor(RGB(0,174,255));
-	dc.TextOut(rc.left+2 , rc.top+1, _T("按Esc，或双击放大镜，或单击此处，退出截图镜！"));
+	dc.TextOut(rc.left+2 , rc.top+1, _T("【Ctrl+Shift+Z 显隐】按Esc，或双击放大镜，或单击此处，退出截图镜！"));
 
 	// Do not call CDialog::OnPaint() for painting messages
 }
