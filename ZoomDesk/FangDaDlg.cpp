@@ -72,8 +72,8 @@ CFangDaDlg::CFangDaDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_nFangDa = 18; // 放大倍数
-	m_nSize = 200;
+	m_nFangDa = 4; // 放大倍数
+	m_nSize = 400;
 	m_pTop = NULL;
 	m_pBufferDC = NULL;
 	m_pScreenDC = NULL;
@@ -238,6 +238,11 @@ void CFangDaDlg::OnPaint()
 			ClientToScreen(&wRc);
 			POINT point;
 			GetCursorPos(&point);
+/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
+			int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
+			point.x = nFullWidth / 2;
+			point.y = nFullHeight / 2;
+*/
 			HDC	hDeskDC = ::GetDC(::GetDesktopWindow());
 			CDC* pDeskDC = CDC::FromHandle(hDeskDC);
 			
@@ -267,6 +272,14 @@ void CFangDaDlg::OnPaint()
 			ClientToScreen(&wRc);
 			POINT point;
 			GetCursorPos(&point);
+			/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
+			int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
+			point.x = nFullWidth / 2;
+			point.y = nFullHeight / 2;
+			*/
+			point.x = 960;
+			point.y = 600;
+
 			HDC	hDeskDC = ::GetDC(::GetDesktopWindow());
 			CDC* pDeskDC = CDC::FromHandle(hDeskDC);
 			

@@ -72,7 +72,7 @@ void Thread_regHotKey(LPVOID Para)
 					ppp->ShowWindow(ppp->bZoom);
 				}
 
-				printf("you press ctrl+alt+T hotkey\n");
+				printf("you press ctrl+alt+Z hotkey\n");
 			}
 
 			//if (msg.wParam == 0x0002) printf("you press ctrl+alt+T hotkey\n");
