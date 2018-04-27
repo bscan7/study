@@ -76,6 +76,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  ID3D11PixelShader* psd = NULL;
  ID3D11PixelShader* psBlue = NULL;
  ID3D11PixelShader* psRed0 = NULL;
+ ID3D11PixelShader* psTmp = NULL;
  ID3D11ShaderResourceView* ShaderResourceView;
 
 
@@ -385,7 +386,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 					 pContext->GetDevice(&ppDevice);
 					 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 					 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-					 pContext->PSSetShader(psBlue, NULL, NULL);
+					 pContext->PSSetShader(psTmp, NULL, NULL);
 				 }
 				 //// Set the depth stencil state.
 				 //pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
@@ -1143,6 +1144,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		GenerateShader(CCheat::pDevice, &psGreen, 0.0f, 0.5f, 0.0f);
 	if (!psBlue)
 		GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
+	if (!psTmp)
+		GenerateShader(CCheat::pDevice, &psTmp, 0.0f, 0.3f, 0.3f);
 
 	if (!psd)
 		GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
