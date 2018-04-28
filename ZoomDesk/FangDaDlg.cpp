@@ -72,7 +72,7 @@ CFangDaDlg::CFangDaDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_nFangDa = 4; // 放大倍数
+	m_nFangDa = 1; // 放大倍数
 	m_nSize = 400;
 	m_pTop = NULL;
 	m_pBufferDC = NULL;
@@ -203,6 +203,9 @@ void CFangDaDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
+HBITMAP DirectBitmap = NULL;
+HDC hMemDC = NULL;
+UINT * ptPixels = NULL;
 // If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
@@ -245,7 +248,10 @@ void CFangDaDlg::OnPaint()
 */
 			HDC	hDeskDC = ::GetDC(::GetDesktopWindow());
 			CDC* pDeskDC = CDC::FromHandle(hDeskDC);
-			
+
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			AutoLockByColor(hDeskDC, rc, wRc);
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			//放大绘制
 			m_pBufferDC->StretchBlt(0, 0, rc.Width(), rc.Height(), m_pScreenDC, 
 				(int)(point.x-(float)rc.Width()/m_nFangDa/2),
@@ -277,12 +283,15 @@ void CFangDaDlg::OnPaint()
 			point.x = nFullWidth / 2;
 			point.y = nFullHeight / 2;
 			*/
-			point.x = 960;
-			point.y = 600;
+			point.x = GetSystemMetrics(SM_CXSCREEN)/2;
+			point.y = GetSystemMetrics(SM_CYSCREEN)/2;
 
 			HDC	hDeskDC = ::GetDC(::GetDesktopWindow());
 			CDC* pDeskDC = CDC::FromHandle(hDeskDC);
-			
+
+			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			AutoLockByColor(hDeskDC, rc, wRc);
+			//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			//放大绘制
 			m_pBufferDC->StretchBlt(0, 0, rc.Width(), rc.Height(), pDeskDC, 
 				(int)(point.x-(float)rc.Width()/m_nFangDa/2),
@@ -303,6 +312,65 @@ void CFangDaDlg::OnPaint()
 		}
 		CDialog::OnPaint();
 	}
+}
+
+void CFangDaDlg::AutoLockByColor(HDC hDeskDC, CRect &rc, CRect &wRc)
+{
+	// 位图句柄
+	HBITMAP    hBitmap, hOldBitmap;
+	if (hMemDC == NULL)
+	{
+		//为屏幕设备描述表创建兼容的内存设备描述表
+		/*HDC*/ hMemDC = CreateCompatibleDC(hDeskDC);
+	}
+
+	if (DirectBitmap == NULL)
+	{
+		// 初始化BITMAPINFO信息，以便使用CreateDIBSection
+		BITMAPINFO RGB32BitsBITMAPINFO;
+		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
+		RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		RGB32BitsBITMAPINFO.bmiHeader.biWidth = rc.Width();
+		RGB32BitsBITMAPINFO.bmiHeader.biHeight = rc.Height();
+		RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
+		RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
+
+		/*HBITMAP*/ DirectBitmap = CreateDIBSection(hMemDC,
+			(BITMAPINFO *)&RGB32BitsBITMAPINFO,
+			DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
+	}
+
+	// 把新位图选到内存设备描述表中
+	hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
+	// 把屏幕设备描述表拷贝到内存设备描述表中
+	{
+		BitBlt(hMemDC, 0, 0, rc.Width(), rc.Height(),
+			hDeskDC, wRc.left, wRc.top, SRCCOPY);
+	}
+	for (int i = ((rc.Width() * rc.Height()) - 1); i >= 0; i--)
+	{
+		if (!ptPixels)
+		{
+			break;
+		}
+		//ptPixels[i]; //0xff 29 27 21 红绿蓝
+		//if (ptPixels[i] == 0xff800000)
+
+		if ( /*(ptPixels[i] == 0xff000080)
+			 ||*/(ptPixels[i] == 0xff800000)
+			)
+		{
+			mouse_event(MOUSEEVENTF_MOVE,
+				(i % rc.Width() - rc.Width() / 2),
+				(i / rc.Width() - rc.Height() / 2),
+				0, 0);
+			break;
+		}
+		//	ptPixels[i] = cNewColor;
+		//bDoneOnShoot = true;
+	}
+
+	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
 }
 
 // The system calls this to obtain the cursor to display while the user drags

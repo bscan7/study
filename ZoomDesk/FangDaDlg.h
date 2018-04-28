@@ -56,6 +56,9 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
+
+	void AutoLockByColor(HDC hDeskDC, CRect &rc, CRect &wRc);
+
 	afx_msg HCURSOR OnQueryDragIcon();
 	virtual void OnOK();
 	virtual void OnCancel();
