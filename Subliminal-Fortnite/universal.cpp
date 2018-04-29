@@ -50,6 +50,7 @@ IFW1FontWrapper *pFontWrapper = NULL;
 ID3D11DepthStencilState *ppDepthStencilStateNew = NULL;
 ID3D11DepthStencilState *ppDepthStencilStateOld = NULL;
 UINT pStencilRef = 0;
+HWND g_hWnd = NULL;
 
 #include "main.h"
 //==========================================================================================================================
@@ -200,11 +201,11 @@ HRESULT __stdcall hookD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval
 	pContext->OMSetRenderTargets(1, &RenderTargetView, NULL);
 	//draw
 	if (pFontWrapper)
-	pFontWrapper->DrawString(pContext, L"Subliminal Fortnite Cheat", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
+	pFontWrapper->DrawString(pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
 
-	pFontWrapper->DrawString(pContext, L"Welcome Back Keidrich" , 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
+	pFontWrapper->DrawString(pContext, L"Welcome Back Bscan*****============================" , 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
 
-	pFontWrapper->DrawString(pContext, L"XXX" , 14.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
+	pFontWrapper->DrawString(pContext, L"[XXX]" , 14.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
 
 	//draw esp
 	if (AimEspInfo.size() != NULL)
@@ -655,8 +656,75 @@ DWORD __stdcall InitializeHook(LPVOID)
 	//hWnd = _EnumChildWindows(hWnd, "ScreenBoardClassWindow");
 
 	//HWND hWnd = (HWND)0x0031162C;
-	HWND hWnd = FindWindowA(NULL, "engine");
-	if (!hWnd)
+	g_hWnd = FindWindowA(NULL, "BlueStacks App Player");
+	if (!g_hWnd)
+	{
+		g_hWnd = FindWindowA(NULL, "夜神模拟器");
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found HWND 夜神模拟器!", "uBoos?", MB_ICONINFORMATION);
+			//return;
+		}
+		else
+		{
+			g_hWnd = _EnumChildWindows(g_hWnd, "ScreenBoardClassWindow");
+		}
+		//HWND hWnd = (HWND)0x0031162C;
+	}
+	if (!g_hWnd)
+	{
+		g_hWnd = FindWindowA(NULL, "雷电模拟器");
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found HWND 雷电模拟器!", "uBoos?", MB_ICONINFORMATION);
+			//return;
+		}
+		else
+		{
+			g_hWnd = _EnumChildWindows(g_hWnd, "TheRender");
+		}
+	}
+	if (!g_hWnd)
+	{
+		g_hWnd = FindWindowA(NULL, "绝地求生 刺激战场 - MuMu模拟器");
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+			//return;
+		}
+		else
+		{
+			g_hWnd = _EnumChildWindows(g_hWnd, "");
+		}
+	}
+	if (!g_hWnd)
+	{
+		g_hWnd = FindWindowA(NULL, "绝地求生 全军出击 - MuMu模拟器");
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+			//return;
+		}
+		else
+		{
+			g_hWnd = _EnumChildWindows(g_hWnd, "");
+		}
+	}
+
+	if (!g_hWnd)
+	{
+		g_hWnd = FindWindowA(NULL, "腾讯手游助手【极速傲引擎】");
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+			//return;
+		}
+		else
+		{
+			g_hWnd = _EnumChildWindows(g_hWnd, "AEngineRenderWindow");
+		}
+	}
+	if (!g_hWnd)
 	{
 		MessageBoxA(NULL, "Not found child HWND!", "uBoos?", MB_ICONINFORMATION);
 		return NULL;
@@ -676,10 +744,10 @@ DWORD __stdcall InitializeHook(LPVOID)
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
 	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	scd.OutputWindow = hWnd;
+	scd.OutputWindow = g_hWnd;
 	scd.SampleDesc.Count = MultisampleCount;
 	scd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-	scd.Windowed = ((GetWindowLongPtr(hWnd, GWL_STYLE) & WS_POPUP) != 0) ? false : true;
+	scd.Windowed = ((GetWindowLongPtr(g_hWnd, GWL_STYLE) & WS_POPUP) != 0) ? false : true;
 
 	// LibOVR 0.4.3 requires that the width and height for the backbuffer is set even if
 	// you use windowed mode, despite being optional according to the D3D11 documentation.
@@ -710,7 +778,7 @@ DWORD __stdcall InitializeHook(LPVOID)
 		&obtainedLevel,
 		&pContext)))
 	{
-		MessageBox(hWnd, "Failed to create directX device and swapchain!", "Error", MB_ICONERROR);
+		MessageBox(g_hWnd, "Failed to create directX device and swapchain!", "Error", MB_ICONERROR);
 		return NULL;
 	}
 
@@ -727,8 +795,8 @@ DWORD __stdcall InitializeHook(LPVOID)
 	if (MH_Initialize() != MH_OK) { return 1; }
 	if (MH_CreateHook((DWORD_PTR*)pSwapChainVtable[8], hookD3D11Present, reinterpret_cast<void**>(&phookD3D11Present)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)pSwapChainVtable[8]) != MH_OK) { return 1; }
-	//if (MH_CreateHook((DWORD_PTR*)pContextVTable[12], hookD3D11DrawIndexed, reinterpret_cast<void**>(&phookD3D11DrawIndexed)) != MH_OK) { return 1; }
-	//if (MH_EnableHook((DWORD_PTR*)pContextVTable[12]) != MH_OK) { return 1; }
+	if (MH_CreateHook((DWORD_PTR*)pContextVTable[12], hookD3D11DrawIndexed, reinterpret_cast<void**>(&phookD3D11DrawIndexed)) != MH_OK) { return 1; }
+	if (MH_EnableHook((DWORD_PTR*)pContextVTable[12]) != MH_OK) { return 1; }
 	//if (MH_CreateHook((DWORD_PTR*)pDeviceVTable[24], hookD3D11CreateQuery, reinterpret_cast<void**>(&phookD3D11CreateQuery)) != MH_OK) { return 1; }
 	//if (MH_EnableHook((DWORD_PTR*)pDeviceVTable[24]) != MH_OK) { return 1; }
 	//if (MH_CreateHook((DWORD_PTR*)pContextVTable[39], hookD3D11DrawIndexedInstancedIndirect, reinterpret_cast<void**>(&phookD3D11DrawIndexedInstancedIndirect)) != MH_OK) { return 1; }
@@ -751,6 +819,8 @@ DWORD __stdcall InitializeHook(LPVOID)
     DWORD dwOld;
     VirtualProtect(phookD3D11Present, 2, PAGE_EXECUTE_READWRITE, &dwOld);
 
+    DWORD dwOld2;
+    VirtualProtect(phookD3D11DrawIndexed, 2, PAGE_EXECUTE_READWRITE, &dwOld2);
 	while (true) {
 		Sleep(10);
 	}
@@ -778,7 +848,7 @@ BOOL __stdcall DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
 	case DLL_PROCESS_DETACH: // A process unloads the DLL.
 		if (MH_Uninitialize() != MH_OK) { return 1; }
 		if (MH_DisableHook((DWORD_PTR*)pSwapChainVtable[8]) != MH_OK) { return 1; }
-		//if (MH_DisableHook((DWORD_PTR*)pContextVTable[12]) != MH_OK) { return 1; }
+		if (MH_DisableHook((DWORD_PTR*)pContextVTable[12]) != MH_OK) { return 1; }
 		//if (MH_DisableHook((DWORD_PTR*)pDeviceVTable[24]) != MH_OK) { return 1; }
 		//if (MH_DisableHook((DWORD_PTR*)pContextVTable[39]) != MH_OK) { return 1; }
 		//if (MH_DisableHook((DWORD_PTR*)pContextVTable[20]) != MH_OK) { return 1; }
