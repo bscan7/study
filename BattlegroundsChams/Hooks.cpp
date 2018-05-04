@@ -7,6 +7,7 @@
 #include ".\mainxxx.h"
 //#include <d3dx11async.h>
 #include <process.h>
+#include <iomanip>
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
@@ -79,7 +80,91 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  ID3D11PixelShader* psTmp = NULL;
  ID3D11ShaderResourceView* ShaderResourceView;
 
+ void Thread_fileWatcher(PVOID param)
+ {
+	 DWORD cbBytes;
+	 char file_name[MAX_PATH]; //设置文件名
+	 char file_name2[MAX_PATH]; //设置文件重命名后的名字
+	 char notify[1024];
+	 int count = 0; //文件数量。可能同时拷贝、删除多个文件，可以进行更友好的提示。
+	 char *dir = /*_T*/("..\\");
 
+	 HANDLE dirHandle = CreateFileA(dir, GENERIC_READ | GENERIC_WRITE | FILE_LIST_DIRECTORY,
+		 FILE_SHARE_READ | FILE_SHARE_WRITE,
+		 NULL,
+		 OPEN_EXISTING,
+		 FILE_FLAG_BACKUP_SEMANTICS,
+		 NULL);
+
+	 if (dirHandle == INVALID_HANDLE_VALUE) //若网络重定向或目标文件系统不支持该操作，函数失败，同时调用GetLastError()返回ERROR_INVALID_FUNCTION
+	 {
+		 cout << "error" + GetLastError() << endl;
+	 }
+
+
+	 memset(notify, 0, strlen(notify));
+
+	 FILE_NOTIFY_INFORMATION *pnotify = (FILE_NOTIFY_INFORMATION*)notify;
+	 cout << "start...." << endl;
+	 while (true)
+	 {
+
+		 if (ReadDirectoryChangesW(dirHandle, &notify, 1024, true,
+			 FILE_NOTIFY_CHANGE_FILE_NAME |
+			 FILE_NOTIFY_CHANGE_DIR_NAME
+			 //| FILE_NOTIFY_CHANGE_CREATION
+			 //| FILE_NOTIFY_CHANGE_LAST_WRITE
+			 | FILE_NOTIFY_CHANGE_SIZE,
+			 &cbBytes, NULL, NULL))
+		 {
+			 //转换文件名为多字节字符串
+			 if (pnotify->FileName)
+			 {
+				 memset(file_name, 0, strlen(file_name));
+
+				 WideCharToMultiByte(CP_ACP, 0, pnotify->FileName, pnotify->FileNameLength / 2, file_name, 99, NULL, NULL);
+			 }
+
+			 //获取重命名的文件名
+			 if (pnotify->NextEntryOffset != 0 && (pnotify->FileNameLength > 0 && pnotify->FileNameLength < MAX_PATH))
+			 {
+				 PFILE_NOTIFY_INFORMATION p = (PFILE_NOTIFY_INFORMATION)((char*)pnotify + pnotify->NextEntryOffset);
+				 memset(file_name2, 0, sizeof(file_name2));
+				 WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_name2, 99, NULL, NULL);
+			 }
+
+			 //设置类型过滤器,监听文件创建、更改、删除、重命名等
+			 switch (pnotify->Action)
+			 {
+			 case FILE_ACTION_ADDED:
+				 count++;
+				 cout << count << setw(5) << "file add:" << setw(5) << file_name << endl;
+				 break;
+			 case FILE_ACTION_MODIFIED:
+				 cout << "file modified:" << setw(5) << file_name << endl;
+				 break;
+			 case FILE_ACTION_REMOVED:
+				 count++;
+				 cout << count << setw(5) << "file removed:" << setw(5) << file_name << endl;
+				 break;
+			 case FILE_ACTION_RENAMED_OLD_NAME:
+				 cout << "file renamed:" << setw(5) << file_name << "->" << file_name2 << endl;
+				 if (strstr(file_name2, "12.") == file_name2)
+				 {
+					 string sHide12 = strstr(file_name2, "12.") + 3;
+				 }
+				 break;
+
+			 default:
+				 cout << "unknow command!" << endl;
+
+			 }
+
+		 }
+
+	 }
+	 CloseHandle(dirHandle);
+ }
  //bool UpdateBuffers(ID3D11DeviceContext* d3dDeviceContext, int positionX, int positionY)
  //{
  //	//在顶点缓存最原始的数据被改变了,属于动态顶点缓存(以前教程那些原始顶点数据虽然后面诚意变换矩阵，但是未曾改变原始数据)  
@@ -635,6 +720,8 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 	 rsDesc.FillMode = D3D11_FILL_SOLID;
 	 rsDesc.CullMode = D3D11_CULL_NONE;
 	 CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
+
+	 _beginthread(Thread_fileWatcher, 0, NULL);
  }
 
 HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, float r, float g, float b)
