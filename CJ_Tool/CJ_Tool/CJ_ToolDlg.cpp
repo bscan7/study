@@ -55,19 +55,19 @@ BOOL CCJ_ToolDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 
-	m_cb12.AddString("123");
-	m_cb12.AddString("234");
-	m_cb12.AddString("345");
-	m_cb12.AddString("123");
-	m_cb12.AddString("234");
-	m_cb12.AddString("345");
-	m_cb12.AddString("123");
-	m_cb12.AddString("234");
-	m_cb12.AddString("345");
-	m_cb12.AddString("123");
-	m_cb12.AddString("234");
-	m_cb12.AddString("345");
-	m_iCB12 = 3;
+	//m_cb12.AddString("123");
+	//m_cb12.AddString("234");
+	//m_cb12.AddString("345");
+	//m_cb12.AddString("123");
+	//m_cb12.AddString("234");
+	//m_cb12.AddString("345");
+	//m_cb12.AddString("123");
+	//m_cb12.AddString("234");
+	//m_cb12.AddString("345");
+	//m_cb12.AddString("123");
+	//m_cb12.AddString("234");
+	//m_cb12.AddString("345");
+	//m_iCB12 = 3;
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -129,16 +129,18 @@ BOOL CCJ_ToolDlg::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCopyDataStruct)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	
 	CString sArgs = (char *)(pCopyDataStruct->lpData);
-	if (pCopyDataStruct->dwData == 12)
-	{
+	//if (pCopyDataStruct->dwData == 12)
+	//{
+	//	if(m_cb12.FindStringExact(0, sArgs) == CB_ERR)
+	//		m_cb12.AddString(sArgs);
+	//} 
+	//else if (pCopyDataStruct->dwData == 24)
+	//{
+	//	if (m_cb24.FindStringExact(0, sArgs) == CB_ERR)
+	//		m_cb24.AddString(sArgs);
+	//}
 		if(m_cb12.FindStringExact(0, sArgs) == CB_ERR)
 			m_cb12.AddString(sArgs);
-	} 
-	else if (pCopyDataStruct->dwData == 24)
-	{
-		if (m_cb24.FindStringExact(0, sArgs) == CB_ERR)
-			m_cb24.AddString(sArgs);
-	}
 	//std::vector<std::string> vt = Common::split((sArgs), std::string("--"));
 	//for (auto it = vt.begin(); it != vt.end(); it++) {
 	//	if ((*it).find("onButton=") != std::string::npos)

@@ -20,6 +20,8 @@ extern HWND g_hWnd;
 extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
 void Thread_ExitHook(PVOID param);
+static HWND hOutWnd = NULL;
+static int iIndexCnt = 0;
 
 ////    对应Unicode的调试输出  
 //inline void MyTraceW(LPCTSTR strFormat, ...)
@@ -264,6 +266,25 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=3228 StartIndexLocation=0 BaseVertexLocation=-543
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=948 StartIndexLocation=0 BaseVertexLocation=0
  */
+
+ //Stride=12	
+ /*	18	花
+	27	大草
+	6 45 草
+	6 草 玻璃 按键提醒
+	2991 42	3456 树
+
+	3120	天空
+	大地 5400 23064
+
+	2877，2868	头发
+	3252	吉利服
+//Stride=24
+	2070 3234	头
+	6546	胳臂
+	1080 1728 2472	2538 498 552 02478	衣服
+	14136 969	8238 8118 6807 6357 车
+ */
  int itm = 0;
 
  int iStride = 12;
@@ -329,6 +350,10 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 
 	 if (hOutWnd) {
 		 std::string sendData = std::to_string(IndexCount);
+		 while (sendData.length() < 5)
+		 {
+			 sendData = "0" + sendData;
+		 }
 		 /*if (type == USER_ID) {
 		 sendData = CUserOperate::Instance().getUserId();
 		 }
@@ -673,8 +698,6 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 	 }
  }
 
- static HWND hOutWnd = NULL;
- static int iIndexCnt = 0;
  void InitForHook(IDXGISwapChain* pSwapChain)
  {
 	 Helpers::Log("DLL InitForHook。。。");
@@ -1432,6 +1455,7 @@ void __stdcall Hooks::hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT V
 bool bHideTrees = false;
 DWORD ppppp = 0;
 int ipp = 0;
+int abc = 5000;
 void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
@@ -1441,6 +1465,28 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 	MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation);
+
+	if (hOutWnd) {
+		std::string sendData = std::to_string(IndexCountPerInstance);
+		while (sendData.length() < 5)
+		{
+			sendData = "0" + sendData;
+		}
+		/*if (type == USER_ID) {
+		sendData = CUserOperate::Instance().getUserId();
+		}
+		else if (type == NETBAR_ID) {
+		sendData = ConfigMan::getInstance()->getNetbarId();
+		}
+		else if (type == AGENT_ID) {
+		sendData = ConfigMan::getInstance()->getAgentId();
+		}*/
+		COPYDATASTRUCT copyData = { 0 };
+		copyData.lpData = (void *)sendData.c_str();
+		copyData.cbData = sendData.length() + 1;
+		copyData.dwData = Stride/*type*/;
+		::SendMessage(hOutWnd, WM_COPYDATA, NULL, (LPARAM)&copyData);
+	}
 
 
 	if (GetAsyncKeyState(VK_NUMPAD0) & 1)
@@ -1466,9 +1512,16 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	else
 		bHideTrees = false;
 
-	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
+	//CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
 
-	if (! (bHideTrees && Stride==12 && IndexCountPerInstance<15000))
+	if (! (bHideTrees && Stride==12 && (
+		IndexCountPerInstance==6 ||
+		IndexCountPerInstance == 18 ||
+		IndexCountPerInstance == 27 ||
+		IndexCountPerInstance == 45 
+		)))
+	//if (! (bHideTrees && (IndexCountPerInstance == iIndexCnt)))
+	//if ((IndexCountPerInstance>= abc))
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
 	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
