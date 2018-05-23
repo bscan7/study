@@ -82,7 +82,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)$(Configuration)</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
-    <IncludePath>N:\Detours Pro v3.0.316\include\;$(IncludePath)</IncludePath>
+    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;$(IncludePath)</IncludePath>
     <LibraryPath>O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\;N:\Detours Pro v3.0.316\lib.X86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
