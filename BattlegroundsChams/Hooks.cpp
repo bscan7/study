@@ -267,24 +267,6 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=948 StartIndexLocation=0 BaseVertexLocation=0
  */
 
- //Stride=12	
- /*	18	花
-	27	大草
-	6 45 草
-	6 草 玻璃 按键提醒
-	2991 42	3456 树
-
-	3120	天空
-	大地 5400 23064
-
-	2877，2868	头发
-	3252	吉利服
-//Stride=24
-	2070 3234	头
-	6546	胳臂
-	1080 1728 2472	2538 498 552 02478	衣服
-	14136 969	8238 8118 6807 6357 车
- */
  int itm = 0;
 
  int iStride = 12;
@@ -431,44 +413,65 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 		 }
 	 }
 
-	 //if (
-		// (
-		// ((Stride == 24) /*|| (Stride == 12)*/)
-		//	 && bRed
-		//	 //&& bUp
+	 if (bRed && 
+		 //(
+		 //(Stride == 24)
+			// && bRed
+			// //&& bUp
 
-		//	 && (IndexCount > 200)
-		//	 && (IndexCount != 69)
-		//	 && (IndexCount != 96)
-		//	 && (IndexCount != 192)
-		//	 && (IndexCount != 876)
+			// && (IndexCount > 200)
+			// && (IndexCount != 69)
+			// && (IndexCount != 96)
+			// && (IndexCount != 192)
+			// && (IndexCount != 876)
 
-		//	 && (IndexCount != 1128)
-		//	 && (IndexCount != 1728)
-		//	 && (IndexCount != 1842)
-		//	 && (IndexCount != 1932)
-		//	 && (IndexCount != 2556)
-		//	 && (IndexCount != 3228)
-		//	 && (IndexCount != 3234)
-		//	 && (IndexCount != 5124)
-		//	 )
-		// || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
-		// || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
-		// || (Stride == 12 && IndexCount == 816) // ？盔 远处
-		//										//|| (Stride == 12 && IndexCount == 192) // ？盔 远处
-		//										//|| (Stride == 12 && IndexCount == 156) // ？盔 远处
-		//										//|| (Stride == 12 && IndexCount == 180) // ？盔 远处
-		//										//|| (Stride == 12 && IndexCount == 276) // ？盔 远处
-		//										//|| (Stride == 12 && IndexCount == 294) // ？盔 远处
-		//										//(
-		//										////(Stride == 12 && IndexCount > 3800) ||
-		//										//	(Stride == 12 && IndexCount == 2838) ||// 胳臂
-		//										//	(Stride == 12 && IndexCount == 2877) ||// 头发
-		//										//	(Stride == 12 && IndexCount == 3132) ||// 上衣
-		//										//	(Stride == 12 && IndexCount == 14136) // 汽车
-		//										//	)
-		// )
-	 if(iIndexCnt == IndexCount)
+			// && (IndexCount != 1128)
+			// && (IndexCount != 1728)
+			// && (IndexCount != 1842)
+			// && (IndexCount != 1932)
+			// && (IndexCount != 2556)
+			// && (IndexCount != 3228)
+			// && (IndexCount != 3234)
+			// && (IndexCount != 5124)
+			// )
+		(
+		 (Stride == 24 ) // ...
+		 || (Stride == 24 && IndexCount == 2070) // 头
+		 || (Stride == 24 && IndexCount == 3234) // 头
+		 || (Stride == 24 && IndexCount == 6546) // 胳臂
+		 || (Stride == 24 && IndexCount == 1080) // 衣服
+		 || (Stride == 24 && IndexCount == 1728) // 衣服
+		 || (Stride == 24 && IndexCount == 2472) // 衣服
+		 || (Stride == 24 && IndexCount == 2538) // 衣服
+		 || (Stride == 24 && IndexCount == 498) // 衣服
+		 || (Stride == 24 && IndexCount == 552) // 衣服
+		 || (Stride == 24 && IndexCount == 2478) // 衣服
+		 || (Stride == 24 && IndexCount == 969) // 车
+		 || (Stride == 24 && IndexCount == 8238) // 车
+		 || (Stride == 24 && IndexCount == 8118) // 车
+		 || (Stride == 24 && IndexCount == 6807) // 车
+		 || (Stride == 24 && IndexCount == 6357) // 车
+
+		 || (Stride == 12 && IndexCount == 2877) // 头发
+		 || (Stride == 12 && IndexCount == 2868) // 头发
+		 || (Stride == 12 && IndexCount == 3252) // 吉利服
+		 || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
+		 || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
+		 || (Stride == 12 && IndexCount == 816) // ？盔 远处
+		)									//|| (Stride == 12 && IndexCount == 192) // ？盔 远处
+												//|| (Stride == 12 && IndexCount == 156) // ？盔 远处
+												//|| (Stride == 12 && IndexCount == 180) // ？盔 远处
+												//|| (Stride == 12 && IndexCount == 276) // ？盔 远处
+												//|| (Stride == 12 && IndexCount == 294) // ？盔 远处
+												//(
+												////(Stride == 12 && IndexCount > 3800) ||
+												//	(Stride == 12 && IndexCount == 2838) ||// 胳臂
+												//	(Stride == 12 && IndexCount == 2877) ||// 头发
+												//	(Stride == 12 && IndexCount == 3132) ||// 上衣
+												//	(Stride == 12 && IndexCount == 14136) // 汽车
+												//	)
+		 )
+	 //if(iIndexCnt == IndexCount)
 	 {
 		 //if (
 		 //	IndexCount == lst24[iPos]
@@ -1512,7 +1515,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	else
 		bHideTrees = false;
 
-	//CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
+	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
 
 	if (! (bHideTrees && Stride==12 && (
 		IndexCountPerInstance==6 ||
