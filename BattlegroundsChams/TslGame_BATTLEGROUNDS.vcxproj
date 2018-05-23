@@ -169,6 +169,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="..\0_rec.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
