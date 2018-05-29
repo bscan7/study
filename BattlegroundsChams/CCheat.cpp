@@ -37,10 +37,23 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		{
 			hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
 		}
-		MoveToEx(hScrDC, 0, lpRect.bottom / 2, NULL);
-		LineTo(hScrDC, lpRect.right, lpRect.bottom / 2);
-		MoveToEx(hScrDC, lpRect.right / 2, 0,  NULL);
-		LineTo(hScrDC, lpRect.right / 2, lpRect.bottom);
+		//HDC hdc; ;
+		PAINTSTRUCT ps;
+		HPEN hPen;
+		HPEN hPenOld;
+		//hdc = BeginPaint(hWnd, &ps);
+		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 255));
+		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
+
+		//EndPaint(hWnd, &ps);
+
+		MoveToEx(hScrDC, lpRect.left, (lpRect.bottom - lpRect.top)/ 2 + lpRect.top, NULL);
+		LineTo(hScrDC, lpRect.right, (lpRect.bottom - lpRect.top) / 2 + lpRect.top);
+		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, lpRect.top,  NULL);
+		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, lpRect.bottom);
+
+		SelectObject(hScrDC, hPenOld);
+		DeleteObject(hPen);
 	}
 }
 

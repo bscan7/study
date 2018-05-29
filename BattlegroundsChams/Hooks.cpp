@@ -21,7 +21,8 @@ extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
 void Thread_ExitHook(PVOID param);
 static HWND hOutWnd = NULL;
-static int iIndexCnt = 0;
+//static int iIndexCnt = 0;
+std::list<std::string> sHideList;
 
 ////    对应Unicode的调试输出  
 //inline void MyTraceW(LPCTSTR strFormat, ...)
@@ -336,6 +337,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 		 {
 			 sendData = "0" + sendData;
 		 }
+		 sendData = std::to_string(Stride) + "_" + sendData;
 		 /*if (type == USER_ID) {
 		 sendData = CUserOperate::Instance().getUserId();
 		 }
@@ -435,7 +437,22 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 			// && (IndexCount != 5124)
 			// )
 		(
-		 (Stride == 24 ) // ...
+		 ((Stride == 24 ) // ...
+						   && (IndexCount > 200)
+						   && (IndexCount != 69)
+						   && (IndexCount != 96)
+						   && (IndexCount != 192)
+						   && (IndexCount != 876)
+
+						   && (IndexCount != 1128)
+						   && (IndexCount != 1728)
+						   && (IndexCount != 1842)
+						   && (IndexCount != 1932)
+						   && (IndexCount != 2556)
+						   && (IndexCount != 3228)
+						   && (IndexCount != 3234)
+						   && (IndexCount != 5124)
+			 )
 		 || (Stride == 24 && IndexCount == 2070) // 头
 		 || (Stride == 24 && IndexCount == 3234) // 头
 		 || (Stride == 24 && IndexCount == 6546) // 胳臂
@@ -451,6 +468,17 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 		 || (Stride == 24 && IndexCount == 8118) // 车
 		 || (Stride == 24 && IndexCount == 6807) // 车
 		 || (Stride == 24 && IndexCount == 6357) // 车
+
+		 || (Stride == 12 && IndexCount == 1002) // 
+		 || (Stride == 12 && IndexCount == 1008) // 
+		 || (Stride == 12 && IndexCount == 1344) // 
+		 || (Stride == 12 && IndexCount == 1362) // 
+		 || (Stride == 12 && IndexCount == 1386) // 
+		 || (Stride == 12 && IndexCount == 1512) // 
+
+		 || (Stride == 12 && IndexCount == 627) // 
+		 || (Stride == 12 && IndexCount == 672) // 
+
 
 		 || (Stride == 12 && IndexCount == 2877) // 头发
 		 || (Stride == 12 && IndexCount == 2868) // 头发
@@ -773,7 +801,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 	 rsDesc.CullMode = D3D11_CULL_NONE;
 	 CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
 
-	 _beginthread(Thread_fileWatcher, 0, NULL);
+	 //_beginthread(Thread_fileWatcher, 0, NULL);
  }
 
 HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, float r, float g, float b)
@@ -1060,11 +1088,34 @@ void AutoShootIfCenter(PVOID param)
 }
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
+	HWND hOutWnd000 = NULL;
+	hOutWnd000 = ::FindWindowExA(NULL, NULL, "#32770", "懵圈宝宝 哈哈哈");
+	if (hOutWnd000)
+	{
+		hOutWnd = hOutWnd000;
+	}
+
 	char szWndTitle[256] = { 0 };
 	if (hOutWnd)
 	{
 		GetWindowTextA(hOutWnd, szWndTitle, 256);
-		iIndexCnt = atoi(szWndTitle);
+		//iIndexCnt = atoi(szWndTitle);
+
+		//std::list::iterator iter;
+		list<string>::iterator iter;
+		iter = std::find(sHideList.begin(), sHideList.end(), szWndTitle);
+
+		if (iter != sHideList.end())
+		{
+			//lst中存在 szWndTitle
+			sHideList.erase(iter);
+		}
+		else
+		{
+			//没找到
+			sHideList.push_back(szWndTitle);
+		}
+
 	}
 
 	//Helpers::LogAddress("\r\n hkD3D11Present++++++++++++++++++++*===");
@@ -1142,134 +1193,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	{
 		InitForHook(pSwapChain);
 
-		aaa.push_back(12);
-		bbb.push_back(702);
-		aaa.push_back(12);
-		bbb.push_back(2826);
-		aaa.push_back(12);
-		bbb.push_back(285);
-		aaa.push_back(12);
-		bbb.push_back(2001);
-		aaa.push_back(12);
-		bbb.push_back(1926);
-		aaa.push_back(12);
-		bbb.push_back(2022);
-		aaa.push_back(12);
-		bbb.push_back(816);
-		aaa.push_back(12);
-		bbb.push_back(372);
-		aaa.push_back(12);
-		bbb.push_back(348);
-		aaa.push_back(12);
-		bbb.push_back(474);
-		aaa.push_back(12);
-		bbb.push_back(3306);
-		aaa.push_back(12);
-		bbb.push_back(4551);
-		aaa.push_back(12);
-		bbb.push_back(1242);
-		aaa.push_back(12);
-		bbb.push_back(1521);
-		aaa.push_back(12);
-		bbb.push_back(3510);
-		aaa.push_back(12);
-		bbb.push_back(3270);
-		aaa.push_back(12);
-		bbb.push_back(2751);
-		aaa.push_back(12);
-		bbb.push_back(2250);
-		aaa.push_back(12);
-		bbb.push_back(174);
-		aaa.push_back(12);
-		bbb.push_back(246);
-		aaa.push_back(12);
-		bbb.push_back(654);
-		aaa.push_back(12);
-		bbb.push_back(192);
-		aaa.push_back(12);
-		bbb.push_back(1377);
-		aaa.push_back(12);
-		bbb.push_back(318);
-		aaa.push_back(12);
-		bbb.push_back(57);
-		aaa.push_back(12);
-		bbb.push_back(36);
-		aaa.push_back(12);
-		bbb.push_back(33);
-		aaa.push_back(12);
-		bbb.push_back(42);
-		aaa.push_back(12);
-		bbb.push_back(1176);
-		aaa.push_back(12);
-		bbb.push_back(2160);
-		aaa.push_back(12);
-		bbb.push_back(95256);
-		aaa.push_back(12);
-		bbb.push_back(23814);
-		aaa.push_back(12);
-		bbb.push_back(5766);
-		aaa.push_back(12);
-		bbb.push_back(1350);
-		aaa.push_back(12);
-		bbb.push_back(294);
-		aaa.push_back(12);
-		bbb.push_back(60);
-		aaa.push_back(12);
-		bbb.push_back(1200);
-		aaa.push_back(12);
-		bbb.push_back(600);
-		aaa.push_back(12);
-		bbb.push_back(13593);
-		aaa.push_back(12);
-		bbb.push_back(6);
-		aaa.push_back(16);
-		bbb.push_back(6);
-		aaa.push_back(16);
-		bbb.push_back(108);
-		aaa.push_back(16);
-		bbb.push_back(54);
-		aaa.push_back(16);
-		bbb.push_back(12);
-		aaa.push_back(16);
-		bbb.push_back(18);
-		aaa.push_back(16);
-		bbb.push_back(30);
-		aaa.push_back(16);
-		bbb.push_back(156);
-		aaa.push_back(16);
-		bbb.push_back(200);
-		aaa.push_back(16);
-		bbb.push_back(66);
-		aaa.push_back(24);
-		bbb.push_back(5124);
-		aaa.push_back(24);
-		bbb.push_back(1842);
-		aaa.push_back(24);
-		bbb.push_back(3234);
-		aaa.push_back(24);
-		bbb.push_back(1128);
-		aaa.push_back(24);
-		bbb.push_back(1932);
-		aaa.push_back(24);
-		bbb.push_back(2556);
-		aaa.push_back(24);
-		bbb.push_back(3228);
-		aaa.push_back(32);
-		bbb.push_back(52560);
-		aaa.push_back(40);
-		bbb.push_back(12);
-		aaa.push_back(40);
-		bbb.push_back(6);
-		aaa.push_back(40);
-		bbb.push_back(18);
-		aaa.push_back(40);
-		bbb.push_back(24);
-		aaa.push_back(8);
-		bbb.push_back(6);
-
 		Helpers::Log("D3D11Present initialised");
-
-
 		bOnce = true;
 
 	}
@@ -1291,7 +1215,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psBlue)
 		GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psTmp)
-		GenerateShader(CCheat::pDevice, &psTmp, 0.0f, 0.3f, 0.3f);
+		GenerateShader(CCheat::pDevice, &psTmp, 0.45f, 0.3f, 0.1f);
 
 	if (!psd)
 		GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
@@ -1456,9 +1380,12 @@ void __stdcall Hooks::hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT V
 
 //==========================================================================================================================
 bool bHideTrees = false;
+bool bHideGrass = false;
 DWORD ppppp = 0;
 int ipp = 0;
-int abc = 5000;
+int gStride = 12;
+int iMin = 601;
+int iMax = 2990;
 void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
@@ -1475,6 +1402,8 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		{
 			sendData = "0" + sendData;
 		}
+		sendData = std::to_string(Stride) + "_" + sendData;
+
 		/*if (type == USER_ID) {
 		sendData = CUserOperate::Instance().getUserId();
 		}
@@ -1494,7 +1423,11 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 
 	if (GetAsyncKeyState(VK_NUMPAD0) & 1)
 	{
-		ipp = ipp++ % 3;
+		ipp = ipp++ % 4;
+	}
+	if (GetAsyncKeyState(VK_NUMPAD1) & 1)
+	{
+		sHideList.clear();
 	}
 	//	Log("DrawIndexedInstanced called");
 
@@ -1503,7 +1436,8 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	if (ipp == 1)
 	{
 		bHideTrees = true;
-	} 
+		bHideGrass = false;
+	}
 	else if (ipp == 2)
 	{
 		if (ppppp != timeGetTime() / INTVL)
@@ -1512,20 +1446,85 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 			ppppp = timeGetTime() / INTVL;
 		}
 	}
-	else
+	else if (ipp == 3)
+	{
+		bHideGrass = !bHideGrass;
+		bHideGrass = true;
 		bHideTrees = false;
+	}
+	else
+	{
+		bHideGrass = false;
+		bHideTrees = false;
+	}
 
 	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
 
-	if (! (bHideTrees && Stride==12 && (
-		IndexCountPerInstance==6 ||
+	std::string szCurIdx = std::to_string(IndexCountPerInstance);
+	while (szCurIdx.length() < 5)
+	{
+		szCurIdx = "0" + szCurIdx;
+	}
+	szCurIdx = std::to_string(Stride) + "_" + szCurIdx;
+
+	list<string>::iterator iter;
+	iter = std::find(sHideList.begin(), sHideList.end(), szCurIdx);
+
+	bool bInList = false;
+	if (iter != sHideList.end())
+	{
+		//lst中存在 
+		bInList = true;
+	}
+	else
+	{
+		//没找到
+		bInList = false;
+	}
+
+	/*if (!(bHideTrees && (Stride == 12) && (
+		IndexCountPerInstance < abc ||
+
+		//IndexCountPerInstance == iIndexCnt ||
+		IndexCountPerInstance == 6 ||
 		IndexCountPerInstance == 18 ||
 		IndexCountPerInstance == 27 ||
-		IndexCountPerInstance == 45 
-		)))
-	//if (! (bHideTrees && (IndexCountPerInstance == iIndexCnt)))
-	//if ((IndexCountPerInstance>= abc))
-		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		IndexCountPerInstance == 45 ||
+		IndexCountPerInstance == 2991 || //2991 42	3456
+		IndexCountPerInstance == 600 || //2991 42	3456
+		IndexCountPerInstance == 42 || //2991 42	3456
+		IndexCountPerInstance == 3456  //2991 42	3456
+		)))*/
+		//if (! (bHideTrees && (Stride == 12 ) && (IndexCountPerInstance <abc)))
+		//if ((IndexCountPerInstance>= abc))
+	{
+		//if (!bInList)
+		if (((Stride == gStride) && bHideTrees 
+			 /*&&(
+									(IndexCountPerInstance <= iMin) ||
+									(IndexCountPerInstance >= iMax))*/
+			))
+		{
+		}
+		else
+		{
+			if (bHideGrass && 
+				(Stride == 12) &&
+				(
+				(IndexCountPerInstance == 6) ||
+					(IndexCountPerInstance == 15) ||
+					(IndexCountPerInstance == 18) ||
+					(IndexCountPerInstance == 21) ||
+					(IndexCountPerInstance == 27) ||
+					(IndexCountPerInstance == 45)
+					)
+				)
+			{
+			}
+			else
+				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		}
+	}
 
 	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
 	return;
