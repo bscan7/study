@@ -264,10 +264,15 @@ void CFangDaDlg::OnPaint()
 			m_pBufferDC->SelectStockObject(NULL_BRUSH);
 			rc.right -= 3;
 			rc.bottom -= 3;
-			m_pBufferDC->Ellipse(rc);
+			m_pBufferDC->Ellipse(rc);//ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²
 			m_pBufferDC->SelectObject(oldPen);
 			
-			dc.BitBlt(0, 0, rc.Width(), rc.Height(), m_pBufferDC, 0, 0, SRCCOPY);	
+
+			m_pBufferDC->MoveTo(rc.right / 2 - 20, rc.bottom / 2);
+			m_pBufferDC->LineTo(rc.right / 2 + 20, rc.bottom / 2);
+			m_pBufferDC->MoveTo(rc.right / 2, rc.bottom / 2 - 20);
+			m_pBufferDC->LineTo(rc.right / 2, rc.bottom / 2 + 20);
+			dc.BitBlt(0, 0, rc.Width(), rc.Height(), m_pBufferDC, 0, 0, SRCCOPY);
 			::ReleaseDC(::GetDesktopWindow(), hDeskDC);
 
 		}else
@@ -307,9 +312,17 @@ void CFangDaDlg::OnPaint()
 			m_pBufferDC->Ellipse(rc);
 			m_pBufferDC->SelectObject(oldPen);
 			
+			m_pBufferDC->MoveTo(rc.right/2 - 20, rc.bottom / 2);
+			m_pBufferDC->LineTo(rc.right / 2 + 20, rc.bottom / 2);
+			m_pBufferDC->MoveTo(rc.right/2, rc.bottom / 2 - 20);
+			m_pBufferDC->LineTo(rc.right / 2, rc.bottom / 2 + 20);
 			dc.BitBlt(0, 0, rc.Width(), rc.Height(), m_pBufferDC, 0, 0, SRCCOPY);	
+
+
 			::ReleaseDC(::GetDesktopWindow(), hDeskDC);
 		}
+
+
 		CDialog::OnPaint();
 	}
 }
