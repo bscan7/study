@@ -3,16 +3,45 @@
 #include "Helpers.h"
 #include "Hooks.h"
 #include <process.h>
+#include <atltypes.h>
 //#include "mainxxx.h"
 
 ID3D11Device *CCheat::pDevice = NULL;
 ID3D11DeviceContext *CCheat::pContext = NULL;
 IDXGISwapChain* CCheat::pSwapChain = NULL; 
+HWND g_hWnd = NULL;
+RECT g_lpRect;
 
 HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
 bool bStoped = false;
 
 void AutoShootIfCenter(PVOID param);
+	HDC       hScrDC = NULL; ;
+void Thread_DrawCrossOnCenter(PVOID param)
+{
+	RECT lpRect;
+	while (1)
+	{
+		Sleep(50);
+		::GetWindowRect(g_hWnd, &lpRect);
+		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
+		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
+		point.x = nFullWidth / 2;
+		point.y = nFullHeight / 2;
+		*/
+
+		//HDC	hClientDC = ::GetDC(g_hWnd);
+
+		//为屏幕创建设备描述表
+		if (!hScrDC)
+		{
+			hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
+		}
+		MoveToEx(hScrDC, 0, lpRect.bottom / 2, NULL);
+		LineTo(hScrDC, lpRect.right, lpRect.bottom / 2);
+	}
+}
+
 void Thread_AutoShootIfCenter(PVOID param)
 {
 	while (!bStoped)
@@ -81,8 +110,6 @@ HWND _EnumChildWindows(HWND hParent, char* pCap)
 }
 
 int HotKeyId;
-HWND g_hWnd = NULL;
-RECT g_lpRect;
 
 void InitForHook(IDXGISwapChain* pSwapChain);
 
@@ -185,6 +212,7 @@ void CCheat::Initialise()
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
 	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
+	_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC
 	DXGI_SWAP_CHAIN_DESC scd;
