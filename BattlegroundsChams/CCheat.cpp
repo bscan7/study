@@ -39,6 +39,8 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		}
 		MoveToEx(hScrDC, 0, lpRect.bottom / 2, NULL);
 		LineTo(hScrDC, lpRect.right, lpRect.bottom / 2);
+		MoveToEx(hScrDC, lpRect.right / 2, 0,  NULL);
+		LineTo(hScrDC, lpRect.right / 2, lpRect.bottom);
 	}
 }
 
