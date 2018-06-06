@@ -21,6 +21,7 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
+	CString m_strCBText;
 
 // 实现
 protected:
@@ -40,4 +41,5 @@ public:
 	CComboBox m_cb24;
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnCbnSelchangeCombo2();
+	afx_msg void OnBnClickedButton1();
 };

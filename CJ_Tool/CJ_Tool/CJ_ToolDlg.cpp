@@ -39,6 +39,17 @@ BEGIN_MESSAGE_MAP(CCJ_ToolDlg, CDialogEx)
 	ON_WM_COPYDATA()
 	ON_BN_CLICKED(IDOK, &CCJ_ToolDlg::OnBnClickedOk)
 	ON_CBN_SELCHANGE(IDC_COMBO2, &CCJ_ToolDlg::OnCbnSelchangeCombo2)
+	ON_BN_CLICKED(IDC_BUTTON1, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON3, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON4, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON5, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON6, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON7, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON8, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON9, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON10, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON11, &CCJ_ToolDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -114,13 +125,12 @@ void CCJ_ToolDlg::OnCbnSelchangeCombo1()
 	// TODO: 在此添加控件通知处理程序代码
 	m_iCB12 = m_cb12.GetCurSel();
 
-	CString strCBText;
 
-	m_cb12.GetLBText(m_iCB12, strCBText);
-	TRACE("\r\nm_iCB12 = %d Text='%s'\t", m_iCB12, strCBText);
+	m_cb12.GetLBText(m_iCB12, m_strCBText);
+	TRACE("\r\nm_iCB12 = %d Text='%s'\t", m_iCB12, m_strCBText);
 	m_iCB12 = m_cb12.GetCurSel();
 
-	this->SetWindowTextA(strCBText);
+	this->SetWindowTextA(m_strCBText);
 }
 
 
@@ -211,3 +221,21 @@ void CCJ_ToolDlg::OnCbnSelchangeCombo2()
 
 	this->SetWindowTextA(strCBText);
 }
+
+
+void CCJ_ToolDlg::OnBnClickedButton1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//m_strCBText = "12_0099";
+	CString xxx;
+	int id = GetFocus()->GetDlgCtrlID();
+	//GetDlgItem(id)->SetWindowText("仿真恢复");
+	GetDlgItem(id)->GetWindowText(xxx);
+	if (m_strCBText.GetLength() >0)
+	{
+		std::string sCMD = "cmd /C ECHO " + m_strCBText + " >> 0000" + xxx + ".txt";
+		WinExec(sCMD.c_str(), SW_HIDE);
+	}
+	GetDlgItem(IDC_COMBO1)->SetFocus();
+}
+

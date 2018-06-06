@@ -415,7 +415,7 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 		 }
 	 }
 
-	 if (bRed && 
+	 if (/*bRed && */
 		 //(
 		 //(Stride == 24)
 			// && bRed
@@ -439,7 +439,9 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 		(
 		 ((Stride == 24 ) // ...
 						   && (IndexCount > 200)
+						   //&& (IndexCount != 54) //6X
 						   && (IndexCount != 69)
+						   //&& (IndexCount != 75) //3X
 						   && (IndexCount != 96)
 						   && (IndexCount != 192)
 						   && (IndexCount != 876)
@@ -549,7 +551,10 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 					 pContext->GetDevice(&ppDevice);
 					 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 					 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-					 pContext->PSSetShader(psTmp, NULL, NULL);
+					 if ( (bRed))
+					 {
+						 pContext->PSSetShader(psTmp, NULL, NULL);
+					 }
 				 }
 				 //// Set the depth stencil state.
 				 //pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
@@ -579,7 +584,10 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 				 //Hooks::oDrawIndexedInstanced(pContext, IndexCount, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 			 }
 			 else
-				 pContext->PSSetShader(psRed, NULL, NULL);
+				 if ( (bRed))
+				 {
+					pContext->PSSetShader(psRed, NULL, NULL);
+				 }
 			 //{
 			 //	{
 			 //		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -1521,7 +1529,9 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 				)
 			{
 			}
-			else
+			else if ((!bInList) && !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+				&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+				)
 				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		}
 	}
