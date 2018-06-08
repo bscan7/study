@@ -136,7 +136,7 @@ void CCheat::Initialise()
 	HRESULT xxx;
 	AllocConsole();
 	freopen("CON", "w", stdout);
-	SetConsoleTitle(L"SleekHook");
+	SetConsoleTitle(L"Bscan_LookLook");
 
 	Helpers::Log("\r\nCheat Initialising");
 
@@ -226,7 +226,7 @@ void CCheat::Initialise()
 	}
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
-	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
+	//_beginthread(Thread_AutoShootIfCenter, 0, NULL);
 	_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC
@@ -330,8 +330,8 @@ void CCheat::Initialise()
 
 	//InitForHook(CCheat::pSwapChain);
 	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
-
 }
+
 void CCheat::Release()
 {
 	Helpers::Log("DLL抽离主进程。。。");
