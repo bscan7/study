@@ -11,6 +11,7 @@ ID3D11DeviceContext *CCheat::pContext = NULL;
 IDXGISwapChain* CCheat::pSwapChain = NULL; 
 HWND g_hWnd = NULL;
 RECT g_lpRect;
+bool bCrossDraw = false;
 
 HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
 bool bStoped = false;
@@ -22,7 +23,12 @@ void Thread_DrawCrossOnCenter(PVOID param)
 	RECT lpRect;
 	while (1)
 	{
-		Sleep(50);
+		Sleep(100);
+
+		if (!bCrossDraw)
+		{
+			continue;
+		}
 		::GetWindowRect(g_hWnd, &lpRect);
 		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
 		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);

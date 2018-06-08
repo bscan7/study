@@ -19,6 +19,8 @@ UINT pStencilRef = 0;
 extern HWND g_hWnd;
 extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
+extern bool bCrossDraw;
+
 void Thread_ExitHook(PVOID param);
 static HWND hOutWnd = NULL;
 //static int iIndexCnt = 0;
@@ -1144,6 +1146,11 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		//red24.push_back(lst24[iPos]);
 	}
 
+	if (GetAsyncKeyState(VK_NUMPAD3) & 1)
+	{
+		bCrossDraw = !bCrossDraw;
+	}
+
 	if (bShoot)
 	{
 		SetEvent(g_Event_Shoot);
@@ -1466,7 +1473,10 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		bHideTrees = false;
 	}
 
-	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
+	if (bCrossDraw)
+	{
+		CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
+	}
 
 	std::string szCurIdx = std::to_string(IndexCountPerInstance);
 	while (szCurIdx.length() < 5)
@@ -1531,6 +1541,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 			}
 			else if ((!bInList) && !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
 				&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+				&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
 				)
 				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		}
