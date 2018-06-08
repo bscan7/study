@@ -97,13 +97,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_USRDLL;TSLGAME_BATTLEGROUNDS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);F:\dev\Detours Pro v3.0.316\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Detours Pro v3.0.316\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>d:\tools\Visual Leak Detector\lib\Win32;%(AdditionalLibraryDirectories);C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3dx11.lib;C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\d3dcompiler.lib;F:\dev\Detours Pro v3.0.316\lib.X86\detours.lib;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3d11.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3dx11.lib;C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\d3dcompiler.lib;$(SolutionDir)..\..\Detours Pro v3.0.316\lib.X86\detours.lib;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3d11.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
