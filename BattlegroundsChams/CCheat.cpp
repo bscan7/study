@@ -11,13 +11,17 @@ ID3D11DeviceContext *CCheat::pContext = NULL;
 IDXGISwapChain* CCheat::pSwapChain = NULL; 
 HWND g_hWnd = NULL;
 RECT g_lpRect;
-bool bCrossDraw = false;
+bool bCrossDraw = true;
 
 HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
 bool bStoped = false;
 
 void AutoShootIfCenter(PVOID param);
 	HDC       hScrDC = NULL; ;
+	HDC       hMemDC = NULL; ;
+	HBITMAP DirectBitmap = NULL; ;
+	UINT * ptPixels = NULL;
+
 void Thread_DrawCrossOnCenter(PVOID param)
 {
 	RECT lpRect;
@@ -48,7 +52,7 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		HPEN hPen;
 		HPEN hPenOld;
 		//hdc = BeginPaint(hWnd, &ps);
-		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 255));
+		hPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
 		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
 
 		//EndPaint(hWnd, &ps);
@@ -60,7 +64,142 @@ void Thread_DrawCrossOnCenter(PVOID param)
 
 		SelectObject(hScrDC, hPenOld);
 		DeleteObject(hPen);
+
+		hPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
+
+		//EndPaint(hWnd, &ps);
+
+		MoveToEx(hScrDC, lpRect.left, (lpRect.bottom - lpRect.top)/ 2 + lpRect.top + 1, NULL);
+		LineTo(hScrDC, lpRect.right, (lpRect.bottom - lpRect.top) / 2 + lpRect.top + 1);
+		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, lpRect.top,  NULL);
+		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, lpRect.bottom);
+
+		SelectObject(hScrDC, hPenOld);
+		DeleteObject(hPen);
 	}
+}
+#define SHOOT_AREA  5
+int pp = 0;
+
+void AutoShootIfCenter(PVOID param)
+{
+	RECT lpRect, lpShootRect;
+	//while (1)
+	//{
+		//Sleep(100);
+
+		//if (!bCrossDraw)
+		//{
+		//	continue;
+		//}
+		::GetWindowRect(g_hWnd, &lpRect);
+		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
+		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
+		point.x = nFullWidth / 2;
+		point.y = nFullHeight / 2;
+		*/
+
+		//HDC	hClientDC = ::GetDC(g_hWnd);
+
+		//为屏幕创建设备描述表
+		if (!hScrDC)
+		{
+			hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
+		}
+		//为屏幕设备描述表创建兼容的内存设备描述表
+		if (!hMemDC)
+		{
+			hMemDC = CreateCompatibleDC(hScrDC);
+		}
+
+		int iW = lpRect.right - lpRect.left;
+		int iH = lpRect.bottom - lpRect.top;
+		int iCenterX = iW / 2 + lpRect.left;
+		int iCenterY = iH / 2 + lpRect.top;
+
+		lpShootRect.top = iCenterY - SHOOT_AREA;
+		lpShootRect.bottom = iCenterY + SHOOT_AREA;
+		lpShootRect.left = iCenterX - SHOOT_AREA;
+		lpShootRect.right = iCenterX + SHOOT_AREA;
+		// 确保选定区域不为空矩形
+		if (IsRectEmpty(&lpShootRect))
+			return /*NULL*/;
+
+		HPEN hPen;
+		HPEN hPenOld;
+		//hdc = BeginPaint(hWnd, &ps);
+		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 0));
+		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
+
+		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.top, NULL);
+		LineTo(hScrDC, lpShootRect.right, lpShootRect.top);
+		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.bottom, NULL);
+		LineTo(hScrDC, lpShootRect.right, lpShootRect.bottom);
+
+		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.top, NULL);
+		LineTo(hScrDC, lpShootRect.left, lpShootRect.bottom);
+		MoveToEx(hScrDC, lpShootRect.right, lpShootRect.top, NULL);
+		LineTo(hScrDC, lpShootRect.right, lpShootRect.bottom);
+
+		SelectObject(hScrDC, hPenOld);
+		DeleteObject(hPen);
+
+		// 初始化BITMAPINFO信息，以便使用CreateDIBSection
+		BITMAPINFO RGB32BitsBITMAPINFO;
+		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
+		RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		RGB32BitsBITMAPINFO.bmiHeader.biWidth = SHOOT_AREA * 2;
+		RGB32BitsBITMAPINFO.bmiHeader.biHeight = SHOOT_AREA * 2;
+		RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
+		RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
+
+		if (!DirectBitmap)
+		{
+			DirectBitmap = CreateDIBSection(hMemDC,
+				(BITMAPINFO *)&RGB32BitsBITMAPINFO,
+				DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
+		}
+		HBITMAP    hBitmap, hOldBitmap;
+		// 把新位图选到内存设备描述表中
+		hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
+
+		BitBlt(hMemDC, 0, 0, SHOOT_AREA * 2, SHOOT_AREA * 2,
+			hScrDC, lpShootRect.left, lpShootRect.top, SRCCOPY);
+
+		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
+		// 替换颜色  
+		for (int i = ((SHOOT_AREA * 2 * SHOOT_AREA * 2) - 1); i >= 0; i--)
+		{
+			if (!ptPixels)
+			{
+				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
+				break;
+			}
+			std::cout << ptPixels[i] << " ";
+			//ptPixels[i]; //0xff 29 27 21 红绿蓝
+			if (   (ptPixels[i] == 0xff000080)
+				|| (ptPixels[i] == 0xff800000)
+				|| (ptPixels[i] == 0xff734c19)
+				)
+			{
+				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
+				std::cout << "==============+-+-+-+- 射击射击射击 i=" << i << " idx=" << pp << std::endl;
+
+				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+				Sleep(10); 
+				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+				//bDoneOnShoot = false;
+				break;
+			}
+			//bDoneOnShoot = true;
+		}
+		std::cout << std::endl;
+		pp++;
+		hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+
+	//}
 }
 
 void Thread_AutoShootIfCenter(PVOID param)
@@ -232,7 +371,7 @@ void CCheat::Initialise()
 	}
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
-	//_beginthread(Thread_AutoShootIfCenter, 0, NULL);
+	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
 	_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC

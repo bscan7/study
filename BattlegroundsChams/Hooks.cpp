@@ -555,7 +555,24 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 					 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
 					 if ( (bRed))
 					 {
-						 pContext->PSSetShader(psTmp, NULL, NULL);
+						 if ((Stride == 24 && IndexCount == 2070) // 头
+							 || (Stride == 24 && IndexCount == 3234) // 头
+							 || (Stride == 12 && IndexCount == 2877) // 头发
+							 || (Stride == 12 && IndexCount == 2868) // 头发
+							 || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
+							 || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
+							 || (Stride == 12 && IndexCount == 816) // ？盔 远处
+							|| (Stride == 12 && IndexCount == 192) // ？盔 远处
+							|| (Stride == 12 && IndexCount == 156) // ？盔 远处
+							|| (Stride == 12 && IndexCount == 180) // ？盔 远处
+							|| (Stride == 12 && IndexCount == 276) // ？盔 远处
+							|| (Stride == 12 && IndexCount == 294) // ？盔 远处
+							)
+						 {
+							 pContext->PSSetShader(psBlue, NULL, NULL);
+						 }
+						 else
+							pContext->PSSetShader(psTmp, NULL, NULL);
 					 }
 				 }
 				 //// Set the depth stencil state.
@@ -588,7 +605,24 @@ tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 			 else
 				 if ( (bRed))
 				 {
-					pContext->PSSetShader(psRed, NULL, NULL);
+					 if ((Stride == 24 && IndexCount == 2070) // 头
+						 || (Stride == 24 && IndexCount == 3234) // 头
+						 || (Stride == 12 && IndexCount == 2877) // 头发
+						 || (Stride == 12 && IndexCount == 2868) // 头发
+						 || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
+						 || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
+						 || (Stride == 12 && IndexCount == 816) // ？盔 远处
+						 || (Stride == 12 && IndexCount == 192) // ？盔 远处
+						 || (Stride == 12 && IndexCount == 156) // ？盔 远处
+						 || (Stride == 12 && IndexCount == 180) // ？盔 远处
+						 || (Stride == 12 && IndexCount == 276) // ？盔 远处
+						 || (Stride == 12 && IndexCount == 294) // ？盔 远处
+						 )
+					 {
+						 pContext->PSSetShader(psBlue, NULL, NULL);
+					 }
+					 else
+						 pContext->PSSetShader(psRed, NULL, NULL);
 				 }
 			 //{
 			 //	{
@@ -945,10 +979,11 @@ S_OK*/
 static BOOL bDoneOnShoot = false;
 
 //HBITMAP AutoShootIfCenter(BOOL bSave = false)
-void AutoShootIfCenter(PVOID param)
+void AutoShootIfCenter000(PVOID param)
 //lpRect 代表选定区域
 {
 	//return;
+	//Helpers::Log("==============AutoShootIfCenter");
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
 	RECT lpRect;
@@ -1053,16 +1088,18 @@ void AutoShootIfCenter(PVOID param)
 		{
 			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
-			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			Sleep(10);
+			Helpers::Log("==============+-+-+-+- 射击射击射击");
+			//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+			//Sleep(10); 
 			//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			Sleep(10);
+			//Sleep(10);
+			////mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+			//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 			//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			Sleep(10);
+			//Sleep(10);
+			////mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+			//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+			//Sleep(10);
 			bDoneOnShoot = false;
 			break;
 		}
@@ -1072,7 +1109,8 @@ void AutoShootIfCenter(PVOID param)
 
 	if (bDoneOnShoot)
 	{
-			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+		//Helpers::Log("==============+-+-+-+- up up up...");
+		//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 	}
 	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
 	//得到屏幕位图的句柄
@@ -1167,18 +1205,18 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		red24.clear();
 	}
 
-	if (GetAsyncKeyState(VK_RIGHT) & 1)
-	{
-		ofstream output(".\\1111.txt", ios::binary);
-		for (int i=0;i<red24.size();i++)
-		{
-			output.write((char*)(&(red24[i])), sizeof((red24[i]))); //写入
-			output.write("\r\n", 2); //写入
-		}
-		//int i2 = 0;
-		//ifstream input("./1.txt", ios::binary);
-		//input.read((char*)(&i2), sizeof(i2)); //读取
-	}
+	//if (GetAsyncKeyState(VK_RIGHT) & 1)
+	//{
+	//	ofstream output(".\\1111.txt", ios::binary);
+	//	for (int i=0;i<red24.size();i++)
+	//	{
+	//		output.write((char*)(&(red24[i])), sizeof((red24[i]))); //写入
+	//		output.write("\r\n", 2); //写入
+	//	}
+	//	//int i2 = 0;
+	//	//ifstream input("./1.txt", ios::binary);
+	//	//input.read((char*)(&i2), sizeof(i2)); //读取
+	//}
 
 	//RECT lpRect;
 	//int iW = g_lpRect.right - g_lpRect.left;

@@ -12,7 +12,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		//DisableThreadLibraryCalls(hModule); // PERFOMANCE? 不确定的call，有可能影响到DLL的移除，暂时屏蔽。
+		DisableThreadLibraryCalls(hModule); // PERFOMANCE? 不确定的call，有可能影响到DLL的移除，暂时屏蔽。
 		CreateThread(NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(CCheat::Initialise), NULL, NULL, NULL);
 		break;
 
