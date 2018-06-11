@@ -72,7 +72,7 @@ CFangDaDlg::CFangDaDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_nFangDa = 1; // ·Å´ó±¶Êý
+	m_nFangDa = 6; // ·Å´ó±¶Êý
 	m_nSize = 400;
 	m_pTop = NULL;
 	m_pBufferDC = NULL;
@@ -250,7 +250,7 @@ void CFangDaDlg::OnPaint()
 			CDC* pDeskDC = CDC::FromHandle(hDeskDC);
 
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			AutoLockByColor(hDeskDC, rc, wRc);
+			//AutoLockByColor(hDeskDC, rc, wRc);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			//·Å´ó»æÖÆ
 			m_pBufferDC->StretchBlt(0, 0, rc.Width(), rc.Height(), m_pScreenDC, 
@@ -262,8 +262,8 @@ void CFangDaDlg::OnPaint()
 			CPen pen(PS_SOLID, 6, RGB(0,174,255));
 			CPen* oldPen = m_pBufferDC->SelectObject(&pen);
 			m_pBufferDC->SelectStockObject(NULL_BRUSH);
-			rc.right -= 3;
-			rc.bottom -= 3;
+			//rc.right -= 3;
+			//rc.bottom -= 3;
 			m_pBufferDC->Ellipse(rc);//ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²ÍÖÔ²
 			m_pBufferDC->SelectObject(oldPen);
 			
@@ -295,7 +295,7 @@ void CFangDaDlg::OnPaint()
 			CDC* pDeskDC = CDC::FromHandle(hDeskDC);
 
 			//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-			AutoLockByColor(hDeskDC, rc, wRc);
+			//AutoLockByColor(hDeskDC, rc, wRc);
 			//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			//·Å´ó»æÖÆ
 			m_pBufferDC->StretchBlt(0, 0, rc.Width(), rc.Height(), pDeskDC, 
@@ -307,15 +307,26 @@ void CFangDaDlg::OnPaint()
 			CPen pen(PS_SOLID, 6, RGB(0,174,255));
 			CPen* oldPen = m_pBufferDC->SelectObject(&pen);
 			m_pBufferDC->SelectStockObject(NULL_BRUSH);
-			rc.right -= 3;
-			rc.bottom -= 3;
+			//rc.right -= 3;
+			//rc.bottom -= 3;
 			m_pBufferDC->Ellipse(rc);
-			m_pBufferDC->SelectObject(oldPen);
-			
+
+			CPen pen1(PS_SOLID, 1, RGB(0, 0, 0));
+			m_pBufferDC->SelectObject(&pen1);
 			m_pBufferDC->MoveTo(rc.right/2 - 20, rc.bottom / 2);
 			m_pBufferDC->LineTo(rc.right / 2 + 20, rc.bottom / 2);
 			m_pBufferDC->MoveTo(rc.right/2, rc.bottom / 2 - 20);
 			m_pBufferDC->LineTo(rc.right / 2, rc.bottom / 2 + 20);
+
+			CPen pen2(PS_SOLID, 1, RGB(255, 255, 255));
+			m_pBufferDC->SelectObject(&pen2);
+			m_pBufferDC->MoveTo(rc.right/2 - 20, rc.bottom / 2 + 1 );
+			m_pBufferDC->LineTo(rc.right / 2 + 20, rc.bottom / 2 + 1);
+			m_pBufferDC->MoveTo(rc.right/2 + 1, rc.bottom / 2 - 20);
+			m_pBufferDC->LineTo(rc.right / 2 + 1, rc.bottom / 2 + 20);
+
+			m_pBufferDC->SelectObject(oldPen);
+
 			dc.BitBlt(0, 0, rc.Width(), rc.Height(), m_pBufferDC, 0, 0, SRCCOPY);	
 
 
