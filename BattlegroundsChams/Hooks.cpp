@@ -60,6 +60,7 @@ tD3D11CreateQuery Hooks::oCreateQuery = NULL;
 tD3D11Present Hooks::oPresent = NULL;
 tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
+tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
 
  tD3D11DrawInstanced Hooks::oDrawInstanced = NULL;
  tD3D11DrawIndexedInstanced Hooks::oDrawIndexedInstanced = NULL;

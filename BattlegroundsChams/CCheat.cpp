@@ -456,6 +456,8 @@ void CCheat::Initialise()
 	Hooks::oDrawIndexed = reinterpret_cast<tD3D11DrawIndexed>(pContextVT[12]/*D3D11DRAWINDEXED*/);
 	Hooks::oCreateQuery = reinterpret_cast<tD3D11CreateQuery>(pDeviceVT[24]/*D3D11CreateQuery*/);
 	Hooks::oVSSetConstantBuffers = reinterpret_cast<tD3D11VSSetConstantBuffers>(pContextVT[7]/*D3D11VSSetConstantBuffers*/);
+	Hooks::oPSSetShaderResources = reinterpret_cast<tD3D11PSSetShaderResources>(pContextVT[8]/*D3D11PSSetShaderResources*/);
+	Hooks::oPSSetSamplers = reinterpret_cast<tD3D11PSSetSamplers>(pContextVT[10]/*D3D11PSSetSamplers*/);
 
 	Hooks::oDrawIndexedInstanced = reinterpret_cast<tD3D11DrawIndexedInstanced>(pContextVT[20]/**/);
 	Hooks::oDrawInstanced = reinterpret_cast<tD3D11DrawInstanced>(pContextVT[21]/**/);
@@ -466,6 +468,8 @@ void CCheat::Initialise()
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oPresent),						Hooks::hkD3D11Present);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oCreateQuery),					Hooks::hkD3D11CreateQuery);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oVSSetConstantBuffers),			Hooks::hkD3D11VSSetConstantBuffers);
+	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetShaderResources),			Hooks::hkD3D11PSSetShaderResources);
+	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetSamplers),					Hooks::hkD3D11PSSetSamplers);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexed),					Hooks::hkD3D11DrawIndexed);
 
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstanced),					Hooks::hkD3D11DrawInstanced);
