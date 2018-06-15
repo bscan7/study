@@ -8,6 +8,8 @@ typedef void(__stdcall *tD3D11DrawIndexed)(ID3D11DeviceContext* pContext, UINT I
 typedef void(__stdcall *tD3D11CreateQuery)(ID3D11Device* pDevice, const D3D11_QUERY_DESC *pQueryDesc, ID3D11Query **ppQuery);
 typedef void(__stdcall *tD3D11EndScene)(ID3D11Device* pDevice, const D3D11_QUERY_DESC *pQueryDesc, ID3D11Query **ppQuery);
 typedef void(__stdcall *tD3D11VSSetConstantBuffers) (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers);
+typedef void(__stdcall *tD3D11PSSetShaderResources) (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews);
+typedef void(__stdcall *tD3D11PSSetSamplers) (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers);
 
 typedef void(__stdcall *tD3D11DrawInstanced) (ID3D11DeviceContext* pContext, UINT VertexCountPerInstance, UINT InstanceCount, UINT StartVertexLocation, UINT StartInstanceLocation);
 typedef void(__stdcall *tD3D11DrawIndexedInstanced) (ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);
@@ -22,6 +24,8 @@ namespace Hooks
 	extern tD3D11Present oPresent;
 	extern tD3D11DrawIndexed oDrawIndexed;
 	extern tD3D11VSSetConstantBuffers oVSSetConstantBuffers;
+	extern tD3D11PSSetShaderResources oPSSetShaderResources;
+	extern tD3D11PSSetSamplers oPSSetSamplers;
 
 	extern tD3D11DrawInstanced oDrawInstanced;
 	extern tD3D11DrawIndexedInstanced oDrawIndexedInstanced;
@@ -33,6 +37,10 @@ namespace Hooks
 	void __stdcall hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation);
 	void __stdcall hkD3D11CreateQuery(ID3D11Device* pDevice, const D3D11_QUERY_DESC *pQueryDesc, ID3D11Query **ppQuery);
 	void __stdcall hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers);
+
+	void __stdcall hkD3D11PSSetShaderResources (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews);
+	void __stdcall hkD3D11PSSetSamplers (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers);
+
 
 	void __stdcall hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT VertexCountPerInstance, UINT InstanceCount, UINT StartVertexLocation, UINT StartInstanceLocation);
 	void __stdcall hkD3D11DrawIndexedInstanced (ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);

@@ -61,6 +61,7 @@ tD3D11Present Hooks::oPresent = NULL;
 tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
+tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 
  tD3D11DrawInstanced Hooks::oDrawInstanced = NULL;
  tD3D11DrawIndexedInstanced Hooks::oDrawIndexedInstanced = NULL;
@@ -1389,6 +1390,18 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 	//MyTraceA("hkD3D11VSSetConstantBuffers**************pContext=%x StartSlot=%d NumBuffers=%d ppConstantBuffers=%x ", pContext, StartSlot, NumBuffers, ppConstantBuffers);
 
 	return Hooks::oVSSetConstantBuffers(pContext, StartSlot, NumBuffers, ppConstantBuffers);
+}
+
+void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews)
+{
+	MyTraceA("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x", pContext, StartSlot, NumViews, ppShaderResourceViews);
+	return Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, ppShaderResourceViews);
+}
+
+void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers)
+{
+	MyTraceA("hkD3D11PSSetSamplers==> pContext=%08x, StartSlot=%d, NumSamplers=%d, ppSamplers=%08x", pContext, StartSlot, NumSamplers, ppSamplers);
+	return Hooks::oPSSetSamplers(pContext, StartSlot, NumSamplers, ppSamplers);
 }
 
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
