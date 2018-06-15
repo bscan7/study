@@ -29,6 +29,7 @@ protected:
 
 	// 生成的消息映射函数
 	virtual BOOL OnInitDialog();
+	DWORD StartInject(HANDLE hProcess, LPTHREAD_START_ROUTINE function, wchar_t * data);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()

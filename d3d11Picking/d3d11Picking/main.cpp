@@ -649,7 +649,7 @@ void DetectInput(double time)
 	DIMOUSESTATE mouseCurrState;
 
 	BYTE keyboardState[256];
-
+	memset(keyboardState, 0, 256);
 	DIKeyboard->Acquire();
 	DIMouse->Acquire();
 

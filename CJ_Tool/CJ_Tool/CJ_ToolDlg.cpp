@@ -7,6 +7,7 @@
 #include "CJ_ToolDlg.h"
 #include "afxdialogex.h"
 #include <string>
+#include <tlhelp32.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -54,6 +55,26 @@ END_MESSAGE_MAP()
 
 
 // CCJ_ToolDlg 消息处理程序
+//通过进程名获取进程句柄  
+HANDLE GetProcessHandleByName(LPCSTR lpName)
+{
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (INVALID_HANDLE_VALUE == hSnapshot)
+	{
+		return NULL;
+	}
+	PROCESSENTRY32 pe = { sizeof(pe) };
+	BOOL fOk;
+	for (fOk = Process32First(hSnapshot, &pe); fOk; fOk = Process32Next(hSnapshot, &pe))
+	{
+		if (!_tcscmp(pe.szExeFile, lpName))
+		{
+			CloseHandle(hSnapshot);
+			return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe.th32ProcessID);
+		}
+	}
+	return NULL;
+}
 
 BOOL CCJ_ToolDlg::OnInitDialog()
 {
@@ -79,7 +100,56 @@ BOOL CCJ_ToolDlg::OnInitDialog()
 	//m_cb12.AddString("234");
 	//m_cb12.AddString("345");
 	//m_iCB12 = 3;
+	/*
+	HANDLE hThread;
+	char szLibPath[_MAX_PATH] = "D:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll"; //指定注入之后目标进程要加载的DLL
+
+	DWORD hLibModule;
+
+	HANDLE hProcess = NULL;
+	//hProcess = GetProcessHandleByName("HttpDebug.exe");
+	hProcess = GetProcessHandleByName("AndroidEmulator.exe");
+	DWORD ERRO = GetLastError();
+
+	if (hProcess == NULL)
+		return 0;
+
+	//HMODULE modHandle = GetModuleHandle(_T("Kernel32")); //因为kernel32 每一个windows程序进程空间中都有 所以让他调用LOADLIBRARY不成问题
+	LPVOID pFunc = LoadLibraryA;
+
+	void* pLibRemote = VirtualAllocEx(hProcess, NULL, sizeof(szLibPath), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	ERRO = GetLastError();
+	//LPTHREAD_START_ROUTINE addr = (LPTHREAD_START_ROUTINE)GetProcAddress(modHandle, "LoadLibraryA");
+	WriteProcessMemory(hProcess, pLibRemote, (void*)szLibPath, sizeof(szLibPath), NULL);
+
+	hThread = CreateRemoteThread(hProcess, NULL, 0,
+		(LPTHREAD_START_ROUTINE)pFunc,
+		pLibRemote,
+		0,
+		NULL);
+
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+*/
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+}
+
+DWORD CCJ_ToolDlg::StartInject(HANDLE hProcess, LPTHREAD_START_ROUTINE function, wchar_t * data)
+{
+	auto buffLen = (wcslen(data) + 1) * sizeof(wchar_t);
+	void* remote = ::VirtualAllocEx(hProcess, NULL, buffLen, MEM_COMMIT, PAGE_READWRITE);
+	if (remote)
+	{
+		::WriteProcessMemory(hProcess, remote, data, buffLen, NULL);
+		auto hThread = ::CreateRemoteThread(hProcess, NULL, 0, function, remote, 0, NULL);
+		::WaitForSingleObject(hThread, INFINITE);
+		DWORD exitCode;
+		::GetExitCodeThread(hThread, &exitCode);
+		::CloseHandle(hThread);
+		::VirtualFreeEx(hProcess, remote, 0, MEM_RELEASE);
+		return exitCode;
+	}
+	return 0;
 }
 
 // 如果向对话框添加最小化按钮，则需要下面的代码
