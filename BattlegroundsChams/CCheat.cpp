@@ -292,82 +292,87 @@ void CCheat::Initialise()
 
 	//HWND hWnd = GetForegroundWindow();//FindWindowA("UnrealWindow", NULL);
 	//HWND hWnd = FindWindowA(NULL, "engine");
-	g_hWnd = FindWindowA(NULL, "BlueStacks App Player");
-	if (!g_hWnd)
+	while (!g_hWnd)
 	{
-		g_hWnd = FindWindowA(NULL, "夜神模拟器");
+		g_hWnd = FindWindowA(NULL, "BlueStacks App Player");
 		if (!g_hWnd)
 		{
-			//MessageBoxA(NULL, "Not found HWND 夜神模拟器!", "uBoos?", MB_ICONINFORMATION);
-			//return;
+			g_hWnd = FindWindowA(NULL, "夜神模拟器");
+			if (!g_hWnd)
+			{
+				//MessageBoxA(NULL, "Not found HWND 夜神模拟器!", "uBoos?", MB_ICONINFORMATION);
+				//return;
+			}
+			else
+			{
+				g_hWnd = _EnumChildWindows(g_hWnd, "ScreenBoardClassWindow");
+			}
+			//HWND hWnd = (HWND)0x0031162C;
 		}
-		else
-		{
-		g_hWnd = _EnumChildWindows(g_hWnd, "ScreenBoardClassWindow");
-		}
-		//HWND hWnd = (HWND)0x0031162C;
-	}
-	if (!g_hWnd)
-	{
-		g_hWnd = FindWindowA(NULL, "雷电模拟器");
 		if (!g_hWnd)
 		{
-			//MessageBoxA(NULL, "Not found HWND 雷电模拟器!", "uBoos?", MB_ICONINFORMATION);
-			//return;
+			g_hWnd = FindWindowA(NULL, "雷电模拟器");
+			if (!g_hWnd)
+			{
+				//MessageBoxA(NULL, "Not found HWND 雷电模拟器!", "uBoos?", MB_ICONINFORMATION);
+				//return;
+			}
+			else
+			{
+				g_hWnd = _EnumChildWindows(g_hWnd, "TheRender");
+			}
 		}
-		else
-		{
-			g_hWnd = _EnumChildWindows(g_hWnd, "TheRender");
-		}
-	}
-	if (!g_hWnd)
-	{
-		g_hWnd = FindWindowA(NULL, "绝地求生 刺激战场 - MuMu模拟器");
 		if (!g_hWnd)
 		{
-			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
-			//return;
+			g_hWnd = FindWindowA(NULL, "绝地求生 刺激战场 - MuMu模拟器");
+			if (!g_hWnd)
+			{
+				//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+				//return;
+			}
+			else
+			{
+				g_hWnd = _EnumChildWindows(g_hWnd, "");
+			}
 		}
-		else
-		{
-			g_hWnd = _EnumChildWindows(g_hWnd, "");
-		}
-	}
-	if (!g_hWnd)
-	{
-		g_hWnd = FindWindowA(NULL, "绝地求生 全军出击 - MuMu模拟器");
 		if (!g_hWnd)
 		{
-			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
-			//return;
+			g_hWnd = FindWindowA(NULL, "绝地求生 全军出击 - MuMu模拟器");
+			if (!g_hWnd)
+			{
+				//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+				//return;
+			}
+			else
+			{
+				g_hWnd = _EnumChildWindows(g_hWnd, "");
+			}
 		}
-		else
-		{
-			g_hWnd = _EnumChildWindows(g_hWnd, "");
-		}
-	}
 
-	if (!g_hWnd)
-	{
-		g_hWnd = FindWindowA(NULL, "腾讯手游助手【极速傲引擎】");
 		if (!g_hWnd)
 		{
-			//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+			g_hWnd = FindWindowA(NULL, "腾讯手游助手【极速傲引擎】");
+			if (!g_hWnd)
+			{
+				//MessageBoxA(NULL, "Not found HWND MuMu模拟器!", "uBoos?", MB_ICONINFORMATION);
+				//return;
+			}
+			else
+			{
+				g_hWnd = _EnumChildWindows(g_hWnd, "AEngineRenderWindow");
+			}
+		}
+
+		//g_hWnd = (HWND)0x001509A8;
+		if (!g_hWnd)
+		{
+			//MessageBoxA(NULL, "Not found child HWND!", "uBoos?", MB_ICONINFORMATION);
+			Helpers::Log("没找到游戏主窗口！！！！！");
+
 			//return;
 		}
-		else
-		{
-			g_hWnd = _EnumChildWindows(g_hWnd, "AEngineRenderWindow");
-		}
-	}
 
-	//g_hWnd = (HWND)0x001509A8;
-	if (!g_hWnd)
-	{
-		//MessageBoxA(NULL, "Not found child HWND!", "uBoos?", MB_ICONINFORMATION);
-		Helpers::Log("没找到游戏主窗口！！！！！");
-
-		return;
+		Sleep(1000);
 	}
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
