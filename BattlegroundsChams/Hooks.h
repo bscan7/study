@@ -46,6 +46,5 @@ namespace Hooks
 	void __stdcall hkD3D11DrawIndexedInstanced (ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);
 	void __stdcall hkD3D11DrawInstancedIndirect (ID3D11DeviceContext* pContext, ID3D11Buffer *pBufferForArgs, UINT AlignedByteOffsetForArgs);
 	void __stdcall hkD3D11DrawIndexedInstancedIndirect (ID3D11DeviceContext* pContext, ID3D11Buffer *pBufferForArgs, UINT AlignedByteOffsetForArgs);
-
 }
 

@@ -100,9 +100,9 @@ BOOL CCJ_ToolDlg::OnInitDialog()
 	//m_cb12.AddString("234");
 	//m_cb12.AddString("345");
 	//m_iCB12 = 3;
-	/*
-	HANDLE hThread;
-	char szLibPath[_MAX_PATH] = "D:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll"; //指定注入之后目标进程要加载的DLL
+	
+	HANDLE hThread; 
+	char szLibPath[_MAX_PATH] = "E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll"; //指定注入之后目标进程要加载的DLL
 
 	DWORD hLibModule;
 
@@ -130,7 +130,7 @@ BOOL CCJ_ToolDlg::OnInitDialog()
 
 	WaitForSingleObject(hThread, INFINITE);
 	CloseHandle(hThread);
-*/
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 

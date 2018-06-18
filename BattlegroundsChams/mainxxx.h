@@ -1,5 +1,8 @@
 #include <mmsystem.h>
 #include <vector>
+bool bLogTxt = false;
+bool bVideo4Rec = false; //触发FRAPS录制视频，同时逐个物体显示红色。用于记录分析
+
 //    对应Unicode的调试输出  
 inline void MyTraceW(LPCTSTR strFormat, ...)
 {
@@ -28,8 +31,11 @@ inline void MyTraceA(const char* strFormat, ...)
 	// The va_end macro just zeroes out pArgList for no good reason  
 	va_end(args);
 	::OutputDebugStringA(szBuffer);
-	//Helpers::LogAddress(szBuffer);
 
+	if (bLogTxt)
+	{
+		Helpers::LogAddress(szBuffer);
+	}
 }
 
 

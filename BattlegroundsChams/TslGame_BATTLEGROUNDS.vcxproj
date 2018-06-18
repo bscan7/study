@@ -92,11 +92,11 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_USRDLL;TSLGAME_BATTLEGROUNDS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);$(SolutionDir)..\..\Detours Pro v3.0.316\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -108,11 +108,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;TSLGAME_BATTLEGROUNDS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);F:\dev\Detours Pro v3.0.316\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -126,12 +126,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;TSLGAME_BATTLEGROUNDS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);F:\dev\Detours Pro v3.0.316\include</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -150,12 +150,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;TSLGAME_BATTLEGROUNDS_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);N:\Detours Pro v3.0.316\include\</AdditionalIncludeDirectories>
     </ClCompile>
@@ -170,6 +170,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="..\0_rec.txt" />
+    <ClInclude Include="FW1FontWrapper\CFW1ColorRGBA.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1DWriteRenderTarget.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1Factory.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1FontWrapper.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1GlyphAtlas.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1GlyphProvider.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1GlyphRenderStates.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1GlyphSheet.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1GlyphVertexDrawer.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1Object.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1StateSaver.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1TextGeometry.h" />
+    <ClInclude Include="FW1FontWrapper\CFW1TextRenderer.h" />
+    <ClInclude Include="FW1FontWrapper\FW1CompileSettings.h" />
+    <ClInclude Include="FW1FontWrapper\FW1FontWrapper.h" />
+    <ClInclude Include="FW1FontWrapper\FW1Precompiled.h" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +214,31 @@
     <ClCompile Include="CCheat.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Hooks.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1ColorRGBA.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1ColorRGBAInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1DWriteRenderTarget.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1DWriteRenderTargetInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1Factory.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1FactoryInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1FontWrapper.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1FontWrapperInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphAtlas.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphAtlasInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphProvider.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphProviderInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphRenderStates.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphRenderStatesInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphSheet.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphSheetInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphVertexDrawer.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1GlyphVertexDrawerInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1StateSaver.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1TextGeometry.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1TextGeometryInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1TextRenderer.cpp" />
+    <ClCompile Include="FW1FontWrapper\CFW1TextRendererInterface.cpp" />
+    <ClCompile Include="FW1FontWrapper\FW1FontWrapper.cpp" />
+    <ClCompile Include="FW1FontWrapper\FW1Precompiled.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

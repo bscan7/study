@@ -10,8 +10,19 @@
 #include <iomanip>
 #include <string>
 
+#include<fstream>
+using namespace std;
+
+extern "C"
+{ 
+#include "..\Subliminal-Fortnite\FW1FontWrapper\FW1FontWrapper.h"
+#include <iosfwd>
+};
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
+
+IFW1Factory *pFW1Factory = NULL;
+IFW1FontWrapper *pFontWrapper = NULL;
 
 ID3D11DepthStencilState *ppDepthStencilState__New = NULL;
 ID3D11DepthStencilState *ppDepthStencilState__Old = NULL;
@@ -73,12 +84,57 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
  std::vector<int> bbb;
  int iiidx = 0;
 
- std::vector<int> lst24;
- std::vector<int> red24;
+ std::vector<UINT64> lstAll2412;
+ std::vector<UINT64> lstAvatar2412;
+ std::vector<UINT64> lstEqupm2412;
+ std::vector<UINT64> lstNot2412;
+ //std::vector<int> lstRed24;
+ //std::vector<int> lstBase12;
+ //std::vector<int> lstRed12;
  int iPos = 0;
 
  bool bFlashIt = false;
 
+ std::wstring StringToWString(const std::string& str)
+ {
+	 setlocale(LC_ALL, "chs");
+	 const char* point_to_source = str.c_str();
+	 size_t new_size = str.size() + 1;
+	 wchar_t *point_to_destination = new wchar_t[new_size];
+	 wmemset(point_to_destination, 0, new_size);
+	 mbstowcs(point_to_destination, point_to_source, new_size);
+	 std::wstring result = point_to_destination;
+	 delete[]point_to_destination;
+	 setlocale(LC_ALL, "C");
+	 return result;
+ }
+
+ void Send2Hwnd(UINT IndexCountPerInstance, UINT Stride)
+ {
+	 if (hOutWnd) {
+		 std::string sendData = std::to_string(IndexCountPerInstance);
+		 while (sendData.length() < 5)
+		 {
+			 sendData = "0" + sendData;
+		 }
+		 sendData = std::to_string(Stride) + "_" + sendData;
+
+		 /*if (type == USER_ID) {
+		 sendData = CUserOperate::Instance().getUserId();
+		 }
+		 else if (type == NETBAR_ID) {
+		 sendData = ConfigMan::getInstance()->getNetbarId();
+		 }
+		 else if (type == AGENT_ID) {
+		 sendData = ConfigMan::getInstance()->getAgentId();
+		 }*/
+		 COPYDATASTRUCT copyData = { 0 };
+		 copyData.lpData = (void *)sendData.c_str();
+		 copyData.cbData = sendData.length() + 1;
+		 copyData.dwData = Stride/*type*/;
+		 ::SendMessage(hOutWnd, WM_COPYDATA, NULL, (LPARAM)&copyData);
+	 }
+ }
  ID3D11PixelShader* psCrimson = NULL;
  ID3D11PixelShader* psYellow = NULL;
  ID3D11PixelShader* psGreen0 = NULL;
@@ -272,21 +328,139 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=948 StartIndexLocation=0 BaseVertexLocation=0
  */
 
+ bool IsNotWhat(UINT Stride, UINT IndexCount)
+ {
+	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	 if (find(lstNot2412.begin(), lstNot2412.end(), IndexCountStride) != lstNot2412.end()) {
+		 //找到
+		 return false;
+	 }
+	 else {
+		 //没找到
+		 if ((Stride == 24) && (IndexCount <= 200))
+		 {
+			 return false;
+		 }
+		 else
+		 {
+			 return true;
+		 }
+	 }
+
+	 //return ((Stride == 24) // ...
+		// && (IndexCount > 200)
+		// && (IndexCount != 69)
+		// && (IndexCount != 96)
+		// && (IndexCount != 192)
+		// && (IndexCount != 876)
+
+		// && (IndexCount != 1128)
+		// && (IndexCount != 1728)
+		// && (IndexCount != 1842)
+		// && (IndexCount != 1932)
+		// && (IndexCount != 2556)
+		// && (IndexCount != 3228)
+		// && (IndexCount != 3234)
+		// && (IndexCount != 5124)
+		// );
+ }
+
+
+ bool IsEquipment(UINT Stride, UINT IndexCount)
+ {
+	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	 if (find(lstEqupm2412.begin(), lstEqupm2412.end(), IndexCountStride) != lstEqupm2412.end()) {
+		 //找到
+		 return true;
+	 }
+	 else {
+		 //没找到
+		 return false;
+	 }
+	 //return (Stride == 24 && IndexCount == 969) // 车
+		// || (Stride == 24 && IndexCount == 8238) // 车
+		// || (Stride == 24 && IndexCount == 8118) // 车
+		// || (Stride == 24 && IndexCount == 6807) // 车
+		// || (Stride == 24 && IndexCount == 6357) // 车
+
+		// || (Stride == 12 && IndexCount == 1002) // 
+		// || (Stride == 12 && IndexCount == 1008) // 
+		// || (Stride == 12 && IndexCount == 1344) // 
+		// || (Stride == 12 && IndexCount == 1362) // 
+		// || (Stride == 12 && IndexCount == 1386) // 
+		// || (Stride == 12 && IndexCount == 1512) // 
+
+		// || (Stride == 12 && IndexCount == 627) // 
+		// || (Stride == 12 && IndexCount == 672) // 
+		// ;
+ }
+
+ bool IsAvatar(UINT Stride, UINT IndexCount)
+ {
+	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	 if (find(lstAvatar2412.begin(), lstAvatar2412.end(), IndexCountStride) != lstAvatar2412.end()) {
+		 //找到
+		 return true;
+	 }
+	 else {
+		 //没找到
+		 return false;
+	 }
+
+	 //return (Stride == 12 && IndexCount == 192) // ？盔 远处
+		// || (Stride == 12 && IndexCount == 156) // ？盔 远处
+		// || (Stride == 12 && IndexCount == 180) // ？盔 远处
+		// || (Stride == 12 && IndexCount == 276) // ？盔 远处
+		// || (Stride == 12 && IndexCount == 294) // ？盔 远处
+		// || (Stride == 12 && IndexCount == 627) // 头;
+		// || (Stride == 12 && IndexCount == 637) // 头;
+		// || (Stride == 12 && IndexCount == 672) // 头;
+		// || (Stride == 12 && IndexCount == 672) // 头;
+		// || (Stride == 12 && IndexCount == 816) // ？盔 远处;
+		// || (Stride == 12 && IndexCount == 1002) // 身体
+		// || (Stride == 12 && IndexCount == 1008) // 身体
+		// || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
+		// || (Stride == 12 && IndexCount == 1344) // 身体
+		// || (Stride == 12 && IndexCount == 1362) // 身体
+		// || (Stride == 12 && IndexCount == 1386) // 身体
+		// || (Stride == 12 && IndexCount == 1512) // 身体
+		// || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
+		// || (Stride == 12 && IndexCount == 2838) // 胳臂
+		// || (Stride == 12 && IndexCount == 2868) // 头发
+		// || (Stride == 12 && IndexCount == 2877) // 头发
+		// || (Stride == 12 && IndexCount == 3132) // 上衣
+		// || (Stride == 12 && IndexCount == 3162) // 上衣
+		// || (Stride == 12 && IndexCount == 3252) // 吉利服
+
+		// || (Stride == 24 && IndexCount == 498) // 衣服
+		// || (Stride == 24 && IndexCount == 552) // 衣服
+		// || (Stride == 24 && IndexCount == 1080) // 衣服
+		// || (Stride == 24 && IndexCount == 1728) // 衣服
+		// || (Stride == 24 && IndexCount == 2070) // 头
+		// || (Stride == 24 && IndexCount == 2472) // 衣服
+		// || (Stride == 24 && IndexCount == 2478) // 衣服;
+		// || (Stride == 24 && IndexCount == 2538) // 衣服
+		// || (Stride == 24 && IndexCount == 3234) // 头
+		// || (Stride == 24 && IndexCount == 6546) // 胳臂
+		// ;
+ }
+  //(
+ ////(Stride == 12 && IndexCount > 3800) ||
+ //	(Stride == 12 && IndexCount == 14136) // 汽车
+ //	)
+
  int itm = 0;
 
- int iStride = 12;
- int iC24a = 1128;
- int iC24b = 1932;
- int iC24c = 2556;
- int iC24d = 3228;
- int iC24e = 3234;
+ UINT64 iStride = 0;
+ UINT64 iIndexCount = 0;
  int bRed = true;
  int iRed = 0;
  DWORD gggg = 0;
  DWORD cover = 0;
  bool bShoot = false;
+ bool bShow24 = false;
 
- void __stdcall CheatIt(ID3D11DeviceContext* pContext, UINT IndexCount, UINT IndexCountPerInstance, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
+  void __stdcall CheatIt(ID3D11DeviceContext* pContext, UINT IndexCount, UINT IndexCountPerInstance, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
  {
 
 	 if (ppDepthStencilState__New != NULL)
@@ -333,36 +507,16 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 	 ID3D11Buffer *veBuffer;
 	 UINT veBufferOffset = 0;
 	 pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
-	 MyTraceA("hkD3D11DrawIndexed**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
 
-	 if (hOutWnd) {
-		 std::string sendData = std::to_string(IndexCount);
-		 while (sendData.length() < 5)
-		 {
-			 sendData = "0" + sendData;
-		 }
-		 sendData = std::to_string(Stride) + "_" + sendData;
-		 /*if (type == USER_ID) {
-		 sendData = CUserOperate::Instance().getUserId();
-		 }
-		 else if (type == NETBAR_ID) {
-		 sendData = ConfigMan::getInstance()->getNetbarId();
-		 }
-		 else if (type == AGENT_ID) {
-		 sendData = ConfigMan::getInstance()->getAgentId();
-		 }*/
-		 COPYDATASTRUCT copyData = { 0 };
-		 copyData.lpData = (void *)sendData.c_str();
-		 copyData.cbData = sendData.length() + 1;
-		 copyData.dwData = Stride/*type*/;
-		 ::SendMessage(hOutWnd, WM_COPYDATA, NULL, (LPARAM)&copyData);
-	 }
+	 
+	 MyTraceA("CheatIt**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
 
+	 Send2Hwnd(IndexCount, Stride);
 
 	 if ((Stride == 12) && (IndexCount > 7000) && (IndexCount < 10000))
 	 {
 
-		 MyTraceA("hkD3D11DrawIndexedBIGBIG**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
+		 MyTraceA("CheatItBIGBIG**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
 		 //		if (!bRed)
 		 //			return;
 	 }
@@ -408,103 +562,22 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 	 {
 	 return;
 	 */
-	 if ((Stride == 24))
+	 //if ((Stride == 24))
 	 {
-		 if (find(lst24.begin(), lst24.end(), IndexCount) != lst24.end()) {
+		 UINT IndexCountStride = IndexCount * 100 + Stride;
+		 if (find(lstAll2412.begin(), lstAll2412.end(), IndexCountStride) != lstAll2412.end()) {
 			 //找到
 		 }
 		 else {
 			 //没找到
-			 lst24.push_back(IndexCount);
+			 lstAll2412.push_back(IndexCountStride);
 		 }
 	 }
 
-	 if (/*bRed && */
-		 //(
-		 //(Stride == 24)
-			// && bRed
-			// //&& bUp
-
-			// && (IndexCount > 200)
-			// && (IndexCount != 69)
-			// && (IndexCount != 96)
-			// && (IndexCount != 192)
-			// && (IndexCount != 876)
-
-			// && (IndexCount != 1128)
-			// && (IndexCount != 1728)
-			// && (IndexCount != 1842)
-			// && (IndexCount != 1932)
-			// && (IndexCount != 2556)
-			// && (IndexCount != 3228)
-			// && (IndexCount != 3234)
-			// && (IndexCount != 5124)
-			// )
-		(
-		 ((Stride == 24 ) // ...
-						   && (IndexCount > 200)
-						   //&& (IndexCount != 54) //6X
-						   && (IndexCount != 69)
-						   //&& (IndexCount != 75) //3X
-						   && (IndexCount != 96)
-						   && (IndexCount != 192)
-						   && (IndexCount != 876)
-
-						   && (IndexCount != 1128)
-						   && (IndexCount != 1728)
-						   && (IndexCount != 1842)
-						   && (IndexCount != 1932)
-						   && (IndexCount != 2556)
-						   && (IndexCount != 3228)
-						   && (IndexCount != 3234)
-						   && (IndexCount != 5124)
-			 )
-		 || (Stride == 24 && IndexCount == 2070) // 头
-		 || (Stride == 24 && IndexCount == 3234) // 头
-		 || (Stride == 24 && IndexCount == 6546) // 胳臂
-		 || (Stride == 24 && IndexCount == 1080) // 衣服
-		 || (Stride == 24 && IndexCount == 1728) // 衣服
-		 || (Stride == 24 && IndexCount == 2472) // 衣服
-		 || (Stride == 24 && IndexCount == 2538) // 衣服
-		 || (Stride == 24 && IndexCount == 498) // 衣服
-		 || (Stride == 24 && IndexCount == 552) // 衣服
-		 || (Stride == 24 && IndexCount == 2478) // 衣服
-		 || (Stride == 24 && IndexCount == 969) // 车
-		 || (Stride == 24 && IndexCount == 8238) // 车
-		 || (Stride == 24 && IndexCount == 8118) // 车
-		 || (Stride == 24 && IndexCount == 6807) // 车
-		 || (Stride == 24 && IndexCount == 6357) // 车
-
-		 || (Stride == 12 && IndexCount == 1002) // 
-		 || (Stride == 12 && IndexCount == 1008) // 
-		 || (Stride == 12 && IndexCount == 1344) // 
-		 || (Stride == 12 && IndexCount == 1362) // 
-		 || (Stride == 12 && IndexCount == 1386) // 
-		 || (Stride == 12 && IndexCount == 1512) // 
-
-		 || (Stride == 12 && IndexCount == 627) // 
-		 || (Stride == 12 && IndexCount == 672) // 
-
-
-		 || (Stride == 12 && IndexCount == 2877) // 头发
-		 || (Stride == 12 && IndexCount == 2868) // 头发
-		 || (Stride == 12 && IndexCount == 3252) // 吉利服
-		 || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
-		 || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
-		 || (Stride == 12 && IndexCount == 816) // ？盔 远处
-		)									//|| (Stride == 12 && IndexCount == 192) // ？盔 远处
-												//|| (Stride == 12 && IndexCount == 156) // ？盔 远处
-												//|| (Stride == 12 && IndexCount == 180) // ？盔 远处
-												//|| (Stride == 12 && IndexCount == 276) // ？盔 远处
-												//|| (Stride == 12 && IndexCount == 294) // ？盔 远处
-												//(
-												////(Stride == 12 && IndexCount > 3800) ||
-												//	(Stride == 12 && IndexCount == 2838) ||// 胳臂
-												//	(Stride == 12 && IndexCount == 2877) ||// 头发
-												//	(Stride == 12 && IndexCount == 3132) ||// 上衣
-												//	(Stride == 12 && IndexCount == 14136) // 汽车
-												//	)
-		 )
+	 if (
+		 IsNotWhat(Stride, IndexCount) &&
+		 (IsAvatar(Stride, IndexCount) || IsEquipment(Stride, IndexCount))
+		)									
 	 //if(iIndexCnt == IndexCount)
 	 {
 		 //if (
@@ -524,7 +597,7 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 		 //	|| (find(red24.begin(), red24.end(), IndexCount) != red24.end())
 		 //	)
 		 //{
-			 MyTraceA("hkD3D11 DrawIndexed**********透明了****iPos=%d  Stride=%d  IndexCount=%d red24.size=%d", iPos, Stride, IndexCount, red24.size());
+			 //MyTraceA("hkD3D11 CheatIt**********透明了****iPos=%d  Stride=%d  IndexCount=%d red24.size=%d", iPos, Stride, IndexCount, lstRed24.size());
 
 			 //return;
 			 //if (ppDepthStencilState__Old == NULL)
@@ -532,6 +605,7 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 				 pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 			 }
 
+			 ID3D11PixelShader* psSSS = psRed;
 			 if (bFlashIt)
 			 {
 				 //AutoShootIfCenter();
@@ -555,27 +629,7 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 					 pContext->GetDevice(&ppDevice);
 					 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 					 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-					 if ( (bRed))
-					 {
-						 if ((Stride == 24 && IndexCount == 2070) // 头
-							 || (Stride == 24 && IndexCount == 3234) // 头
-							 || (Stride == 12 && IndexCount == 2877) // 头发
-							 || (Stride == 12 && IndexCount == 2868) // 头发
-							 || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
-							 || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
-							 || (Stride == 12 && IndexCount == 816) // ？盔 远处
-							|| (Stride == 12 && IndexCount == 192) // ？盔 远处
-							|| (Stride == 12 && IndexCount == 156) // ？盔 远处
-							|| (Stride == 12 && IndexCount == 180) // ？盔 远处
-							|| (Stride == 12 && IndexCount == 276) // ？盔 远处
-							|| (Stride == 12 && IndexCount == 294) // ？盔 远处
-							)
-						 {
-							 pContext->PSSetShader(psBlue, NULL, NULL);
-						 }
-						 else
-							pContext->PSSetShader(psTmp, NULL, NULL);
-					 }
+					 psSSS = psTmp;
 				 }
 				 //// Set the depth stencil state.
 				 //pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
@@ -604,8 +658,8 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 				 //Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 				 //Hooks::oDrawIndexedInstanced(pContext, IndexCount, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 			 }
-			 else
-				 if ( (bRed))
+
+			 if ( (bRed))
 				 {
 					 if ((Stride == 24 && IndexCount == 2070) // 头
 						 || (Stride == 24 && IndexCount == 3234) // 头
@@ -623,8 +677,14 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 					 {
 						 pContext->PSSetShader(psBlue, NULL, NULL);
 					 }
+					 else if (IsAvatar(Stride, IndexCount))
+						 pContext->PSSetShader(psSSS, NULL, NULL);
+					 else if (IsEquipment(Stride, IndexCount))
+					 {
+						 pContext->PSSetShader(psGreen, NULL, NULL);
+					 }
 					 else
-						 pContext->PSSetShader(psRed, NULL, NULL);
+						 pContext->PSSetShader(psd, NULL, NULL);
 				 }
 			 //{
 			 //	{
@@ -775,6 +835,40 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 	 }
  }
 
+ void InitList()
+ {
+	 //从文件读取列表
+	 {
+		 //WinExec("cmd /K CD ", SW_SHOW);
+
+		 lstAvatar2412.clear();
+		 fstream fin("..\\avatarList.txt");  //打开文件
+		 string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstAvatar2412.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+
+		 lstEqupm2412.clear();
+		 fin.open("..\\equpmList.txt");  //打开文件
+										 //string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstEqupm2412.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+
+		 lstNot2412.clear();
+		 fin.open("..\\notList.txt");  //打开文件
+									   //string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstNot2412.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+	 }
+ }
  void InitForHook(IDXGISwapChain* pSwapChain)
  {
 	 Helpers::Log("DLL InitForHook。。。");
@@ -846,6 +940,21 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 	 rsDesc.FillMode = D3D11_FILL_SOLID;
 	 rsDesc.CullMode = D3D11_CULL_NONE;
 	 CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
+
+	 //create font
+	 HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
+	 hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
+	 pFW1Factory->Release();
+
+	 // use the back buffer address to create the render target
+	 //if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&RenderTargetTexture))))
+	 if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
+	 {
+		 CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
+		 RenderTargetTexture->Release();
+	 }
+
+	 InitList();
 
 	 //_beginthread(Thread_fileWatcher, 0, NULL);
  }
@@ -978,12 +1087,13 @@ S_OK*/
 //}
 
 #define SHOOT_AREA  5
+
 static BOOL bDoneOnShoot = false;
 
-//HBITMAP AutoShootIfCenter(BOOL bSave = false)
-void AutoShootIfCenter000(PVOID param)
+bool IsCenterRed()
 //lpRect 代表选定区域
 {
+	bool bOK = false;
 	//return;
 	//Helpers::Log("==============AutoShootIfCenter");
 	::GetWindowRect(g_hWnd, &g_lpRect);
@@ -1009,7 +1119,7 @@ void AutoShootIfCenter000(PVOID param)
 
 	// 确保选定区域不为空矩形
 	if (IsRectEmpty(&lpRect))
-		return /*NULL*/;
+		return false;
 	//为屏幕创建设备描述表
 	hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
 
@@ -1091,51 +1201,22 @@ void AutoShootIfCenter000(PVOID param)
 			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
 			Helpers::Log("==============+-+-+-+- 射击射击射击");
-			//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			//Sleep(10); 
-			//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			//Sleep(10);
-			////mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			//Sleep(10);
-			////mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-			//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-			//Sleep(10);
-			bDoneOnShoot = false;
+			bOK = true;
+
 			break;
 		}
 		//	ptPixels[i] = cNewColor;
-		bDoneOnShoot = true;
 	}
 
-	if (bDoneOnShoot)
-	{
-		//Helpers::Log("==============+-+-+-+- up up up...");
-		//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-	}
 	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
 	//得到屏幕位图的句柄
 	//清除 
 	DeleteDC(hScrDC);
 	DeleteDC(hMemDC);
-	// 返回位图句柄
-	if (0/*bSave*/)
-	{
 
-		if (OpenClipboard(NULL))
-		{
-			//清空剪贴板
-			EmptyClipboard();
-			//把屏幕内容粘贴到剪贴板上,
-			//hBitmap 为刚才的屏幕位图句柄
-			SetClipboardData(CF_BITMAP, hBitmap);
-			//关闭剪贴板
-			CloseClipboard();
-		}
-	}
-	return /*hBitmap*/;
+	return bOK;
 }
+
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	HWND hOutWnd000 = NULL;
@@ -1171,15 +1252,18 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//Helpers::LogAddress("\r\n hkD3D11Present++++++++++++++++++++*===");
 	bFlashIt = !bFlashIt;
 	MyTraceA("hkD3D11Present+++++++----------------------------------------------------------------- bUp = %d", bFlashIt);
-	if (GetAsyncKeyState(VK_LEFT) & 1)
+	if (GetAsyncKeyState(VK_F9) & 1)
 	{
-		iPos++;
-		if (iPos >= lst24.size())
-		{
-			iPos = 0;
-		}		
+		bLogTxt = !bLogTxt;
 	}
-
+	if (GetAsyncKeyState(VK_SCROLL) & 1)
+	{
+		bVideo4Rec = !bVideo4Rec;
+	}
+	if (GetAsyncKeyState(VK_F10) & 1)
+	{
+		bShow24 = !bShow24;
+	}
 	if (GetAsyncKeyState(VK_ADD) & 1)
 	{
 		bShoot = !bShoot;
@@ -1202,10 +1286,15 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		ppDepthStencilState__New = NULL;
 	}
 
-	if (GetAsyncKeyState(VK_RETURN) & 1)
+	if (GetAsyncKeyState(VK_PAUSE) & 1)
 	{
-		red24.clear();
+		InitList();
 	}
+
+	//if (GetAsyncKeyState(VK_RETURN) & 1)
+	//{
+	//	//lstRed24.clear();
+	//}
 
 	//if (GetAsyncKeyState(VK_RIGHT) & 1)
 	//{
@@ -1230,7 +1319,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//lpRect.bottom = iCenterY + 20;
 	//lpRect.left = iCenterX - 20;
 	//lpRect.right = iCenterX + 20;
-	static bool bOnce = false;
+	static bool bInited = false;
 	//MyTraceA("hkD3D11Present+++++++------------------------------------------------------------------= key=0X%x", ((GetAsyncKeyState(VK_RETURN) & 1)));
 
 	//if (GetAsyncKeyState(VK_RETURN) & 1)
@@ -1244,12 +1333,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//		iiidx++;
 	//}
 
-	if (!bOnce)
+	if (!bInited)
 	{
 		InitForHook(pSwapChain);
 
 		Helpers::Log("D3D11Present initialised");
-		bOnce = true;
+		bInited = true;
 
 	}
 
@@ -1279,10 +1368,18 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(1, &RenderTargetView, NULL);
 	//draw
-	//if (pFontWrapper)
-	//pFontWrapper->DrawString(CCheat::pContext, L"Subliminal Fortnite Cheat", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
+	if (pFontWrapper)
+	{
+		//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
+		//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
 
-	//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Keidrich" , 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
+		//std::string sData = std::to_string(iStride);
+		//sData += "_";
+		//sData += std::to_string(iIndexCount);
+		//
+		//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
+		//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
+	}
 
 
 	//draw esp
@@ -1375,6 +1472,23 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			astime = timeGetTime();
 		}
 	}
+
+	if (bVideo4Rec && !IsCenterRed())
+	{
+		if (lstAll2412.size() > 0)
+		{
+			if (iPos >= lstAll2412.size())
+			{
+				iPos = 0;
+			}
+
+			iStride = lstAll2412.at(iPos) % 100;
+			iIndexCount = lstAll2412.at(iPos) / 100;;
+
+			iPos++;
+		}
+	}
+
 	return Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 }
 
@@ -1407,11 +1521,11 @@ void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT S
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexed++++++++++++++++++++*===");
-	CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
+	//CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
 
 	Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 
-	pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
 	return;
 
 }
@@ -1463,30 +1577,28 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 	MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
-	if (hOutWnd) {
-		std::string sendData = std::to_string(IndexCountPerInstance);
-		while (sendData.length() < 5)
-		{
-			sendData = "0" + sendData;
+	{
+		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
+		if (find(lstAll2412.begin(), lstAll2412.end(), IndexCountStride) != lstAll2412.end()) {
+			//找到
 		}
-		sendData = std::to_string(Stride) + "_" + sendData;
-
-		/*if (type == USER_ID) {
-		sendData = CUserOperate::Instance().getUserId();
+		else {
+			//没找到
+			lstAll2412.push_back(IndexCountStride);
 		}
-		else if (type == NETBAR_ID) {
-		sendData = ConfigMan::getInstance()->getNetbarId();
-		}
-		else if (type == AGENT_ID) {
-		sendData = ConfigMan::getInstance()->getAgentId();
-		}*/
-		COPYDATASTRUCT copyData = { 0 };
-		copyData.lpData = (void *)sendData.c_str();
-		copyData.cbData = sendData.length() + 1;
-		copyData.dwData = Stride/*type*/;
-		::SendMessage(hOutWnd, WM_COPYDATA, NULL, (LPARAM)&copyData);
 	}
 
+	if ((bVideo4Rec) )
+	{
+		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
+		{
+			pContext->PSSetShader(psRed, NULL, NULL);
+		}
+			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		return;
+	}
+
+	Send2Hwnd(IndexCountPerInstance, Stride);
 
 	if (GetAsyncKeyState(VK_NUMPAD0) & 1)
 	{
@@ -1595,10 +1707,29 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 				&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
 				&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
 				)
+			{
+
 				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+			}
 		}
 	}
 
+	//if (bShow24)
+	//{
+	//	if ((Stride != 12))
+	//	{
+	//			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	//	}
+	//}
+	//else
+	//{
+	//	if ((Stride != 24))
+	//	{
+	//			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	//	}
+
+	//}
+				//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
 	return;
 }
@@ -1632,3 +1763,4 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstancedIndirect(ID3D11DeviceContext* p
 	
 	return oDrawIndexedInstancedIndirect(pContext, pBufferForArgs, AlignedByteOffsetForArgs);
 }
+
