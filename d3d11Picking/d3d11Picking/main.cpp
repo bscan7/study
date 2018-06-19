@@ -114,8 +114,8 @@ LPCTSTR WndClassName = L"firstwindow";
 HWND hwnd = NULL;
 HRESULT hr;
 
-int Width  = 1920;
-int Height = 1200;
+int Width  = 800;
+int Height = 600;
 
 DIMOUSESTATE mouseLastState;
 LPDIRECTINPUT8 DirectInput;
