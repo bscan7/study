@@ -93,7 +93,61 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
  //std::vector<int> lstRed12;
  int iPos = 0;
 
+ bool bInited = false;
  bool bFlashIt = false;
+ //==========================================================================================================================
+ bool bHideTrees = false;
+ bool bHideGrass = false;
+ DWORD ppppp = 0;
+ int ipp = 0;
+ int gStride = 12;
+ int iMin = 601;
+ int iMax = 2990;
+ int itm = 0;
+
+ UINT64 iStride = 0;
+ UINT64 iIndexCount = 0;
+ int bRed = true;
+ int iRed = 0;
+ DWORD gggg = 0;
+ DWORD cover = 0;
+ bool bShoot = false;
+ bool bShow24 = false;
+
+ void InitListFromFiles()
+ {
+	 //从文件读取列表
+	 {
+		 //WinExec("cmd /K CD ", SW_SHOW);
+
+		 lstAvatar2412.clear();
+		 fstream fin("..\\avatarList.txt");  //打开文件
+		 string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstAvatar2412.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+
+		 lstEqupm2412.clear();
+		 fin.open("..\\equpmList.txt");  //打开文件
+										 //string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstEqupm2412.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+
+		 lstNot2412.clear();
+		 fin.open("..\\notList.txt");  //打开文件
+									   //string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstNot2412.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+	 }
+ }
 
  std::wstring StringToWString(const std::string& str)
  {
@@ -228,6 +282,135 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 
 	 }
 	 CloseHandle(dirHandle);
+ }
+
+ void Thread_KeysSwitch(PVOID param)
+ {
+	 while (true)
+	 {
+		 if (GetAsyncKeyState(VK_NUMPAD0) & 1)
+		 {
+			 ipp = ipp++ % 4;
+		 }
+		 if (GetAsyncKeyState(VK_NUMPAD1) & 1)
+		 {
+			 sHideList.clear();
+		 }
+		 if (GetAsyncKeyState(VK_F9) & 1)
+		 {
+			 bLogTxt = !bLogTxt;
+		 }
+		 if (GetAsyncKeyState(VK_SCROLL) & 1)
+		 {
+			 bVideo4Rec = !bVideo4Rec;
+		 }
+		 if (GetAsyncKeyState(VK_F10) & 1)
+		 {
+			 bShow24 = !bShow24;
+		 }
+		 if (GetAsyncKeyState(VK_ADD) & 1)
+		 {
+			 bShoot = !bShoot;
+			 //red24.push_back(lst24[iPos]);
+		 }
+
+		 if (GetAsyncKeyState(VK_NUMPAD3) & 1)
+		 {
+			 bCrossDraw = !bCrossDraw;
+		 }
+
+		 if (bShoot)
+		 {
+			 SetEvent(g_Event_Shoot);
+		 }
+
+		 if (GetAsyncKeyState(VK_DELETE) & 1)
+		 {
+			 ppDepthStencilState__Old = NULL;
+			 ppDepthStencilState__New = NULL;
+		 }
+
+		 if (GetAsyncKeyState(VK_PAUSE) & 1)
+		 {
+			 InitListFromFiles();
+		 }
+
+		 //if (GetAsyncKeyState(VK_RETURN) & 1)
+		 //{
+		 //	//lstRed24.clear();
+		 //}
+
+		 //if (GetAsyncKeyState(VK_RIGHT) & 1)
+		 //{
+		 //	ofstream output(".\\1111.txt", ios::binary);
+		 //	for (int i=0;i<red24.size();i++)
+		 //	{
+		 //		output.write((char*)(&(red24[i])), sizeof((red24[i]))); //写入
+		 //		output.write("\r\n", 2); //写入
+		 //	}
+		 //	//int i2 = 0;
+		 //	//ifstream input("./1.txt", ios::binary);
+		 //	//input.read((char*)(&i2), sizeof(i2)); //读取
+		 //}
+
+		 if (ipp == 1)
+		 {
+			 bHideTrees = true;
+			 bHideGrass = false;
+		 }
+		 else if (ipp == 2)
+		 {
+			 if (ppppp != timeGetTime() / INTVL)
+			 {
+				 bHideTrees = !bHideTrees;
+				 ppppp = timeGetTime() / INTVL;
+			 }
+		 }
+		 else if (ipp == 3)
+		 {
+			 bHideGrass = !bHideGrass;
+			 bHideGrass = true;
+			 bHideTrees = false;
+		 }
+		 else
+		 {
+			 bHideGrass = false;
+			 bHideTrees = false;
+		 }
+
+
+		 HWND hOutWnd000 = NULL;
+		 hOutWnd000 = ::FindWindowExA(NULL, NULL, "#32770", "懵圈宝宝 哈哈哈");
+		 if (hOutWnd000)
+		 {
+			 hOutWnd = hOutWnd000;
+		 }
+
+		 char szWndTitle[256] = { 0 };
+		 if (hOutWnd)
+		 {
+			 GetWindowTextA(hOutWnd, szWndTitle, 256);
+			 //iIndexCnt = atoi(szWndTitle);
+
+			 //std::list::iterator iter;
+			 list<string>::iterator iter;
+			 iter = std::find(sHideList.begin(), sHideList.end(), szWndTitle);
+
+			 if (iter != sHideList.end())
+			 {
+				 //lst中存在 szWndTitle
+				 sHideList.erase(iter);
+			 }
+			 else
+			 {
+				 //没找到
+				 sHideList.push_back(szWndTitle);
+			 }
+
+		 }
+
+		 Sleep(300);
+	 }
  }
  //bool UpdateBuffers(ID3D11DeviceContext* d3dDeviceContext, int positionX, int positionY)
  //{
@@ -448,17 +631,6 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
  ////(Stride == 12 && IndexCount > 3800) ||
  //	(Stride == 12 && IndexCount == 14136) // 汽车
  //	)
-
- int itm = 0;
-
- UINT64 iStride = 0;
- UINT64 iIndexCount = 0;
- int bRed = true;
- int iRed = 0;
- DWORD gggg = 0;
- DWORD cover = 0;
- bool bShoot = false;
- bool bShow24 = false;
 
   void __stdcall CheatIt(ID3D11DeviceContext* pContext, UINT IndexCount, UINT IndexCountPerInstance, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
  {
@@ -835,41 +1007,7 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 	 }
  }
 
- void InitList()
- {
-	 //从文件读取列表
-	 {
-		 //WinExec("cmd /K CD ", SW_SHOW);
-
-		 lstAvatar2412.clear();
-		 fstream fin("..\\avatarList.txt");  //打开文件
-		 string ReadLine;
-		 while (getline(fin, ReadLine))  //逐行读取，直到结束
-		 {
-			 lstAvatar2412.push_back(atoi(ReadLine.c_str()));
-		 }
-		 fin.close();
-
-		 lstEqupm2412.clear();
-		 fin.open("..\\equpmList.txt");  //打开文件
-										 //string ReadLine;
-		 while (getline(fin, ReadLine))  //逐行读取，直到结束
-		 {
-			 lstEqupm2412.push_back(atoi(ReadLine.c_str()));
-		 }
-		 fin.close();
-
-		 lstNot2412.clear();
-		 fin.open("..\\notList.txt");  //打开文件
-									   //string ReadLine;
-		 while (getline(fin, ReadLine))  //逐行读取，直到结束
-		 {
-			 lstNot2412.push_back(atoi(ReadLine.c_str()));
-		 }
-		 fin.close();
-	 }
- }
- void InitForHook(IDXGISwapChain* pSwapChain)
+  void InitForHook(IDXGISwapChain* pSwapChain)
  {
 	 Helpers::Log("DLL InitForHook。。。");
 	 hOutWnd = ::FindWindowExA(NULL, NULL, "#32770", "懵圈宝宝 哈哈哈");
@@ -954,9 +1092,10 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 		 RenderTargetTexture->Release();
 	 }
 
-	 InitList();
+	 InitListFromFiles();
 
 	 //_beginthread(Thread_fileWatcher, 0, NULL);
+	 _beginthread(Thread_KeysSwitch, 0, NULL);
  }
 
 HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, float r, float g, float b)
@@ -1219,95 +1358,10 @@ bool IsCenterRed()
 
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
-	HWND hOutWnd000 = NULL;
-	hOutWnd000 = ::FindWindowExA(NULL, NULL, "#32770", "懵圈宝宝 哈哈哈");
-	if (hOutWnd000)
-	{
-		hOutWnd = hOutWnd000;
-	}
-
-	char szWndTitle[256] = { 0 };
-	if (hOutWnd)
-	{
-		GetWindowTextA(hOutWnd, szWndTitle, 256);
-		//iIndexCnt = atoi(szWndTitle);
-
-		//std::list::iterator iter;
-		list<string>::iterator iter;
-		iter = std::find(sHideList.begin(), sHideList.end(), szWndTitle);
-
-		if (iter != sHideList.end())
-		{
-			//lst中存在 szWndTitle
-			sHideList.erase(iter);
-		}
-		else
-		{
-			//没找到
-			sHideList.push_back(szWndTitle);
-		}
-
-	}
 
 	//Helpers::LogAddress("\r\n hkD3D11Present++++++++++++++++++++*===");
 	bFlashIt = !bFlashIt;
 	MyTraceA("hkD3D11Present+++++++----------------------------------------------------------------- bUp = %d", bFlashIt);
-	if (GetAsyncKeyState(VK_F9) & 1)
-	{
-		bLogTxt = !bLogTxt;
-	}
-	if (GetAsyncKeyState(VK_SCROLL) & 1)
-	{
-		bVideo4Rec = !bVideo4Rec;
-	}
-	if (GetAsyncKeyState(VK_F10) & 1)
-	{
-		bShow24 = !bShow24;
-	}
-	if (GetAsyncKeyState(VK_ADD) & 1)
-	{
-		bShoot = !bShoot;
-		//red24.push_back(lst24[iPos]);
-	}
-
-	if (GetAsyncKeyState(VK_NUMPAD3) & 1)
-	{
-		bCrossDraw = !bCrossDraw;
-	}
-
-	if (bShoot)
-	{
-		SetEvent(g_Event_Shoot);
-	}
-
-	if (GetAsyncKeyState(VK_DELETE) & 1)
-	{
-		ppDepthStencilState__Old = NULL;
-		ppDepthStencilState__New = NULL;
-	}
-
-	if (GetAsyncKeyState(VK_PAUSE) & 1)
-	{
-		InitList();
-	}
-
-	//if (GetAsyncKeyState(VK_RETURN) & 1)
-	//{
-	//	//lstRed24.clear();
-	//}
-
-	//if (GetAsyncKeyState(VK_RIGHT) & 1)
-	//{
-	//	ofstream output(".\\1111.txt", ios::binary);
-	//	for (int i=0;i<red24.size();i++)
-	//	{
-	//		output.write((char*)(&(red24[i])), sizeof((red24[i]))); //写入
-	//		output.write("\r\n", 2); //写入
-	//	}
-	//	//int i2 = 0;
-	//	//ifstream input("./1.txt", ios::binary);
-	//	//input.read((char*)(&i2), sizeof(i2)); //读取
-	//}
 
 	//RECT lpRect;
 	//int iW = g_lpRect.right - g_lpRect.left;
@@ -1319,7 +1373,6 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//lpRect.bottom = iCenterY + 20;
 	//lpRect.left = iCenterX - 20;
 	//lpRect.right = iCenterX + 20;
-	static bool bInited = false;
 	//MyTraceA("hkD3D11Present+++++++------------------------------------------------------------------= key=0X%x", ((GetAsyncKeyState(VK_RETURN) & 1)));
 
 	//if (GetAsyncKeyState(VK_RETURN) & 1)
@@ -1339,19 +1392,17 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 		Helpers::Log("D3D11Present initialised");
 		bInited = true;
-
 	}
 
 	//viewport
 	CCheat::pContext->RSGetViewports(&vps, &viewport);
 	ScreenCenterX = viewport.Width / 2.0f;
 	ScreenCenterY = viewport.Height / 2.0f;
+
 	if (!psCrimson)
 		GenerateShader(CCheat::pDevice, &psCrimson, 1.f, 0.2f, 0.2f);
-
 	if (!psYellow)
 		GenerateShader(CCheat::pDevice, &psYellow, 1.f, 0.6f, 0);
-
 	if (!psRed)
 		GenerateShader(CCheat::pDevice, &psRed, 0.5f, 0.0f, 0.0f);
 	if (!psGreen)
@@ -1360,13 +1411,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psTmp)
 		GenerateShader(CCheat::pDevice, &psTmp, 0.45f, 0.3f, 0.1f);
-
 	if (!psd)
 		GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
 
 	//call before you draw
-	CCheat::pContext->OMSetRenderTargets(1, &RenderTargetView, NULL);
+	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 	//draw
 	if (pFontWrapper)
 	{
@@ -1559,14 +1609,6 @@ void __stdcall Hooks::hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT V
 	return oDrawInstanced(pContext, VertexCountPerInstance, InstanceCount, StartVertexLocation, StartInstanceLocation);
 }
 
-//==========================================================================================================================
-bool bHideTrees = false;
-bool bHideGrass = false;
-DWORD ppppp = 0;
-int ipp = 0;
-int gStride = 12;
-int iMin = 601;
-int iMax = 2990;
 void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
@@ -1588,54 +1630,18 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		}
 	}
 
-	if ((bVideo4Rec) )
+	if (bVideo4Rec)
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
 		{
 			pContext->PSSetShader(psRed, NULL, NULL);
 		}
-			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+
+		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
 	}
 
 	Send2Hwnd(IndexCountPerInstance, Stride);
-
-	if (GetAsyncKeyState(VK_NUMPAD0) & 1)
-	{
-		ipp = ipp++ % 4;
-	}
-	if (GetAsyncKeyState(VK_NUMPAD1) & 1)
-	{
-		sHideList.clear();
-	}
-	//	Log("DrawIndexedInstanced called");
-
-	//if (GetAsyncKeyState(VK_RETURN) & 1)
-
-	if (ipp == 1)
-	{
-		bHideTrees = true;
-		bHideGrass = false;
-	}
-	else if (ipp == 2)
-	{
-		if (ppppp != timeGetTime() / INTVL)
-		{
-			bHideTrees = !bHideTrees;
-			ppppp = timeGetTime() / INTVL;
-		}
-	}
-	else if (ipp == 3)
-	{
-		bHideGrass = !bHideGrass;
-		bHideGrass = true;
-		bHideTrees = false;
-	}
-	else
-	{
-		bHideGrass = false;
-		bHideTrees = false;
-	}
 
 	if (bCrossDraw)
 	{
