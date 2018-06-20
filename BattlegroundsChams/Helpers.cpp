@@ -18,6 +18,7 @@ void Helpers::UnhookFunction(PVOID *oFunction, PVOID pDetour)
 	DetourDetach(oFunction, pDetour);
 	DetourTransactionCommit();
 }
+extern bool bLog2Txt;
 
 //MISCELLANEOUS
 void Helpers::Log(char* szMessage)
@@ -39,6 +40,24 @@ void Helpers::LogAddress(char* szName, int64_t iAddress)
 	//}
 	std::cout << "[+] " << szName << ": 0x" << std::hex << iAddress << std::endl;
 }
+void Helpers::Log2Txt(char* szLog, int64_t iAddress)
+{
+	if (bLog2Txt && iAddress>0)
+	{
+		ofstream outfile;
+		outfile.open("..\\Log2Txt.txt", ios::app);
+		if (!outfile)
+		{
+			std::cout << "打开Log2Txt.txt文件失败！" << endl;
+		}
+		else
+		{
+			outfile << "[+] " << szLog << ": " << iAddress << std::endl;
+			outfile.close();
+		}
+	}
+}
+
 void Helpers::LogError(char* szMessage)
 {
 	std::cout << "[Error] " << szMessage << std::endl;

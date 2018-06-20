@@ -31,6 +31,8 @@ extern HWND g_hWnd;
 extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
 extern bool bCrossDraw;
+bool bCheat = true;
+bool bLog2Txt = false;
 
 void Thread_ExitHook(PVOID param);
 static HWND hOutWnd = NULL;
@@ -299,6 +301,14 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 		 if (GetAsyncKeyState(VK_F9) & 1)
 		 {
 			 bLogTxt = !bLogTxt;
+		 }
+		 if (GetAsyncKeyState(VK_F8) & 1)
+		 {
+			 bCheat = !bCheat;
+		 }
+		 if (GetAsyncKeyState(VK_F7) & 1)
+		 {
+			 bLog2Txt = !bLog2Txt;
 		 }
 		 if (GetAsyncKeyState(VK_SCROLL) & 1)
 		 {
@@ -1358,6 +1368,11 @@ bool IsCenterRed()
 
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
+	DWORD bgtime = timeGetTime();
+	if (!bCheat)
+	{
+		return Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+	}
 
 	//Helpers::LogAddress("\r\n hkD3D11Present++++++++++++++++++++*===");
 	bFlashIt = !bFlashIt;
@@ -1414,7 +1429,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psd)
 		GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
-
+	Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 	//draw
@@ -1447,7 +1462,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	
 	//aimbot
 	//if (aimbot == 1 && AimEspInfo.size() != NULL && GetAsyncKeyState(Daimkey) & 0x8000)//warning: GetAsyncKeyState here will cause aimbot not to work for a few people
-	if (aimbot == 1 && AimEspInfo.size() != NULL)
+/*	if (aimbot == 1 && AimEspInfo.size() != NULL)
 	{
 		UINT BestTarget = -1;
 		DOUBLE fClosestPos = 99999;
@@ -1481,7 +1496,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 				}
 		}
 
-		OutputDebugStringA("hkD3D11Present+++++++-BestTarget???");
+		//OutputDebugStringA("hkD3D11Present+++++++-BestTarget???");
 		//if nearest target to crosshair
 		if (BestTarget != -1)
 		{
@@ -1522,7 +1537,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			astime = timeGetTime();
 		}
 	}
-
+	*/
 	if (bVideo4Rec && !IsCenterRed())
 	{
 		if (lstAll2412.size() > 0)
@@ -1538,6 +1553,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iPos++;
 		}
 	}
+	Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
 
 	return Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 }
@@ -1613,11 +1629,17 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	//	OutputDebugStringA("hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
+	DWORD bgtime = timeGetTime();
+	if (!bCheat)
+	{
+		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		return;
+	}
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
-	MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
 	{
 		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
@@ -1641,12 +1663,16 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		return;
 	}
 
+	Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
 	Send2Hwnd(IndexCountPerInstance, Stride);
 
+	Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
 	if (bCrossDraw)
 	{
 		CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
 	}
+
+	Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 3 usedTime = ", timeGetTime() - bgtime);
 
 	std::string szCurIdx = std::to_string(IndexCountPerInstance);
 	while (szCurIdx.length() < 5)
@@ -1669,6 +1695,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		//Ã»ÕÒµ½
 		bInList = false;
 	}
+	Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 4 usedTime = ", timeGetTime() - bgtime);
 
 	/*if (!(bHideTrees && (Stride == 12) && (
 		IndexCountPerInstance < abc ||
@@ -1693,6 +1720,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 									(IndexCountPerInstance >= iMax))*/
 			))
 		{
+			Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
 		}
 		else
 		{
@@ -1715,6 +1743,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 				)
 			{
 
+				Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
 				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 			}
 		}
