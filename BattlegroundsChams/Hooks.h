@@ -10,6 +10,7 @@ typedef void(__stdcall *tD3D11EndScene)(ID3D11Device* pDevice, const D3D11_QUERY
 typedef void(__stdcall *tD3D11VSSetConstantBuffers) (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers);
 typedef void(__stdcall *tD3D11PSSetShaderResources) (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews);
 typedef void(__stdcall *tD3D11PSSetSamplers) (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers);
+typedef void(__stdcall *tD3D11UpdateSubresource) (ID3D11DeviceContext* pContext, ID3D11Resource *pDstResource, UINT DstSubresource, const D3D11_BOX *pDstBox, const void *pSrcData, UINT SrcRowPitch, UINT SrcDepthPitch);
 
 typedef void(__stdcall *tD3D11DrawInstanced) (ID3D11DeviceContext* pContext, UINT VertexCountPerInstance, UINT InstanceCount, UINT StartVertexLocation, UINT StartInstanceLocation);
 typedef void(__stdcall *tD3D11DrawIndexedInstanced) (ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);
@@ -26,6 +27,7 @@ namespace Hooks
 	extern tD3D11VSSetConstantBuffers oVSSetConstantBuffers;
 	extern tD3D11PSSetShaderResources oPSSetShaderResources;
 	extern tD3D11PSSetSamplers oPSSetSamplers;
+	extern tD3D11UpdateSubresource oUpdateSubresource;
 
 	extern tD3D11DrawInstanced oDrawInstanced;
 	extern tD3D11DrawIndexedInstanced oDrawIndexedInstanced;
@@ -40,7 +42,7 @@ namespace Hooks
 
 	void __stdcall hkD3D11PSSetShaderResources (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews);
 	void __stdcall hkD3D11PSSetSamplers (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers);
-
+	void __stdcall hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID3D11Resource *pDstResource, UINT DstSubresource, const D3D11_BOX *pDstBox, const void *pSrcData, UINT SrcRowPitch, UINT SrcDepthPitch);
 
 	void __stdcall hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT VertexCountPerInstance, UINT InstanceCount, UINT StartVertexLocation, UINT StartInstanceLocation);
 	void __stdcall hkD3D11DrawIndexedInstanced (ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation);

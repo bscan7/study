@@ -84,7 +84,8 @@ ID3D11PixelShader* psRed = NULL;
 ID3D11PixelShader* psGreen = NULL;
 
 //pssetshaderresources
-UINT pssrStartSlot;
+UINT pssrStartSlot = 1;
+UINT pssrStride = 0;
 D3D11_SHADER_RESOURCE_VIEW_DESC  Descr;
 //ID3D11ShaderResourceView* ShaderResourceView;
 
@@ -240,7 +241,7 @@ static Vec4 Vec4MulMat4x4(const Vec4& v, float(*mat4x4)[4])
 static Vec4 Vec3MulMat4x4(const Vec3& v, float(*mat4x4)[4])
 {
 	Vec4 o;
-	MyTraceA("hkD3D11  AddModel******Vec3MulMat4x4******** %.2f  %.2f  %.2f  %.2f |  %.2f  %.2f  %.2f  %.2f |  %.2f  %.2f  %.2f  %.2f |  %.2f  %.2f  %.2f  %.2f \r\n", 
+	Helpers::LogFormat("hkD3D11  AddModel******Vec3MulMat4x4******** \r\n%f  %f  %f  %f\r\n%f  %f  %f  %f\r\n%f  %f  %f  %f\r\n%f  %f  %f  %f", 
 		mat4x4[0][0], mat4x4[1][0], mat4x4[2][0], mat4x4[3][0],
 		mat4x4[0][1], mat4x4[1][1], mat4x4[2][1], mat4x4[3][1],
 		mat4x4[0][2], mat4x4[1][2], mat4x4[2][2], mat4x4[3][2],
@@ -252,7 +253,9 @@ static Vec4 Vec3MulMat4x4(const Vec3& v, float(*mat4x4)[4])
 	o.y = v.x * mat4x4[0][1] + v.y * mat4x4[1][1] + v.z * mat4x4[2][1] + mat4x4[3][1];
 	o.z = v.x * mat4x4[0][2] + v.y * mat4x4[1][2] + v.z * mat4x4[2][2] + mat4x4[3][2];
 	o.w = v.x * mat4x4[0][3] + v.y * mat4x4[1][3] + v.z * mat4x4[2][3] + mat4x4[3][3];
-	
+	Helpers::LogFormat("hkD3D11  AddModel******Vec3MulMat4x4******** o.xyzw = \r\n%f  %f  %f  %f",
+		o.x,o.y,o.z,o.w);
+
 	/*
 	//normal?
 	o.x = mat4x4[0][0] * v.x + mat4x4[0][1] * v.y + mat4x4[0][2] * v.z + mat4x4[0][3];
@@ -359,7 +362,7 @@ void AddModel(ID3D11DeviceContext* pContext)
 
 	pContext->VSGetConstantBuffers(0/*WorldViewCBnum*/, 1, &pWorldViewCB);//2works (UT4)		//worldview
 
-	pContext->VSGetConstantBuffers(ProjCBnum, 1, &pProjCB);//1works (UT4)				//proj
+	pContext->VSGetConstantBuffers(0/*ProjCBnum*/, 1, &pProjCB);//1works (UT4)				//proj
 
 	if (pWorldViewCB == NULL)
 	{
@@ -409,8 +412,10 @@ void AddModel(ID3D11DeviceContext* pContext)
 	o.x = ScreenCenterX + ScreenCenterX * vWorldViewProj.x / vWorldViewProj.w;
 	o.y = ScreenCenterY + ScreenCenterY * -vWorldViewProj.y / vWorldViewProj.w;
 
-	AimEspInfo_t pAimEspInfo = { static_cast<float>(o.x), static_cast<float>(o.y) };
-	AimEspInfo.push_back(pAimEspInfo);
+	Helpers::LogFormat("hkD3D11  AddModel******XY******** x=%f  y=%f  \r\n", o.x, o.y);
+
+	//AimEspInfo_t pAimEspInfo = { static_cast<float>(o.x), static_cast<float>(o.y) };
+	//AimEspInfo.push_back(pAimEspInfo);
 }
 /*
 void TransformToScreenSpace(ID3D11DeviceContext* CCheat::pContext)

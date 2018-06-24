@@ -294,7 +294,21 @@ void CCheat::Initialise()
 	//HWND hWnd = FindWindowA(NULL, "engine");
 	while (!g_hWnd)
 	{
-		g_hWnd = FindWindowA(NULL, "BlueStacks App Player");
+		g_hWnd = FindWindowA(NULL, "Lesson 4 - Begin Drawing");
+		if (!g_hWnd)
+		{
+			g_hWnd = FindWindowA(NULL, "BlueStacks App Player");
+			if (!g_hWnd)
+			{
+				//MessageBoxA(NULL, "Not found HWND 夜神模拟器!", "uBoos?", MB_ICONINFORMATION);
+				//return;
+			}
+			//else
+			//{
+			//	g_hWnd = _EnumChildWindows(g_hWnd, "ScreenBoardClassWindow");
+			//}
+			//HWND hWnd = (HWND)0x0031162C;
+		}
 		if (!g_hWnd)
 		{
 			g_hWnd = FindWindowA(NULL, "夜神模拟器");
@@ -463,6 +477,7 @@ void CCheat::Initialise()
 	Hooks::oVSSetConstantBuffers = reinterpret_cast<tD3D11VSSetConstantBuffers>(pContextVT[7]/*D3D11VSSetConstantBuffers*/);
 	Hooks::oPSSetShaderResources = reinterpret_cast<tD3D11PSSetShaderResources>(pContextVT[8]/*D3D11PSSetShaderResources*/);
 	Hooks::oPSSetSamplers = reinterpret_cast<tD3D11PSSetSamplers>(pContextVT[10]/*D3D11PSSetSamplers*/);
+	Hooks::oUpdateSubresource = reinterpret_cast<tD3D11UpdateSubresource>(pContextVT[48]/*D3D11UpdateSubresource*/);
 
 	Hooks::oDrawIndexedInstanced = reinterpret_cast<tD3D11DrawIndexedInstanced>(pContextVT[20]/**/);
 	Hooks::oDrawInstanced = reinterpret_cast<tD3D11DrawInstanced>(pContextVT[21]/**/);
@@ -475,6 +490,7 @@ void CCheat::Initialise()
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oVSSetConstantBuffers),			Hooks::hkD3D11VSSetConstantBuffers);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetShaderResources),			Hooks::hkD3D11PSSetShaderResources);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetSamplers),					Hooks::hkD3D11PSSetSamplers);
+	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oUpdateSubresource),				Hooks::hkD3D11UpdateSubresource);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexed),					Hooks::hkD3D11DrawIndexed);
 
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstanced),					Hooks::hkD3D11DrawInstanced);

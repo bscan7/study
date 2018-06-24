@@ -62,3 +62,22 @@ void Helpers::LogError(char* szMessage)
 {
 	std::cout << "[Error] " << szMessage << std::endl;
 }
+
+void Helpers::LogFormat(const char* strFormat, ...)
+{
+	const int BUFFER_SIZE = 1280;
+	char   szBuffer[BUFFER_SIZE] = { 0 };
+	va_list args = NULL;
+
+	// The va_start macro (defined in STDARG.H) is usually equivalent to:  
+	// pArgList = (char *) &szFormat + sizeof (szFormat) ;  
+	va_start(args, strFormat);
+
+	// The last argument to wvsprintf points to the arguments  
+	_vsnprintf(szBuffer, BUFFER_SIZE, strFormat, args);
+
+	// The va_end macro just zeroes out pArgList for no good reason  
+	va_end(args);
+	//::OutputDebugStringA(szBuffer);
+	std::cout << "[:-)] " << szBuffer << std::endl;
+}

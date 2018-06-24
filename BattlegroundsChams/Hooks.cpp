@@ -8,16 +8,18 @@
 //#include <d3dx11async.h>
 #include <process.h>
 #include <iomanip>
+#include <iosfwd>
 #include <string>
-
-#include<fstream>
-using namespace std;
-
 extern "C"
 { 
 #include "..\Subliminal-Fortnite\FW1FontWrapper\FW1FontWrapper.h"
-#include <iosfwd>
 };
+
+#include<fstream>
+using namespace std;
+#include "E:\Microsoft DirectX SDK (June 2010)\Include\xnamath.h"
+#include "E:\Microsoft DirectX SDK (June 2010)\Include\D3DX11tex.h"
+
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
 
@@ -75,6 +77,7 @@ tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
 tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
+tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
 
  tD3D11DrawInstanced Hooks::oDrawInstanced = NULL;
  tD3D11DrawIndexedInstanced Hooks::oDrawIndexedInstanced = NULL;
@@ -85,6 +88,8 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
  std::vector<int> aaa;
  std::vector<int> bbb;
  int iiidx = 0;
+
+ std::vector<UINT64> lstAllStride00;
 
  std::vector<UINT64> lstAll2412;
  std::vector<UINT64> lstAvatar2412;
@@ -115,6 +120,222 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
  DWORD cover = 0;
  bool bShoot = false;
  bool bShow24 = false;
+ID3D11ShaderResourceView *pTextureSRV = NULL;
+
+ void tmppp(ID3D11DeviceContext* pContext)
+ {
+	 D3D11_TEXTURE2D_DESC textureDesc;
+	 ID3D11Texture2D *pTexture;
+
+	 ZeroMemory(&textureDesc, sizeof(textureDesc));
+	 textureDesc.Width = 1280;
+	 textureDesc.Height = 720;
+	 textureDesc.ArraySize = 1;
+	 textureDesc.Format = DXGI_FORMAT_R8_UNORM;
+	 textureDesc.SampleDesc.Count = 1;
+	 textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	 textureDesc.MipLevels = 1;
+	 textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+	 Helpers::LogFormat("Create glyph sheet texture 0");
+	 HRESULT hResult = CCheat::pDevice->CreateTexture2D(&textureDesc, NULL, &pTexture);
+	 if (FAILED(hResult)) {
+		 //m_lastError = L"Failed to create glyph sheet texture";
+		 Helpers::LogFormat("Failed to create glyph sheet texture 1");
+	 }
+	 else {
+
+		 hResult = CCheat::pDevice->CreateShaderResourceView(pTexture, NULL, &pTextureSRV);
+		 if (FAILED(hResult)) {
+			 //m_lastError = L"Failed to create shader resource view for glyph sheet texture";
+			 Helpers::LogFormat("Failed to create glyph sheet texture 2");
+		 }
+		 else {
+			 // Create coord buffer if enabled
+			 //if (m_hardwareCoordBuffer) {
+			 //	D3D11_BUFFER_DESC bufferDesc;
+			 //	ID3D11Buffer *pBuffer;
+
+			 //	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+			 //	bufferDesc.ByteWidth = m_maxGlyphCount * sizeof(FW1_GLYPHCOORDS);
+			 //	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			 //	bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+			 //	hResult = m_pDevice->CreateBuffer(&bufferDesc, NULL, &pBuffer);
+			 //	if (FAILED(hResult)) {
+			 //		m_lastError = L"Failed to create glyph coord buffer";
+			 //	}
+			 //	else {
+			 //		D3D11_SHADER_RESOURCE_VIEW_DESC bufferSRVDesc;
+			 //		ID3D11ShaderResourceView *pBufferSRV;
+
+			 //		ZeroMemory(&bufferSRVDesc, sizeof(bufferSRVDesc));
+			 //		bufferSRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			 //		bufferSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+			 //		bufferSRVDesc.Buffer.ElementOffset = 0;
+			 //		bufferSRVDesc.Buffer.ElementWidth = m_maxGlyphCount * 2;// Two float4 per glyphcoords
+
+			 //		hResult = m_pDevice->CreateShaderResourceView(pBuffer, &bufferSRVDesc, &pBufferSRV);
+			 //		if (FAILED(hResult)) {
+			 //			m_lastError = L"Failed to create shader resource view for glyph coord buffer";
+			 //		}
+			 //		else {
+			 //			m_pCoordBuffer = pBuffer;
+			 //			m_pCoordBufferSRV = pBufferSRV;
+			 //		}
+
+			 //		if (FAILED(hResult))
+			 //			pBuffer->Release();
+			 //	}
+			 //}
+
+			 //if (SUCCEEDED(hResult)) {
+			 //	m_pTexture = pTexture;
+			 //	m_pTextureSRV = pTextureSRV;
+			 //}
+			 //else
+			 //	pTextureSRV->Release();
+		 }
+
+		 if (FAILED(hResult))
+		 {
+			 Helpers::LogFormat("Failed to create glyph sheet texture 3");
+			 pTexture->Release();
+		 }
+		 //Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, (ID3D11ShaderResourceView *const *)pTextureSRV);
+	 }
+	 Helpers::LogFormat("Done create glyph sheet texture 000000000000000000");
+ }
+
+ struct Vertex	//Overloaded Vertex Structure
+ {
+	 Vertex() {}
+	 Vertex(float x, float y, float z,
+		 float u, float v,
+		 float nx, float ny, float nz,
+		 float tx, float ty, float tz)
+		 : pos(x, y, z), texCoord(u, v), normal(nx, ny, nz),
+		 tangent(tx, ty, tz) {}
+
+	 XMFLOAT3 pos;
+	 XMFLOAT2 texCoord;
+	 XMFLOAT3 normal;
+	 XMFLOAT3 tangent;
+	 XMFLOAT3 biTangent;
+ };
+ 
+ ID3D11Texture2D *sharedTex11 = NULL;
+ ID3D11Buffer *d2dVertBuffer = NULL;
+ ID3D11Buffer *d2dIndexBuffer = NULL;
+ ID3D11ShaderResourceView *d2dTexture = NULL;
+
+ void InitD2DScreenTexture()
+ {
+	 HRESULT hResult;
+	 ////Create the vertex buffer
+	 //Vertex v[] =
+	 //{
+		// // Front Face
+		// Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f,-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+		// Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f,-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+		// Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+		// Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+	 //};
+
+	 //DWORD indices[] = {
+		// // Front Face
+		// 0,  1,  2,
+		// 0,  2,  3,
+	 //};
+
+	 //D3D11_BUFFER_DESC indexBufferDesc;
+	 //ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
+
+	 //indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	 //indexBufferDesc.ByteWidth = sizeof(DWORD) * 2 * 3;
+	 //indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	 //indexBufferDesc.CPUAccessFlags = 0;
+	 //indexBufferDesc.MiscFlags = 0;
+
+	 //D3D11_SUBRESOURCE_DATA iinitData;
+
+	 //iinitData.pSysMem = indices;
+	 //hResult = CCheat::pDevice->CreateBuffer(&indexBufferDesc, &iinitData, &d2dIndexBuffer);
+	 //if (FAILED(hResult))
+	 //{
+		// Helpers::LogFormat("FAILED(hResult) 0");
+	 //}
+	 //D3D11_BUFFER_DESC vertexBufferDesc;
+	 //ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+
+	 //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	 //vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
+	 //vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	 //vertexBufferDesc.CPUAccessFlags = 0;
+	 //vertexBufferDesc.MiscFlags = 0;
+
+	 //D3D11_SUBRESOURCE_DATA vertexBufferData;
+
+	 //ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
+	 //vertexBufferData.pSysMem = v;
+	 //hResult = CCheat::pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &d2dVertBuffer);
+	 //if (FAILED(hResult))
+	 //{
+		// Helpers::LogFormat("FAILED(hResult) 1");
+	 //}
+
+	 //D3D11_TEXTURE2D_DESC sharedTexDesc;
+
+	 //ZeroMemory(&sharedTexDesc, sizeof(sharedTexDesc));
+
+	 //sharedTexDesc.Width = 1280;
+	 //sharedTexDesc.Height = 720;
+	 //sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	 //sharedTexDesc.MipLevels = 1;
+	 //sharedTexDesc.ArraySize = 1;
+	 //sharedTexDesc.SampleDesc.Count = 1;
+	 //sharedTexDesc.Usage = D3D11_USAGE_DEFAULT;
+	 //sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	 //sharedTexDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+	 //hResult = CCheat::pDevice->CreateTexture2D(&sharedTexDesc, NULL, &sharedTex11);
+	 //if (FAILED(hResult))
+	 //{
+		// Helpers::LogFormat("FAILED(CreateTexture2D) .......");
+	 //}
+
+	 ////Create A shader resource view from the texture D2D will render to,
+	 ////So we can use it to texture a square which overlays our scene
+	 //hResult = CCheat::pDevice->CreateShaderResourceView(sharedTex11, NULL, &d2dTexture);
+	 //if (FAILED(hResult))
+	 //{
+		// Helpers::LogFormat("FAILED(hResult) 222");
+	 //}
+
+
+	 ///Load Skymap's cube texture///
+	 D3DX11_IMAGE_LOAD_INFO loadSMInfo;
+	 loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+	 ID3D11Texture2D* SMTexture = 0;
+	 hResult = D3DX11CreateTextureFromFile(CCheat::pDevice, L"..\\skymap.dds",
+		 &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
+
+	 D3D11_TEXTURE2D_DESC SMTextureDesc;
+	 SMTexture->GetDesc(&SMTextureDesc);
+
+	 D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
+	 SMViewDesc.Format = SMTextureDesc.Format;
+	 SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	 SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
+	 SMViewDesc.TextureCube.MostDetailedMip = 0;
+
+	 hResult = CCheat::pDevice->CreateShaderResourceView(SMTexture, &SMViewDesc, &d2dTexture);
+
+
+	 Helpers::LogFormat("SMTexture=[%x] d2dTexture=[[ %x ]] ", SMTexture, d2dTexture);
+	 system("pause");
+ }
 
  void InitListFromFiles()
  {
@@ -288,6 +509,7 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 
  void Thread_KeysSwitch(PVOID param)
  {
+	 int iBW_Pos = 0;
 	 while (true)
 	 {
 		 if (GetAsyncKeyState(VK_NUMPAD0) & 1)
@@ -297,6 +519,10 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 		 if (GetAsyncKeyState(VK_NUMPAD1) & 1)
 		 {
 			 sHideList.clear();
+		 }
+		 if (GetAsyncKeyState(VK_F10) & 1)
+		 {
+			 bShow24 = !bShow24;
 		 }
 		 if (GetAsyncKeyState(VK_F9) & 1)
 		 {
@@ -310,13 +536,34 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 		 {
 			 bLog2Txt = !bLog2Txt;
 		 }
+		 if (GetAsyncKeyState(VK_F12) & 1)
+		 {
+			 if (iBW_Pos >= lstAllStride00.size())
+			 {
+				 iBW_Pos = 0;
+			 } 
+			 if (lstAllStride00.size() > 0)
+			 {
+				 pssrStride = lstAllStride00.at(iBW_Pos++);
+				 Helpers::LogFormat("pssrStride  == [[ %d ]], lstAllByteWidth.size()=[%d]", pssrStride, lstAllStride00.size());
+			 }
+		 }
+		 if (GetAsyncKeyState(VK_F5) & 1)
+		 {
+			 lstAllStride00.clear();
+			 iBW_Pos = 0;
+
+			 pssrStartSlot++;
+			 if (pssrStartSlot > 5)
+			 {
+				 pssrStartSlot = 0;
+			 }
+			 Helpers::LogFormat("pssrStartSlot= < %d >, ", pssrStartSlot);
+
+		 }
 		 if (GetAsyncKeyState(VK_SCROLL) & 1)
 		 {
 			 bVideo4Rec = !bVideo4Rec;
-		 }
-		 if (GetAsyncKeyState(VK_F10) & 1)
-		 {
-			 bShow24 = !bShow24;
 		 }
 		 if (GetAsyncKeyState(VK_ADD) & 1)
 		 {
@@ -695,13 +942,13 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 
 	 Send2Hwnd(IndexCount, Stride);
 
-	 if ((Stride == 12) && (IndexCount > 7000) && (IndexCount < 10000))
-	 {
+	 //if ((Stride == 12) && (IndexCount > 7000) && (IndexCount < 10000))
+	 //{
 
-		 MyTraceA("CheatItBIGBIG**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
-		 //		if (!bRed)
-		 //			return;
-	 }
+		// MyTraceA("CheatItBIGBIG**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
+		// //		if (!bRed)
+		// //			return;
+	 //}
 
 
 	 //if (/*(Stride == iStride  && IndexCount == 2514)
@@ -1103,7 +1350,9 @@ tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
 	 }
 
 	 InitListFromFiles();
+	 //tmppp(CCheat::pContext);
 
+	 //InitD2DScreenTexture();
 	 //_beginthread(Thread_fileWatcher, 0, NULL);
 	 _beginthread(Thread_KeysSwitch, 0, NULL);
  }
@@ -1561,7 +1810,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers)
 {
 	//Helpers::LogAddress("\r\n hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
-	OutputDebugStringA("hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
+	//OutputDebugStringA("hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
 	//works ok in ut4 alpha only
 	//if (Stride == 40 || Stride == 44) //ut4 models
 	//{
@@ -1569,18 +1818,132 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 	//}
 	//MyTraceA("hkD3D11VSSetConstantBuffers**************pContext=%x StartSlot=%d NumBuffers=%d ppConstantBuffers=%x ", pContext, StartSlot, NumBuffers, ppConstantBuffers);
 
+
+
 	return Hooks::oVSSetConstantBuffers(pContext, StartSlot, NumBuffers, ppConstantBuffers);
 }
 
 void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews)
 {
-	MyTraceA("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x", pContext, StartSlot, NumViews, ppShaderResourceViews);
-	return Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, ppShaderResourceViews);
+	//MyTraceA("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x", pContext, StartSlot, NumViews, ppShaderResourceViews);
+	//pssrStartSlot = StartSlot;
+
+	//get pscdesc.ByteWidth
+	pContext->PSGetConstantBuffers(StartSlot, 1, &pcsBuffer);
+	if (pcsBuffer)
+		pcsBuffer->GetDesc(&pscdesc);
+	if (pcsBuffer != NULL) { pcsBuffer->Release(); pcsBuffer = NULL; }
+
+	//(pscdesc.ByteWidth == 224 && Descr.Format == 71)
+	//Helpers::LogFormat("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x pscdesc.ByteWidth=%d, Descr.Format=%d", pContext, StartSlot, NumViews, ppShaderResourceViews, pscdesc.ByteWidth, Descr.Format);
+	UINT Stride = 0;
+	if ((pssrStartSlot == StartSlot))
+	{
+		ID3D11Buffer *veBuffer;
+		UINT veBufferOffset = 0;
+		pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+		//Helpers::LogFormat("pssrStartSlot=[%d] pssrStride=[[ %d ]] curStride=[%d] size()=[%d]", StartSlot, pssrStride, Stride, lstAllStride00.size());
+
+		if (find(lstAllStride00.begin(), lstAllStride00.end(), Stride) != lstAllStride00.end()) {
+			//找到
+		}
+		else {
+			//没找到
+
+			lstAllStride00.push_back(Stride);
+		}
+	}
+
+	//if (((1 == StartSlot) || (2 == StartSlot) || (pssrStartSlot == StartSlot))&&
+	//	((Stride == 12) ||
+	//	(Stride == 24))
+	//	)//不显示它的贴图
+	if ((pssrStartSlot == StartSlot)) {
+		//Helpers::LogFormat("不显示它的贴图..........curStartSlot=[%d] curStride=[%d] pssrStride=[[ %d ]] size()=[%d]", StartSlot, Stride, pssrStride, lstAllStride00.size());
+		//tmppp(pContext, StartSlot, NumViews);
+		//if (d2dTexture)
+		//{
+		//	//Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, (ID3D11ShaderResourceView *const *)d2dTexture);
+		//}
+		//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+
+		////if (ppDepthStencilStateNew == NULL)
+		//{
+		//	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+		//	ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+		//	//depthStencilDesc.DepthEnable = TRUE;
+		//	//depthStencilDesc.DepthEnable = FALSE;
+		//	//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+		//	//depthStencilDesc.StencilEnable = FALSE;
+		//	ID3D11Device *ppDevice;
+		//	pContext->GetDevice(&ppDevice);
+		//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+		//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+		//}
+
+		//pContext->PSSetShader(psRed, NULL, NULL);
+	}
+	else
+		Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, ppShaderResourceViews);
+
+	return;
+}
+
+void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID3D11Resource *pDstResource, UINT DstSubresource, const D3D11_BOX *pDstBox, const void *pSrcData, UINT SrcRowPitch, UINT SrcDepthPitch)
+{
+	//system("cls");
+	//int i = 0;
+	//Helpers::LogFormat("====\r\n%03.8f %03.8f %03.8f %03.8f\r\n%03.8f %03.8f %03.8f %03.8f\r\n%03.8f %03.8f %03.8f %03.8f\r\n%03.8f %03.8f %03.8f %03.8f", 
+	//	*(float*)((int)pSrcData + 0), *(float*)((int)pSrcData + 4), *(float*)((int)pSrcData + 8), *(float*)((int)pSrcData + 12),
+	//	*(float*)((int)pSrcData + 16), *(float*)((int)pSrcData + 16 + 4), *(float*)((int)pSrcData + 16 + 8), *(float*)((int)pSrcData + 16 + 12),
+	//	*(float*)((int)pSrcData + 32), *(float*)((int)pSrcData + 32 + 4), *(float*)((int)pSrcData + 32 + 8), *(float*)((int)pSrcData + 32 + 12),
+	//	*(float*)((int)pSrcData + 48), *(float*)((int)pSrcData + 48 + 4), *(float*)((int)pSrcData + 48 + 8), *(float*)((int)pSrcData + 48 + 12)
+	//);
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	int i = 0;
+
+	if (Stride == 24)
+	{
+		//system("cls");
+		//std::cout << *(float*)((int)pSrcData + 0) << " " << *(float*)((int)pSrcData + 4) << " " << *(float*)((int)pSrcData + 8) << " " << *(float*)((int)pSrcData + 12) << std::endl;
+		//std::cout << *(float*)((int)pSrcData + 16) << " " << *(float*)((int)pSrcData + 16 + 4) << " " << *(float*)((int)pSrcData + 16 + 8) << " " << *(float*)((int)pSrcData + 16 + 12) << std::endl;
+		//std::cout << *(float*)((int)pSrcData + 32) << " " << *(float*)((int)pSrcData + 32 + 4) << " " << *(float*)((int)pSrcData + 32 + 8) << " " << *(float*)((int)pSrcData + 32 + 12) << std::endl;
+		//std::cout << *(float*)((int)pSrcData + 48) << " " << *(float*)((int)pSrcData + 48 + 4) << " " << *(float*)((int)pSrcData + 48 + 8) << " " << *(float*)((int)pSrcData + 48 + 12) << std::endl;
+
+		//for (int i = 0; i < 60; i++)
+		//{
+		//	std::cout << std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 0) << " "
+		//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 4) << " "
+		//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 8) << " "
+		//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 12) << std::endl;
+
+		//	//if ((*(float*)((int)(ppConstantBuffers)+(i * 16) + 0) != 0.00000000) || 
+		//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 4) != 0.00000000) ||
+		//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 8) != 0.00000000) ||
+		//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 12) != 0.00000000) )
+		//	//{
+		//	//	Helpers::LogFormat("i=%d ===%03.8f %03.8f %03.8f %03.8f", i, /*18.123456789,*/
+		//	//		*(float*)((int)(ppConstantBuffers)+(i*16) + 0),
+		//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 4),
+		//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 8),
+		//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 12)
+		//	//	);
+		//	//}
+		//}
+	}
+	return Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
 }
 
 void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers)
 {
-	MyTraceA("hkD3D11PSSetSamplers==> pContext=%08x, StartSlot=%d, NumSamplers=%d, ppSamplers=%08x", pContext, StartSlot, NumSamplers, ppSamplers);
+	//MyTraceA("hkD3D11PSSetSamplers==> pContext=%08x, StartSlot=%d, NumSamplers=%d, ppSamplers=%08x", pContext, StartSlot, NumSamplers, ppSamplers);
 	return Hooks::oPSSetSamplers(pContext, StartSlot, NumSamplers, ppSamplers);
 }
 
