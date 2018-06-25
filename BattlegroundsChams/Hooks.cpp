@@ -17,8 +17,8 @@ extern "C"
 
 #include<fstream>
 using namespace std;
-#include "E:\Microsoft DirectX SDK (June 2010)\Include\xnamath.h"
-#include "E:\Microsoft DirectX SDK (June 2010)\Include\D3DX11tex.h"
+#include "xnamath.h"
+#include "D3DX11tex.h"
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
@@ -74,6 +74,7 @@ std::list<std::string> sHideList;
 tD3D11CreateQuery Hooks::oCreateQuery = NULL;
 tD3D11Present Hooks::oPresent = NULL;
 tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
+tD3D11Map Hooks::oMap = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
 tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
@@ -1827,7 +1828,11 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 {
 	//MyTraceA("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x", pContext, StartSlot, NumViews, ppShaderResourceViews);
 	//pssrStartSlot = StartSlot;
-
+	ID3D11ShaderResourceView* pShaderResView = ppShaderResourceViews[0];
+	if (pShaderResView)
+	{
+		pShaderResView->GetDesc(&Descr);
+	}
 	//get pscdesc.ByteWidth
 	pContext->PSGetConstantBuffers(StartSlot, 1, &pcsBuffer);
 	if (pcsBuffer)
@@ -1835,7 +1840,6 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 	if (pcsBuffer != NULL) { pcsBuffer->Release(); pcsBuffer = NULL; }
 
 	//(pscdesc.ByteWidth == 224 && Descr.Format == 71)
-	//Helpers::LogFormat("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x pscdesc.ByteWidth=%d, Descr.Format=%d", pContext, StartSlot, NumViews, ppShaderResourceViews, pscdesc.ByteWidth, Descr.Format);
 	UINT Stride = 0;
 	if ((pssrStartSlot == StartSlot))
 	{
@@ -1843,6 +1847,7 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 		UINT veBufferOffset = 0;
 		pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
+		Helpers::LogFormat("hkD3D11PSSetShaderResources==> NumViews=%d, ppSRViews=%08x pscdesc.BW=%d, Descr.F=%d, Descr.V=%d, StartSlot=%d", NumViews, ppShaderResourceViews, pscdesc.ByteWidth, Descr.Format, Descr.ViewDimension, StartSlot);
 		//Helpers::LogFormat("pssrStartSlot=[%d] pssrStride=[[ %d ]] curStride=[%d] size()=[%d]", StartSlot, pssrStride, Stride, lstAllStride00.size());
 
 		if (find(lstAllStride00.begin(), lstAllStride00.end(), Stride) != lstAllStride00.end()) {
@@ -1958,6 +1963,29 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	return;
 
 }
+
+void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resource *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
+{
+	Helpers::LogFormat("hkD3D11Map...");
+
+	////锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
+	//D3D11_MAPPED_SUBRESOURCE mappedResource;
+	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+
+	////获取指向顶点缓存的指针  
+	//Vertex* verticesPtr;
+	//verticesPtr = (Vertex*)mappedResource.pData;
+
+	////把数据复制进顶点缓存  
+	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+
+	////解锁顶点缓存  
+	//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+
+	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+	return;
+}
+
 void __stdcall Hooks::hkD3D11CreateQuery(ID3D11Device* pDevice, const D3D11_QUERY_DESC *pQueryDesc, ID3D11Query **ppQuery)
 {
 	//Helpers::LogAddress("\r\n hkD3D11CreateQuery++++++++++++++++++++*===");
