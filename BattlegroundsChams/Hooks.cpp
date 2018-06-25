@@ -1618,6 +1618,7 @@ bool IsCenterRed()
 
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
+	Helpers::LogFormat("hkD3D11Present+++++++-------------------------------- bUp = %d", bFlashIt);
 	DWORD bgtime = timeGetTime();
 	if (!bCheat)
 	{
@@ -1626,7 +1627,6 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	//Helpers::LogAddress("\r\n hkD3D11Present++++++++++++++++++++*===");
 	bFlashIt = !bFlashIt;
-	MyTraceA("hkD3D11Present+++++++----------------------------------------------------------------- bUp = %d", bFlashIt);
 
 	//RECT lpRect;
 	//int iW = g_lpRect.right - g_lpRect.left;
@@ -1841,13 +1841,13 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 
 	//(pscdesc.ByteWidth == 224 && Descr.Format == 71)
 	UINT Stride = 0;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 	if ((pssrStartSlot == StartSlot))
 	{
-		ID3D11Buffer *veBuffer;
-		UINT veBufferOffset = 0;
-		pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-		Helpers::LogFormat("hkD3D11PSSetShaderResources==> NumViews=%d, ppSRViews=%08x pscdesc.BW=%d, Descr.F=%d, Descr.V=%d, StartSlot=%d", NumViews, ppShaderResourceViews, pscdesc.ByteWidth, Descr.Format, Descr.ViewDimension, StartSlot);
+		//Helpers::LogFormat("hkD3D11PSSetShaderResources==> NumViews=%d, ppSRViews=%08x pscdesc.BW=%d, Descr.F=%d, Descr.V=%d, StartSlot=%d", NumViews, ppShaderResourceViews, pscdesc.ByteWidth, Descr.Format, Descr.ViewDimension, StartSlot);
 		//Helpers::LogFormat("pssrStartSlot=[%d] pssrStride=[[ %d ]] curStride=[%d] size()=[%d]", StartSlot, pssrStride, Stride, lstAllStride00.size());
 
 		if (find(lstAllStride00.begin(), lstAllStride00.end(), Stride) != lstAllStride00.end()) {
@@ -1860,12 +1860,16 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 		}
 	}
 
-	//if (((1 == StartSlot) || (2 == StartSlot) || (pssrStartSlot == StartSlot))&&
-	//	((Stride == 12) ||
-	//	(Stride == 24))
-	//	)//不显示它的贴图
-	if ((pssrStartSlot == StartSlot)) {
+	if (((1 == StartSlot) || (2 == StartSlot) || (pssrStartSlot == StartSlot))
+		&&
+		((Stride == 12) ||(Stride == 24))
+		&&
+		(Descr.Format==28 && Descr.ViewDimension==4)//28,4 10,9
+		)//不显示它的贴图
+	//if ((pssrStartSlot == StartSlot)) 
+	{
 		//Helpers::LogFormat("不显示它的贴图..........curStartSlot=[%d] curStride=[%d] pssrStride=[[ %d ]] size()=[%d]", StartSlot, Stride, pssrStride, lstAllStride00.size());
+		//Helpers::LogFormat("不显示它的贴图==> NVs=%d, SRVs=%08x BW=%d, F=%d, V=%d, StartSlot=%d", NumViews, ppShaderResourceViews, pscdesc.ByteWidth, Descr.Format, Descr.ViewDimension, StartSlot);
 		//tmppp(pContext, StartSlot, NumViews);
 		//if (d2dTexture)
 		//{
@@ -1966,23 +1970,40 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resource *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
 {
-	Helpers::LogFormat("hkD3D11Map...");
 
-	////锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
+	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
 	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 
-	////获取指向顶点缓存的指针  
-	//Vertex* verticesPtr;
-	//verticesPtr = (Vertex*)mappedResource.pData;
-
-	////把数据复制进顶点缓存  
-	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
-
-	////解锁顶点缓存  
-	//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+	//UINT Stride;
+	//ID3D11Buffer *veBuffer;
+	//UINT veBufferOffset = 0;
+	//pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+
+	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+	// 得到const buffer指针.  
+	if (D3D11_MAP_WRITE_DISCARD == MapType)
+	{
+		UINT* p = (UINT*)pMappedResource->pData;
+		Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28));
+	}
+
+	//if (Stride == 24)
+	//{
+	//	//获取指向顶点缓存的指针  
+	//	Vertex* verticesPtr;
+	//	verticesPtr = (Vertex*)pMappedResource->pData;
+
+	//	////把数据复制进顶点缓存  
+	//	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+
+	//	////解锁顶点缓存  
+	//	//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+	//	Helpers::LogFormat("hkD3D11Map...(Stride:24) %03.8f %03.8f %03.8f %03.8f", *(float*)((int)verticesPtr + 28), *(float*)((int)verticesPtr + 32), *(float*)((int)verticesPtr + 36), *(float*)((int)verticesPtr + 40));
+	//}
 	return;
 }
 
