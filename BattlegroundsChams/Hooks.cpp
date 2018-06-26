@@ -1989,7 +1989,6 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resource *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
 {
-
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
 	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -2004,7 +2003,7 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resou
 	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 
 	// 得到const buffer指针.  
-	if (D3D11_MAP_WRITE_DISCARD == MapType)
+	//if (D3D11_MAP_WRITE_DISCARD == MapType)
 	{
 		UINT* p = (UINT*)pMappedResource->pData;
 		Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28));
