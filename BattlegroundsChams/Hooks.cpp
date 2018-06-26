@@ -937,7 +937,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 UINT Stride;
 	 ID3D11Buffer *veBuffer;
 	 UINT veBufferOffset = 0;
-	 pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	 pContext->IAGetVertexBuffers(g_StartSlot/*StartSlot*/, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	 
 	 MyTraceA("CheatIt**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
@@ -1829,6 +1829,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers)
 {
+	g_StartSlot = StartSlot;
 	//Helpers::LogAddress("\r\n hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
 	//OutputDebugStringA("hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
 	//works ok in ut4 alpha only
@@ -1845,6 +1846,7 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 
 void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews)
 {
+	g_StartSlot = StartSlot;
 	//MyTraceA("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x", pContext, StartSlot, NumViews, ppShaderResourceViews);
 	//pssrStartSlot = StartSlot;
 	ID3D11ShaderResourceView* pShaderResView = ppShaderResourceViews[0];
@@ -1862,7 +1864,7 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 	UINT Stride = 0;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	pContext->IAGetVertexBuffers(StartSlot, 1, &veBuffer, &Stride, &veBufferOffset);
 	if ((pssrStartSlot == StartSlot))
 	{
 
@@ -1930,14 +1932,14 @@ void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID
 	//	*(float*)((int)pSrcData + 32), *(float*)((int)pSrcData + 32 + 4), *(float*)((int)pSrcData + 32 + 8), *(float*)((int)pSrcData + 32 + 12),
 	//	*(float*)((int)pSrcData + 48), *(float*)((int)pSrcData + 48 + 4), *(float*)((int)pSrcData + 48 + 8), *(float*)((int)pSrcData + 48 + 12)
 	//);
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	//UINT Stride;
+	//ID3D11Buffer *veBuffer;
+	//UINT veBufferOffset = 0;
+	//pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	int i = 0;
+	//int i = 0;
 
-	if (Stride == 24)
+	//if (Stride == 24)
 	{
 		//system("cls");
 		//std::cout << *(float*)((int)pSrcData + 0) << " " << *(float*)((int)pSrcData + 4) << " " << *(float*)((int)pSrcData + 8) << " " << *(float*)((int)pSrcData + 12) << std::endl;
@@ -1971,6 +1973,7 @@ void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID
 
 void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers)
 {
+	g_StartSlot = StartSlot;
 	//MyTraceA("hkD3D11PSSetSamplers==> pContext=%08x, StartSlot=%d, NumSamplers=%d, ppSamplers=%08x", pContext, StartSlot, NumSamplers, ppSamplers);
 	return Hooks::oPSSetSamplers(pContext, StartSlot, NumSamplers, ppSamplers);
 }
@@ -2060,7 +2063,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	//	OutputDebugStringA("hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	DWORD bgtime = timeGetTime();
-	if (!bCheat)
+	if ((!bCheat) || (g_StartSlot==0))
 	{
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
@@ -2068,7 +2071,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	pContext->IAGetVertexBuffers(g_StartSlot/*StartSlot*/, 1, &veBuffer, &Stride, &veBufferOffset);
 	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
 	{
