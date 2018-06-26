@@ -19,6 +19,7 @@ void Helpers::UnhookFunction(PVOID *oFunction, PVOID pDetour)
 	DetourTransactionCommit();
 }
 extern bool bLog2Txt;
+extern ofstream outfile;
 
 //MISCELLANEOUS
 void Helpers::Log(char* szMessage)
@@ -40,23 +41,23 @@ void Helpers::LogAddress(char* szName, int64_t iAddress)
 	//}
 	std::cout << "[+] " << szName << ": 0x" << std::hex << iAddress << std::endl;
 }
-void Helpers::Log2Txt(char* szLog, int64_t iAddress)
-{
-	if (bLog2Txt && iAddress>0)
-	{
-		ofstream outfile;
-		outfile.open("..\\Log2Txt.txt", ios::app);
-		if (!outfile)
-		{
-			std::cout << "打开Log2Txt.txt文件失败！" << endl;
-		}
-		else
-		{
-			outfile << "[+] " << szLog << ": " << iAddress << std::endl;
-			outfile.close();
-		}
-	}
-}
+//void Helpers::Log2Txt(char* szLog, int64_t iAddress)
+//{
+//	if (bLog2Txt && iAddress>0)
+//	{
+//		ofstream outfile;
+//		outfile.open("..\\Log2Txt.txt", ios::app);
+//		if (!outfile)
+//		{
+//			std::cout << "打开Log2Txt.txt文件失败！" << endl;
+//		}
+//		else
+//		{
+//			outfile << "[+] " << szLog << ": " << iAddress << std::endl;
+//			outfile.close();
+//		}
+//	}
+//}
 
 void Helpers::LogError(char* szMessage)
 {
@@ -78,6 +79,20 @@ void Helpers::LogFormat(const char* strFormat, ...)
 
 	// The va_end macro just zeroes out pArgList for no good reason  
 	va_end(args);
-	//::OutputDebugStringA(szBuffer);
-	std::cout << "[:-)] " << szBuffer << std::endl;
+
+	if (bLog2Txt)
+	{
+		//outfile.open("..\\Log2Txt.txt", ios::app);
+		if (!outfile)
+		{
+			std::cout << "打开Frame***文件失败！" << endl;
+		}
+		else
+		{
+			outfile << "[+] " << szBuffer << std::endl;
+			//outfile.close();
+		}
+	}
+	else
+		std::cout << "[:-)] " << szBuffer << std::endl;
 }

@@ -1,6 +1,6 @@
 #include <mmsystem.h>
 #include <vector>
-bool bLogTxt = false;
+//bool bLogTxt = false;
 bool bVideo4Rec = false; //触发FRAPS录制视频，同时逐个物体显示红色。用于记录分析
 
 //    对应Unicode的调试输出  
@@ -32,10 +32,10 @@ inline void MyTraceA(const char* strFormat, ...)
 	va_end(args);
 	::OutputDebugStringA(szBuffer);
 
-	if (bLogTxt)
-	{
-		Helpers::LogAddress(szBuffer);
-	}
+	//if (bLogTxt)
+	//{
+	//	Helpers::LogAddress(szBuffer);
+	//}
 }
 
 
