@@ -114,8 +114,8 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  int iMax = 2990;
  int itm = 0;
 
- UINT64 iStride = 0;
- UINT64 iIndexCount = 0;
+ int iStride = 0;
+ int iIndexCount = 0;
  int bRed = true;
  int iRed = 0;
  DWORD gggg = 0;
@@ -937,7 +937,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 UINT Stride;
 	 ID3D11Buffer *veBuffer;
 	 UINT veBufferOffset = 0;
-	 pContext->IAGetVertexBuffers(g_StartSlot/*StartSlot*/, 1, &veBuffer, &Stride, &veBufferOffset);
+	 pContext->IAGetVertexBuffers(0/*StartSlot*/, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	 
 	 MyTraceA("CheatIt**************Stride=%d IndexCount=%d StartIndexLocation=%d BaseVertexLocation=%d \r\n", Stride, IndexCount, StartIndexLocation, BaseVertexLocation);
@@ -1623,12 +1623,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (bLog2Txt)
 	{
 		;
-		if (outfile)
+		if (outfile.is_open())
 		{
 			outfile.close();
 		}
 		
-		outfile.open("..\\Frame_" + to_string(iName++), ios::app);
+		outfile.open("..\\xFrame_" + to_string(iName++), ios::app);
 		if (!outfile)
 		{
 			std::cout << "打开Log2Txt.txt文件失败！" << endl;
@@ -1637,7 +1637,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		{
 		}
 	}
-	Helpers::LogFormat("hkD3D11Present+++++++-------------------------------- bUp = %d", bFlashIt);
+	//Helpers::LogFormat("hkD3D11Present+++++++-------------------------------- bUp = %d", bFlashIt);
 	DWORD bgtime = timeGetTime();
 	if (!bCheat)
 	{
@@ -1819,8 +1819,13 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iStride = lstAll2412.at(iPos) % 100;
 			iIndexCount = lstAll2412.at(iPos) / 100;;
 
+			Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
 			iPos++;
 		}
+	}
+	if (bVideo4Rec && IsCenterRed())
+	{
+		Helpers::LogFormat("111 iStride=%d iIndexCount=%d", iStride, iIndexCount);
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
 
@@ -1864,7 +1869,7 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 	UINT Stride = 0;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(StartSlot, 1, &veBuffer, &Stride, &veBufferOffset);
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 	if ((pssrStartSlot == StartSlot))
 	{
 
@@ -1996,10 +2001,10 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resou
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
 	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 
-	//UINT Stride;
-	//ID3D11Buffer *veBuffer;
-	//UINT veBufferOffset = 0;
-	//pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
 
@@ -2007,9 +2012,10 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resou
 
 	// 得到const buffer指针.  
 	//if (D3D11_MAP_WRITE_DISCARD == MapType)
+	if ((g_StartSlot == 1) && (Stride == 24))
 	{
 		UINT* p = (UINT*)pMappedResource->pData;
-		Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28));
+		//Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x Slot=%d Stride=%d", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28), g_StartSlot, Stride);
 	}
 
 	//if (Stride == 24)
@@ -2063,7 +2069,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	//	OutputDebugStringA("hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	DWORD bgtime = timeGetTime();
-	if ((!bCheat) || (g_StartSlot==0))
+	if (!bCheat)
 	{
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
@@ -2071,7 +2077,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(g_StartSlot/*StartSlot*/, 1, &veBuffer, &Stride, &veBufferOffset);
+	pContext->IAGetVertexBuffers(0/*StartSlot*/, 1, &veBuffer, &Stride, &veBufferOffset);
 	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
 	{
@@ -2082,6 +2088,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		else {
 			//没找到
 			lstAll2412.push_back(IndexCountStride);
+			Helpers::LogFormat("lstAll2412.push_back(%d) ", IndexCountStride);
 		}
 	}
 
@@ -2089,7 +2096,11 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
 		{
-			pContext->PSSetShader(psRed, NULL, NULL);
+			if ((Stride == 24) || (Stride == 12))
+			{
+				Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
+				pContext->PSSetShader(psRed, NULL, NULL);
+			}
 		}
 
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
