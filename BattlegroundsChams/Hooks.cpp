@@ -514,6 +514,16 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 int iBW_Pos = 0;
 	 while (true)
 	 {
+		 if (GetAsyncKeyState(VK_SCROLL) & 1)
+		 {
+			 bVideo4Rec = !bVideo4Rec;
+		 }
+		 if (GetAsyncKeyState(VK_ADD) & 1)
+		 {
+			 bShoot = !bShoot;
+			 //red24.push_back(lst24[iPos]);
+		 }
+
 		 if (GetAsyncKeyState(VK_NUMPAD0) & 1)
 		 {
 			 ipp = ipp++ % 4;
@@ -521,6 +531,22 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 if (GetAsyncKeyState(VK_NUMPAD1) & 1)
 		 {
 			 sHideList.clear();
+		 }
+		 if (GetAsyncKeyState(VK_NUMPAD3) & 1)
+		 {
+			 bCrossDraw = !bCrossDraw;
+		 }
+		 if (GetAsyncKeyState(VK_F12) & 1)
+		 {
+			 if (iBW_Pos >= lstAllStride00.size())
+			 {
+				 iBW_Pos = 0;
+			 } 
+			 if (lstAllStride00.size() > 0)
+			 {
+				 pssrStride = lstAllStride00.at(iBW_Pos++);
+				 Helpers::LogFormat("pssrStride  == [[ %d ]], lstAllByteWidth.size()=[%d]", pssrStride, lstAllStride00.size());
+			 }
 		 }
 		 if (GetAsyncKeyState(VK_F10) & 1)
 		 {
@@ -538,18 +564,6 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 {
 			 bLog2Txt = !bLog2Txt;
 		 }
-		 if (GetAsyncKeyState(VK_F12) & 1)
-		 {
-			 if (iBW_Pos >= lstAllStride00.size())
-			 {
-				 iBW_Pos = 0;
-			 } 
-			 if (lstAllStride00.size() > 0)
-			 {
-				 pssrStride = lstAllStride00.at(iBW_Pos++);
-				 Helpers::LogFormat("pssrStride  == [[ %d ]], lstAllByteWidth.size()=[%d]", pssrStride, lstAllStride00.size());
-			 }
-		 }
 		 if (GetAsyncKeyState(VK_F5) & 1)
 		 {
 			 lstAllStride00.clear();
@@ -563,25 +577,6 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 Helpers::LogFormat("pssrStartSlot= < %d >, ", pssrStartSlot);
 
 		 }
-		 if (GetAsyncKeyState(VK_SCROLL) & 1)
-		 {
-			 bVideo4Rec = !bVideo4Rec;
-		 }
-		 if (GetAsyncKeyState(VK_ADD) & 1)
-		 {
-			 bShoot = !bShoot;
-			 //red24.push_back(lst24[iPos]);
-		 }
-
-		 if (GetAsyncKeyState(VK_NUMPAD3) & 1)
-		 {
-			 bCrossDraw = !bCrossDraw;
-		 }
-
-		 if (bShoot)
-		 {
-			 SetEvent(g_Event_Shoot);
-		 }
 
 		 if (GetAsyncKeyState(VK_DELETE) & 1)
 		 {
@@ -593,6 +588,21 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 {
 			 InitListFromFiles();
 		 }
+		 if (GetAsyncKeyState(VK_RIGHT) & 1)
+		 {
+			 iRed = iRed++ % 3;;
+		 }
+
+		 if (GetAsyncKeyState('Q') & 1)
+		 {
+			 //bShoot = !bShoot;
+		 }
+
+		 if (bShoot)
+		 {
+			 SetEvent(g_Event_Shoot);
+		 }
+
 
 		 //if (GetAsyncKeyState(VK_RETURN) & 1)
 		 //{
@@ -898,16 +908,6 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 {
 		 ppDepthStencilState__New->Release();
 		 ppDepthStencilState__New = NULL;
-	 }
-
-	 if (GetAsyncKeyState(VK_RIGHT) & 1)
-	 {
-		 iRed = iRed++ % 3;;
-	 }
-
-	 if (GetAsyncKeyState('Q') & 1)
-	 {
-		 //bShoot = !bShoot;
 	 }
 
 	 if (iRed == 1)
@@ -1616,8 +1616,8 @@ bool IsCenterRed()
 
 	return bOK;
 }
-UINT iName = 0;
 
+UINT iName = 0;
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	if (bLog2Txt)
@@ -1823,8 +1823,9 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iPos++;
 		}
 	}
-	if (bVideo4Rec && IsCenterRed())
+	else if (bVideo4Rec) //IsCenterRed()
 	{
+		bVideo4Rec = !bVideo4Rec;
 		Helpers::LogFormat("111 iStride=%d iIndexCount=%d", iStride, iIndexCount);
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
