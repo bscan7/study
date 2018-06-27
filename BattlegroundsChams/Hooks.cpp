@@ -114,6 +114,7 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  int iMax = 2990;
  int itm = 0;
 
+ UINT64 iiiii = 0;
  int iStride = 0;
  int iIndexCount = 0;
  int bRed = true;
@@ -789,7 +790,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 }
 	 else {
 		 //没找到
-		 if ((Stride == 24) && (IndexCount <= 200))
+		 if (/*(Stride == 24) &&*/ (IndexCount <= 200))
 		 {
 			 return false;
 		 }
@@ -1674,7 +1675,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	{
 		InitForHook(pSwapChain);
 
-		Helpers::Log("D3D11Present initialised");
+		//Helpers::Log("D3D11Present initialised");
 		bInited = true;
 	}
 
@@ -1682,22 +1683,26 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	CCheat::pContext->RSGetViewports(&vps, &viewport);
 	ScreenCenterX = viewport.Width / 2.0f;
 	ScreenCenterY = viewport.Height / 2.0f;
-
+	HRESULT hr;
 	if (!psCrimson)
-		GenerateShader(CCheat::pDevice, &psCrimson, 1.f, 0.2f, 0.2f);
+		hr=GenerateShader(CCheat::pDevice, &psCrimson, 1.f, 0.2f, 0.2f);
 	if (!psYellow)
-		GenerateShader(CCheat::pDevice, &psYellow, 1.f, 0.6f, 0);
+		hr = GenerateShader(CCheat::pDevice, &psYellow, 1.f, 0.6f, 0);
 	if (!psRed)
-		GenerateShader(CCheat::pDevice, &psRed, 0.5f, 0.0f, 0.0f);
+		hr = GenerateShader(CCheat::pDevice, &psRed, 0.5f, 0.0f, 0.0f);
 	if (!psGreen)
-		GenerateShader(CCheat::pDevice, &psGreen, 0.0f, 0.5f, 0.0f);
+		hr = GenerateShader(CCheat::pDevice, &psGreen, 0.0f, 0.5f, 0.0f);
 	if (!psBlue)
-		GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
+		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psTmp)
-		GenerateShader(CCheat::pDevice, &psTmp, 0.45f, 0.3f, 0.1f);
+		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.45f, 0.3f, 0.1f);
 	if (!psd)
-		GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
+		hr = GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
+	if (S_OK == hr)
+	{
+		pssrStartSlot = 1;
+	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
@@ -1816,17 +1821,23 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 				iPos = 0;
 			}
 
-			iStride = lstAll2412.at(iPos) % 100;
-			iIndexCount = lstAll2412.at(iPos) / 100;;
+			iiiii = lstAll2412.at(iPos);
+			iStride = iiiii % 100;
+			iIndexCount = iiiii / 100;;
 
-			Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
+			//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
 			iPos++;
 		}
 	}
 	else if (bVideo4Rec) //IsCenterRed()
 	{
 		bVideo4Rec = !bVideo4Rec;
-		Helpers::LogFormat("111 iStride=%d iIndexCount=%d", iStride, iIndexCount);
+		Helpers::LogFormat("hkD3D11Present 红色了+++++++++++++ iStride=%d iIndexCount=%d ==%ld", iStride, iIndexCount, iiiii);
+	}
+	if (bVideo4Rec) //IsCenterRed()
+	{
+		//bVideo4Rec = !bVideo4Rec;
+		Helpers::LogFormat("hkD3D11Present 空帧+++++++++++++ iStride=%d iIndexCount=%d", iStride, iIndexCount);
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
 
@@ -2089,7 +2100,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		else {
 			//没找到
 			lstAll2412.push_back(IndexCountStride);
-			Helpers::LogFormat("lstAll2412.push_back(%d) ", IndexCountStride);
+			//Helpers::LogFormat("lstAll2412.push_back(%d) ", IndexCountStride);
 		}
 	}
 
@@ -2097,7 +2108,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
 		{
-			if ((Stride == 24) || (Stride == 12))
+			//if ((Stride == 24) || (Stride == 12))
 			{
 				Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
 				pContext->PSSetShader(psRed, NULL, NULL);

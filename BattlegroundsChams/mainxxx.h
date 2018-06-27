@@ -85,7 +85,7 @@ ID3D11PixelShader* psGreen = NULL;
 
 //pssetshaderresources
 UINT g_StartSlot = 0;
-UINT pssrStartSlot = 1;
+UINT pssrStartSlot = 0;
 UINT pssrStride = 0;
 D3D11_SHADER_RESOURCE_VIEW_DESC  Descr;
 //ID3D11ShaderResourceView* ShaderResourceView;
