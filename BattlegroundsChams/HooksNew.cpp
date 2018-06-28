@@ -34,6 +34,7 @@ extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
 extern bool bCrossDraw;
 bool bCheat = true;
+bool bHideOne = false;
 bool bLog2Txt = false;
 ofstream outfile;
 
@@ -101,6 +102,7 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  //std::vector<int> lstBase12;
  //std::vector<int> lstRed12;
  int iPos = 0;
+ int iPosHide = 0;
 
  bool bInited = false;
  bool bFlashIt = false;
@@ -365,7 +367,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 fin.close();
 
 		 lstNot2412.clear();
-		 fin.open("..\\notList.txt");  //打开文件
+		 fin.open("..\\notListNEW.txt");  //打开文件
 									   //string ReadLine;
 		 while (getline(fin, ReadLine))  //逐行读取，直到结束
 		 {
@@ -564,6 +566,10 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 if (GetAsyncKeyState(VK_F7) & 1)
 		 {
 			 bLog2Txt = !bLog2Txt;
+		 }
+		 if (GetAsyncKeyState(VK_F6) & 1)
+		 {
+			 bHideOne = !bHideOne;
 		 }
 		 if (GetAsyncKeyState(VK_F5) & 1)
 		 {
@@ -1683,7 +1689,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	CCheat::pContext->RSGetViewports(&vps, &viewport);
 	ScreenCenterX = viewport.Width / 2.0f;
 	ScreenCenterY = viewport.Height / 2.0f;
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	if (!psCrimson)
 		hr=GenerateShader(CCheat::pDevice, &psCrimson, 1.f, 0.2f, 0.2f);
 	if (!psYellow)
@@ -1705,20 +1711,20 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
 	//call before you draw
-	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
+	//CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 	//draw
-	if (pFontWrapper)
-	{
-		//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
-		//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
+	//if (pFontWrapper)
+	//{
+	//	//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
+	//	//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
 
-		//std::string sData = std::to_string(iStride);
-		//sData += "_";
-		//sData += std::to_string(iIndexCount);
-		//
-		//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
-		//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
-	}
+	//	//std::string sData = std::to_string(iStride);
+	//	//sData += "_";
+	//	//sData += std::to_string(iIndexCount);
+	//	//
+	//	//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
+	//	//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
+	//}
 
 
 	//draw esp
@@ -1812,6 +1818,9 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		}
 	}
 	*/
+
+	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+
 	if (bVideo4Rec && !IsCenterRed())
 	{
 		if (lstAll2412.size() > 0)
@@ -1832,21 +1841,69 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	else if (bVideo4Rec) //IsCenterRed()
 	{
 		bVideo4Rec = !bVideo4Rec;
-		Helpers::LogFormat("hkD3D11Present 红色了+++++++++++++ iStride=%d iIndexCount=%d ==%ld", iStride, iIndexCount, iiiii);
+		Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAll2412.size(), iiiii);
+				ofstream outfile;
+				outfile.open("..\\redCent.txt", ios::app);
+				if (!outfile)
+				{
+					std::cout << "打开文件失败！" << endl;
+				}
+				else
+				{
+					outfile << iiiii << std::endl;
+					outfile.close();
+				}
 	}
 	if (bVideo4Rec) //IsCenterRed()
 	{
 		//bVideo4Rec = !bVideo4Rec;
-		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d", iStride, iIndexCount);
+		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d l=%d", iStride, iIndexCount, lstAll2412.size());
 	}
+
+	if (bHideOne)
+	{
+		bHideOne = !bHideOne;
+				ofstream outfile;
+				outfile.open("..\\1212.txt", ios::app);
+		for (int i=0;i<lstAll2412.size();i++)
+		{
+			if ((lstAll2412.at(i) % 100) == 12)
+			{
+				if (!outfile)
+				{
+					std::cout << "打开文件失败！" << endl;
+				}
+				else
+				{
+					outfile << lstAll2412.at(i) << std::endl;
+				}
+			}
+		}
+		if (outfile)		outfile.close();
+
+		if (lstAll2412.size() > 0)
+		{
+			if (iPosHide >= lstAll2412.size())
+			{
+				iPosHide = 0;
+			}
+
+			iiiii = lstAll2412.at(iPosHide);
+			iStride = iiiii % 100;
+			iIndexCount = iiiii / 100;;
+
+			Helpers::LogFormat("hkD3D11Present bHideOne i=%d/%d (%d-%d) %ld", iPosHide, lstAll2412.size(), iStride, iIndexCount, lstAll2412.at(iPosHide));
+			iPosHide++;
+		}
+	}
+
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
 
-	return Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+	return S_OK;
 }
 
 void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers)
 {
-	g_StartSlot = StartSlot;
 	//Helpers::LogAddress("\r\n hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
 	//OutputDebugStringA("hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
 	//works ok in ut4 alpha only
@@ -1863,7 +1920,7 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 
 void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews)
 {
-//	g_StartSlot = StartSlot;
+	g_StartSlot = StartSlot;
 //	//MyTraceA("hkD3D11PSSetShaderResources==> pContext=%08x, StartSlot=%d, NumViews=%d, ppShaderResourceViews=%08x", pContext, StartSlot, NumViews, ppShaderResourceViews);
 //	//pssrStartSlot = StartSlot;
 //	ID3D11ShaderResourceView* pShaderResView = ppShaderResourceViews[0];
@@ -2086,28 +2143,12 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
 	}
-	//UINT Stride;
-	//ID3D11Buffer *veBuffer;
-	//UINT veBufferOffset = 0;
-	//pContext->IAGetVertexBuffers(g_StartSlot, 1, &veBuffer, &Stride, &veBufferOffset);
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	if ((1 == g_StartSlot) )
-	{
-		g_StartSlot = 0;
-		pContext->PSSetShader(psRed, NULL, NULL);
-		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		return;
-	}
-	if ( (2 == g_StartSlot))
-	{
-		g_StartSlot = 0;
-		pContext->PSSetShader(psGreen, NULL, NULL);
-		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		return;
-	}
-	/////////////////////////////////////////////////////////
-	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-
+			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
 	{
 		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
 		if (find(lstAll2412.begin(), lstAll2412.end(), IndexCountStride) != lstAll2412.end()) {
@@ -2116,7 +2157,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		else {
 			//没找到
 			lstAll2412.push_back(IndexCountStride);
-			//Helpers::LogFormat("lstAll2412.push_back(%d) ", IndexCountStride);
+			Helpers::LogFormat("lstAll2412.push_back ++++++++ size=%d (%d) ", lstAll2412.size(), IndexCountStride);
 		}
 	}
 
@@ -2134,6 +2175,99 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
 	}
+
+	if (bHideOne)
+	{
+		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
+		{
+			//if ((Stride == 24) || (Stride == 12))
+			{
+				Helpers::LogFormat("bHideOne==> iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
+				//pContext->PSSetShader(psRed, NULL, NULL);
+			}
+		}
+
+		//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		return;
+	}
+	if ((1 == g_StartSlot) )
+	{
+		g_StartSlot = 0;
+		if (((12 == Stride) || (24 == Stride)) && 
+			IsNotWhat(Stride, IndexCountPerInstance))
+		{
+			pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+
+			//AutoShootIfCenter();
+			//SetEvent(g_Event_Shoot);
+
+			//pContext->PSSetShader(psYellow, NULL, NULL);
+			//ppDepthStencilState->GetDesc(&depthStencilDesc);
+
+			// Create the depth stencil state.
+			//if (ppDepthStencilStateNew == NULL)
+			{
+				D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+				ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+				//depthStencilDesc.DepthEnable = TRUE;
+				//depthStencilDesc.DepthEnable = FALSE;
+				//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+				depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+				//depthStencilDesc.StencilEnable = FALSE;
+				ID3D11Device *ppDevice;
+				pContext->GetDevice(&ppDevice);
+				ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+				pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+			}
+			pContext->PSSetShader(psGreen, NULL, NULL);
+		}
+	}
+	else if ( (2 == g_StartSlot))
+	{
+		g_StartSlot = 0;
+		if (((12 == Stride) || (24 == Stride)) &&
+			IsNotWhat(Stride, IndexCountPerInstance))
+		{
+			pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+
+			//AutoShootIfCenter();
+			//SetEvent(g_Event_Shoot);
+
+			//pContext->PSSetShader(psYellow, NULL, NULL);
+			//ppDepthStencilState->GetDesc(&depthStencilDesc);
+
+			// Create the depth stencil state.
+			//if (ppDepthStencilStateNew == NULL)
+			{
+				D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+				ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+				//depthStencilDesc.DepthEnable = TRUE;
+				//depthStencilDesc.DepthEnable = FALSE;
+				//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+				depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+				//depthStencilDesc.StencilEnable = FALSE;
+				ID3D11Device *ppDevice;
+				pContext->GetDevice(&ppDevice);
+				ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+				pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+			}
+			pContext->PSSetShader(psRed, NULL, NULL);
+		}
+	}
+	else
+	{
+	}
+
+	if ((12 == Stride) || (24 == Stride))
+	{
+	}
+	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	return;
+	/////////////////////////////////////////////////////////
+	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+
 
 	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
 	Send2Hwnd(IndexCountPerInstance, Stride);
