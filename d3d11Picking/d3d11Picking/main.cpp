@@ -2463,7 +2463,7 @@ void DrawScene()
 		//Set the grounds index buffer
 		d3d11DevCon->IASetIndexBuffer( meshIndexBuff, DXGI_FORMAT_R32_UINT, 0);
 		//Set the grounds vertex buffer
-		d3d11DevCon->IASetVertexBuffers( 0, 1, &meshVertBuff, &stride, &offset );
+		d3d11DevCon->IASetVertexBuffers(/*StartSlot=*/ 0, 1, &meshVertBuff, &stride, &offset );
 
 		//Set the WVP matrix and send it to the constant buffer in effect file
 		WVP = meshWorld * camView * camProjection;
@@ -2473,13 +2473,13 @@ void DrawScene()
 		cbPerObj.hasTexture = material[meshSubsetTexture[i]].hasTexture;
 		cbPerObj.hasNormMap = material[meshSubsetTexture[i]].hasNormMap;
 		d3d11DevCon->UpdateSubresource( cbPerObjectBuffer, 0, NULL, &cbPerObj, 0, 0 );
-		d3d11DevCon->VSSetConstantBuffers( 0, 1, &cbPerObjectBuffer );
-		d3d11DevCon->PSSetConstantBuffers( 1, 1, &cbPerObjectBuffer );
+		d3d11DevCon->VSSetConstantBuffers(/*StartSlot=*/ 0, 1, &cbPerObjectBuffer );
+		d3d11DevCon->PSSetConstantBuffers(/*StartSlot=*/ 1, 1, &cbPerObjectBuffer );
 		if(material[meshSubsetTexture[i]].hasTexture)
-			d3d11DevCon->PSSetShaderResources( 0, 1, &meshSRV[material[meshSubsetTexture[i]].texArrayIndex] );
+			d3d11DevCon->PSSetShaderResources(/*StartSlot=*/  0, 1, &meshSRV[material[meshSubsetTexture[i]].texArrayIndex] );
 		if(material[meshSubsetTexture[i]].hasNormMap)
-			d3d11DevCon->PSSetShaderResources( 1, 1, &meshSRV[material[meshSubsetTexture[i]].normMapTexArrayIndex] );
-		d3d11DevCon->PSSetSamplers( 0, 1, &CubesTexSamplerState );
+			d3d11DevCon->PSSetShaderResources(/*StartSlot=*/  1, 1, &meshSRV[material[meshSubsetTexture[i]].normMapTexArrayIndex] );
+		d3d11DevCon->PSSetSamplers(/*StartSlot=*/  0, 1, &CubesTexSamplerState );
 
 		d3d11DevCon->RSSetState(RSCullNone);
 		int indexStart = meshSubsetIndexStart[i];
