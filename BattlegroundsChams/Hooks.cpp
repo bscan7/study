@@ -1837,7 +1837,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (bVideo4Rec) //IsCenterRed()
 	{
 		//bVideo4Rec = !bVideo4Rec;
-		Helpers::LogFormat("hkD3D11Present ø’÷°+++++++++++++ iStride=%d iIndexCount=%d", iStride, iIndexCount);
+		Helpers::LogFormat("hkD3D11Present “ª÷°+++++++++++++ iStride=%d iIndexCount=%d", iStride, iIndexCount);
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
 
