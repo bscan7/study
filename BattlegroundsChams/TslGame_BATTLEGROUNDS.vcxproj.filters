@@ -81,6 +81,7 @@
     <ClCompile Include="FW1FontWrapper\FW1Precompiled.cpp">
       <Filter>3rd\FW1FontWrapper</Filter>
     </ClCompile>
+    <ClCompile Include="HooksNew.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCheat.h" />

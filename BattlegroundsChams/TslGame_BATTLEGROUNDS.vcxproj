@@ -82,7 +82,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)$(Configuration)</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
-    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;$(IncludePath)</IncludePath>
+    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;$(IncludePath);C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</IncludePath>
     <LibraryPath>O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\;N:\Detours Pro v3.0.316\lib.X86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -214,7 +214,9 @@
     </ClCompile>
     <ClCompile Include="CCheat.cpp" />
     <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="Hooks.cpp" />
+    <ClCompile Include="Hooks.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="FW1FontWrapper\CFW1ColorRGBA.cpp" />
     <ClCompile Include="FW1FontWrapper\CFW1ColorRGBAInterface.cpp" />
     <ClCompile Include="FW1FontWrapper\CFW1DWriteRenderTarget.cpp" />
@@ -240,6 +242,7 @@
     <ClCompile Include="FW1FontWrapper\CFW1TextRendererInterface.cpp" />
     <ClCompile Include="FW1FontWrapper\FW1FontWrapper.cpp" />
     <ClCompile Include="FW1FontWrapper\FW1Precompiled.cpp" />
+    <ClCompile Include="HooksNew.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
