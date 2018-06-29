@@ -1,5 +1,5 @@
 @echo off  
-set TMPP=*.~* *.aps *.bak *.dcu *.ddp *.old *.plg *.user *.idb *.ncp *.obj *.pch *.sbr *.tmp *.pdb *.bsc *.ilk *.res *.ncb *.opt *.suo *.dep *.log .git
+set TMPP=*.~* *.aps *.bak *.dcu *.ddp *.old *.plg *.user *.idb *.ncp *.obj *.pch *.sbr *.tmp *.pdb *.bsc *.ilk *.res *.ncb *.opt *.suo *.dep *.log *.sdf *.db *.ipch
 echo ----------------------------------------------------  
 echo By Bscan
 echo 即将删除目录：%cd% 中，所有以下类型的文件:  
