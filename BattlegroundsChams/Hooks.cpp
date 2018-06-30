@@ -517,7 +517,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 {
 		 if (GetAsyncKeyState(VK_SCROLL) & 1)
 		 {
-			 bVideo4Rec = !bVideo4Rec;
+			 bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		 }
 		 if (GetAsyncKeyState(VK_ADD) & 1)
 		 {
@@ -1812,7 +1812,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		}
 	}
 	*/
-	if (bVideo4Rec && !IsCenterRed())
+	if (bVideo4Rec_SCROL && !IsCenterRed())
 	{
 		if (lstAll2412.size() > 0)
 		{
@@ -1829,12 +1829,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iPos++;
 		}
 	}
-	else if (bVideo4Rec) //IsCenterRed()
+	else if (bVideo4Rec_SCROL) //IsCenterRed()
 	{
-		bVideo4Rec = !bVideo4Rec;
+		bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		Helpers::LogFormat("hkD3D11Present ºìÉ«ÁË+++++++++++++ iStride=%d iIndexCount=%d ==%ld", iStride, iIndexCount, iiiii);
 	}
-	if (bVideo4Rec) //IsCenterRed()
+	if (bVideo4Rec_SCROL) //IsCenterRed()
 	{
 		//bVideo4Rec = !bVideo4Rec;
 		Helpers::LogFormat("hkD3D11Present Ò»Ö¡+++++++++++++ iStride=%d iIndexCount=%d", iStride, iIndexCount);
@@ -2104,7 +2104,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		}
 	}
 
-	if (bVideo4Rec)
+	if (bVideo4Rec_SCROL)
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
 		{

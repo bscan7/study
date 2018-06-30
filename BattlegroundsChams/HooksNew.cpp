@@ -519,7 +519,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 {
 		 if (GetAsyncKeyState(VK_SCROLL) & 1)
 		 {
-			 bVideo4Rec = !bVideo4Rec;
+			 bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		 }
 		 if (GetAsyncKeyState(VK_ADD) & 1)
 		 {
@@ -907,7 +907,99 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
  ////(Stride == 12 && IndexCount > 3800) ||
  //	(Stride == 12 && IndexCount == 14136) // 汽车
  //	)
+ void CheatItNew(ID3D11DeviceContext* pContext)
+ {
+	 if (ppDepthStencilState__New != NULL)
+	 {
+		 ppDepthStencilState__New->Release();
+		 ppDepthStencilState__New = NULL;
+	 }
 
+	 if (iRed == 1)
+	 {
+		 bRed = false;
+	 }
+	 else if (iRed == 2)
+	 {
+		 if (gggg != timeGetTime() / INTVL)
+		 {
+			 bRed = !bRed;
+			 gggg = timeGetTime() / INTVL;
+		 }
+	 }
+	 else
+		 bRed = true;
+
+	 if (cover != timeGetTime() / INTVL)
+	 {
+		 // bFlashIt = !bFlashIt;
+		 cover = timeGetTime() / INTVL;
+	 }
+
+	 SYSTEMTIME st = { 0 };
+	 GetLocalTime(&st);
+
+	 pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+
+	 //AutoShootIfCenter();
+	 //SetEvent(g_Event_Shoot);
+
+	 //pContext->PSSetShader(psYellow, NULL, NULL);
+	 //ppDepthStencilState->GetDesc(&depthStencilDesc);
+
+	 ID3D11PixelShader* psSSS = psRed;
+	 if (bFlashIt)
+	 {
+		 // Create the depth stencil state.
+	 //if (ppDepthStencilStateNew == NULL)
+		 {
+			 D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+			 ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+			 //depthStencilDesc.DepthEnable = TRUE;
+			 //depthStencilDesc.DepthEnable = FALSE;
+			 //depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			 depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+			 //depthStencilDesc.StencilEnable = FALSE;
+			 ID3D11Device *ppDevice;
+			 pContext->GetDevice(&ppDevice);
+			 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+			 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+			 psSSS = psTmp;
+		 }
+	 }
+	 if ((bRed))
+	 {
+		 //if ((Stride == 24 && IndexCount == 2070) // 头
+			// || (Stride == 24 && IndexCount == 3234) // 头
+			// || (Stride == 12 && IndexCount == 2877) // 头发
+			// || (Stride == 12 && IndexCount == 2868) // 头发
+			// || (Stride == 12 && IndexCount == 2637) // 三级盔 近处
+			// || (Stride == 12 && IndexCount == 1116) // 2级盔 近处
+			// || (Stride == 12 && IndexCount == 816) // ？盔 远处
+			// || (Stride == 12 && IndexCount == 192) // ？盔 远处
+			// || (Stride == 12 && IndexCount == 156) // ？盔 远处
+			// || (Stride == 12 && IndexCount == 180) // ？盔 远处
+			// || (Stride == 12 && IndexCount == 276) // ？盔 远处
+			// || (Stride == 12 && IndexCount == 294) // ？盔 远处
+			// )
+		 //{
+			// pContext->PSSetShader(psBlue, NULL, NULL);
+		 //}
+		 //else 
+		 //if (IsAvatar(Stride, IndexCount))
+			// pContext->PSSetShader(psSSS, NULL, NULL);
+		 //else if (IsEquipment(Stride, IndexCount))
+		 //{
+			// pContext->PSSetShader(psGreen, NULL, NULL);
+		 //}
+		 //else
+			// pContext->PSSetShader(psd, NULL, NULL);
+
+		 pContext->PSSetShader(psSSS, NULL, NULL);
+	 }
+
+ }
   void __stdcall CheatIt(ID3D11DeviceContext* pContext, UINT IndexCount, UINT IndexCountPerInstance, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
  {
 
@@ -1701,7 +1793,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psBlue)
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psTmp)
-		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.45f, 0.3f, 0.1f);
+		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.6f, 0.3f, 0.1f);
 	if (!psd)
 		hr = GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
@@ -1821,7 +1913,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 
-	if (bVideo4Rec && !IsCenterRed())
+	if (bVideo4Rec_SCROL && !IsCenterRed())
 	{
 		if (lstAll2412.size() > 0)
 		{
@@ -1838,12 +1930,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iPos++;
 		}
 	}
-	else if (bVideo4Rec) //IsCenterRed()
+	else if (bVideo4Rec_SCROL) //IsCenterRed()
 	{
-		bVideo4Rec = !bVideo4Rec;
+		bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAll2412.size(), iiiii);
 				ofstream outfile;
-				outfile.open("..\\redCent.txt", ios::app);
+				outfile.open("..\\notListNew.txt", ios::app);
 				if (!outfile)
 				{
 					std::cout << "打开文件失败！" << endl;
@@ -1854,10 +1946,10 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 					outfile.close();
 				}
 	}
-	if (bVideo4Rec) //IsCenterRed()
+	if (bVideo4Rec_SCROL) //IsCenterRed()
 	{
 		//bVideo4Rec = !bVideo4Rec;
-		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d l=%d", iStride, iIndexCount, lstAll2412.size());
+		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", iStride, iIndexCount, iPos, lstAll2412.size());
 	}
 
 	if (bHideOne)
@@ -2161,9 +2253,10 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		}
 	}
 
-	if (bVideo4Rec)
+	if (bVideo4Rec_SCROL)
 	{
-		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
+		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
+			IsNotWhat(iStride, iIndexCount))
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
@@ -2196,31 +2289,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		if (((12 == Stride) || (24 == Stride)) && 
 			IsNotWhat(Stride, IndexCountPerInstance))
 		{
-			pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
-
-			//AutoShootIfCenter();
-			//SetEvent(g_Event_Shoot);
-
-			//pContext->PSSetShader(psYellow, NULL, NULL);
-			//ppDepthStencilState->GetDesc(&depthStencilDesc);
-
-			// Create the depth stencil state.
-			//if (ppDepthStencilStateNew == NULL)
-			{
-				D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-				ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
-
-				//depthStencilDesc.DepthEnable = TRUE;
-				//depthStencilDesc.DepthEnable = FALSE;
-				//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-				depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-				//depthStencilDesc.StencilEnable = FALSE;
-				ID3D11Device *ppDevice;
-				pContext->GetDevice(&ppDevice);
-				ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
-				pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-			}
-			pContext->PSSetShader(psGreen, NULL, NULL);
+			CheatItNew(pContext);
 		}
 	}
 	else if ( (2 == g_StartSlot))
@@ -2229,41 +2298,44 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		if (((12 == Stride) || (24 == Stride)) &&
 			IsNotWhat(Stride, IndexCountPerInstance))
 		{
-			pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
-
-			//AutoShootIfCenter();
-			//SetEvent(g_Event_Shoot);
-
-			//pContext->PSSetShader(psYellow, NULL, NULL);
-			//ppDepthStencilState->GetDesc(&depthStencilDesc);
-
-			// Create the depth stencil state.
-			//if (ppDepthStencilStateNew == NULL)
-			{
-				D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-				ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
-
-				//depthStencilDesc.DepthEnable = TRUE;
-				//depthStencilDesc.DepthEnable = FALSE;
-				//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-				depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-				//depthStencilDesc.StencilEnable = FALSE;
-				ID3D11Device *ppDevice;
-				pContext->GetDevice(&ppDevice);
-				ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
-				pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-			}
-			pContext->PSSetShader(psRed, NULL, NULL);
+			CheatItNew(pContext);
 		}
+	}
+
+	if (((Stride == gStride) && bHideTrees
+		/*&&(
+		(IndexCountPerInstance <= iMin) ||
+		(IndexCountPerInstance >= iMax))*/
+		))
+	{
+		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
 	}
 	else
 	{
-	}
+		if (bHideGrass &&
+			(Stride == 12) &&
+			(
+			(IndexCountPerInstance == 6) ||
+				(IndexCountPerInstance == 15) ||
+				(IndexCountPerInstance == 18) ||
+				(IndexCountPerInstance == 21) ||
+				(IndexCountPerInstance == 27) ||
+				(IndexCountPerInstance == 45)
+				)
+			)
+		{
+		}
+		else if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+			&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+			&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+			)
+		{
 
-	if ((12 == Stride) || (24 == Stride))
-	{
+			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		}
 	}
-	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+//	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 	return;
 	/////////////////////////////////////////////////////////
 	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
