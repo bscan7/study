@@ -25,7 +25,7 @@ void AutoShootIfCenter(PVOID param);
 void Thread_DrawCrossOnCenter(PVOID param)
 {
 	RECT lpRect;
-	while (1)
+	while (!bStoped)
 	{
 		Sleep(100);
 
@@ -207,6 +207,10 @@ void Thread_AutoShootIfCenter(PVOID param)
 	while (!bStoped)
 	{
 		DWORD res = WaitForSingleObject(g_Event_Shoot, 500);
+		if (bStoped)
+		{
+			return;
+		}
 		//MyTraceA("/////////////////////////////////////////////////////////2");
 
 		//if (!c.socket_.is_open())
@@ -231,7 +235,7 @@ void Thread_AutoShootIfCenter(PVOID param)
 
 		}
 	}
-	bStoped = false;
+	//bStoped = false;
 }
 
 void Thread_ExitHook(PVOID param)
@@ -507,6 +511,10 @@ void CCheat::Initialise()
 void CCheat::Release()
 {
 	Helpers::Log("DLL抽离主进程。。。");
+
+	bStoped = true;
+	::SetEvent(g_Event_Shoot);
+
 	Sleep(300);
 	//bStoped = true;
 	//while (bStoped)
@@ -519,7 +527,11 @@ void CCheat::Release()
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oPresent), Hooks::hkD3D11Present);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oCreateQuery), Hooks::hkD3D11CreateQuery);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oVSSetConstantBuffers), Hooks::hkD3D11VSSetConstantBuffers);
+	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetShaderResources), Hooks::hkD3D11PSSetShaderResources);
+	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetSamplers), Hooks::hkD3D11PSSetSamplers);
+	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oUpdateSubresource), Hooks::hkD3D11UpdateSubresource);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexed), Hooks::hkD3D11DrawIndexed);
+	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oMap), Hooks::hkD3D11Map);
 
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstanced), Hooks::hkD3D11DrawInstanced);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstanced), Hooks::hkD3D11DrawIndexedInstanced);

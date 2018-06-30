@@ -510,10 +510,12 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 CloseHandle(dirHandle);
  }
 
+ extern bool bStoped;
+
  void Thread_KeysSwitch(PVOID param)
  {
 	 int iBW_Pos = 0;
-	 while (true)
+	 while (!bStoped)
 	 {
 		 if (GetAsyncKeyState(VK_SCROLL) & 1)
 		 {
@@ -679,7 +681,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 		 }
 
-		 Sleep(300);
+		 Sleep(100);
 	 }
  }
  //bool UpdateBuffers(ID3D11DeviceContext* d3dDeviceContext, int positionX, int positionY)
