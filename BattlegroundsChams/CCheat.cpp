@@ -276,6 +276,7 @@ HWND _EnumChildWindows(HWND hParent, char* pCap)
 int HotKeyId;
 
 void InitForHook(IDXGISwapChain* pSwapChain);
+extern std::string  g_NotRedListFName;
 
 void CCheat::Initialise()
 {
@@ -351,6 +352,7 @@ void CCheat::Initialise()
 			else
 			{
 				g_hWnd = _EnumChildWindows(g_hWnd, "");
+				g_NotRedListFName = "..\\notListMuMu.txt";
 			}
 		}
 		if (!g_hWnd)
@@ -378,6 +380,7 @@ void CCheat::Initialise()
 			else
 			{
 				g_hWnd = _EnumChildWindows(g_hWnd, "AEngineRenderWindow");
+				g_NotRedListFName = "..\\notListTX.txt";
 			}
 		}
 

@@ -82,7 +82,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)$(Configuration)</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
-    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;$(IncludePath);C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include</IncludePath>
+    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;$(IncludePath);E:\Microsoft DirectX SDK (June 2010)\Include</IncludePath>
     <LibraryPath>O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\;N:\Detours Pro v3.0.316\lib.X86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -128,14 +128,14 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <Optimization>Full</Optimization>
+      <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;TSLGAME_BATTLEGROUNDS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>d:\tools\Visual Leak Detector\include;%(AdditionalIncludeDirectories);F:\dev\Detours Pro v3.0.316\include</AdditionalIncludeDirectories>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-      <DebugInformationFormat>None</DebugInformationFormat>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +147,9 @@
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) M:\TxGameAssistant\UI\profapi.dll</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -187,12 +190,14 @@
     <ClInclude Include="FW1FontWrapper\FW1CompileSettings.h" />
     <ClInclude Include="FW1FontWrapper\FW1FontWrapper.h" />
     <ClInclude Include="FW1FontWrapper\FW1Precompiled.h" />
+    <Text Include="..\0_Todo.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCheat.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Hooks.h" />
+    <ClInclude Include="mainxxx.h" />
     <ClInclude Include="SDK.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -242,7 +247,9 @@
     <ClCompile Include="FW1FontWrapper\CFW1TextRendererInterface.cpp" />
     <ClCompile Include="FW1FontWrapper\FW1FontWrapper.cpp" />
     <ClCompile Include="FW1FontWrapper\FW1Precompiled.cpp" />
-    <ClCompile Include="HooksNew.cpp" />
+    <ClCompile Include="HooksNew.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
