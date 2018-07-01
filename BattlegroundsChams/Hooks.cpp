@@ -783,7 +783,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=948 StartIndexLocation=0 BaseVertexLocation=0
  */
 
- bool IsNotWhat(UINT Stride, UINT IndexCount)
+ bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
  {
 	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
 	 if (find(lstNot2412.begin(), lstNot2412.end(), IndexCountStride) != lstNot2412.end()) {
@@ -1009,7 +1009,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 }
 
 	 if (
-		 IsNotWhat(Stride, IndexCount) /*&&
+		 IsNotIn_ExcludeList(Stride, IndexCount) /*&&
 		 (IsAvatar(Stride, IndexCount) || IsEquipment(Stride, IndexCount))*/
 		)									
 	 //if(iIndexCnt == IndexCount)

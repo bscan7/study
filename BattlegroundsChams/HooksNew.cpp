@@ -375,6 +375,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 lstNot2412.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
+		 std::cout << "从3文件读取列表！" << g_NotRedListFName.c_str() << endl;
 	 }
  }
 
@@ -791,7 +792,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=948 StartIndexLocation=0 BaseVertexLocation=0
  */
 
- bool IsNotWhat(UINT Stride, UINT IndexCount)
+ bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
  {
 	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
 	 if (find(lstNot2412.begin(), lstNot2412.end(), IndexCountStride) != lstNot2412.end()) {
@@ -1109,7 +1110,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 }
 
 	 if (
-		 IsNotWhat(Stride, IndexCount) &&
+		 IsNotIn_ExcludeList(Stride, IndexCount) &&
 		 (IsAvatar(Stride, IndexCount) || IsEquipment(Stride, IndexCount))
 		)									
 	 //if(iIndexCnt == IndexCount)
@@ -1600,6 +1601,7 @@ bool IsCenterRed()
 	//return;
 	//Helpers::Log("==============AutoShootIfCenter");
 	::GetWindowRect(g_hWnd, &g_lpRect);
+	//Helpers::Log("IsCenterRed==============...0");
 
 	RECT lpRect;
 	int iW = g_lpRect.right - g_lpRect.left;
@@ -1620,12 +1622,14 @@ bool IsCenterRed()
 	// 选定区域坐标
 	int       nWidth, nHeight;
 
+	//Helpers::Log("IsCenterRed==============...1");
 	// 确保选定区域不为空矩形
 	if (IsRectEmpty(&lpRect))
 		return false;
 	//为屏幕创建设备描述表
 	hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
 
+	//Helpers::Log("IsCenterRed==============...2");
 
 	//为屏幕设备描述表创建兼容的内存设备描述表
 	hMemDC = CreateCompatibleDC(hScrDC);
@@ -1665,6 +1669,7 @@ bool IsCenterRed()
 		(BITMAPINFO *)&RGB32BitsBITMAPINFO,
 		DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
 
+	//Helpers::Log("IsCenterRed==============...3");
 
 	// 把新位图选到内存设备描述表中
 	hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
@@ -1684,6 +1689,7 @@ bool IsCenterRed()
 			hScrDC, nX, nY, SRCCOPY);
 	}
 	
+	//Helpers::Log("IsCenterRed==============...4");
 	// 转换 COLORREF 为 RGB  
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
@@ -1692,13 +1698,17 @@ bool IsCenterRed()
 	{
 		if (!ptPixels)
 		{
+			//Helpers::Log("IsCenterRed==============...5555555555555555555");
 			break;
 		}
 		//ptPixels[i]; //0xff 29 27 21 红绿蓝
 		//if (ptPixels[i] == 0xff800000)
 
+			//Helpers::LogFormat("%08x ", ptPixels[i]);
 		if( /*(ptPixels[i] == 0xff000080) 
-			||*/(ptPixels[i] == 0xff800000)
+			||*/(ptPixels[i] % 0x1000000 == 0x800000)
+			|| (ptPixels[i] % 0x1000000 == 0x790000)
+			|| (ptPixels[i] % 0x1000000 == 0x810000)
 			)
 		{
 			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
@@ -1917,7 +1927,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 
-	if (bVideo4Rec_SCROL && !IsCenterRed())
+	if (bVideo4Rec_SCROL/* */ && !IsCenterRed())
 	{
 		if (lstAllStides.size() > 0)
 		{
@@ -1934,20 +1944,21 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iPos++;
 		}
 	}
-	else if (bVideo4Rec_SCROL) //IsCenterRed()
+	else if ((bVideo4Rec_SCROL) && IsNotIn_ExcludeList(iStride, iIndexCount))
 	{
 		bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAllStides.size(), iiiii);
 				ofstream outfile;
-				outfile.open("..\\notListNew.txt", ios::app);
+				outfile.open(g_NotRedListFName.c_str(), ios::app);
 				if (!outfile)
 				{
-					std::cout << "打开文件失败！" << endl;
+					std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
 				}
 				else
 				{
 					outfile << iiiii << std::endl;
 					outfile.close();
+					std::cout << "写入文件完成！" << g_NotRedListFName.c_str() << endl;
 				}
 	}
 	if (bVideo4Rec_SCROL) //IsCenterRed()
@@ -2185,7 +2196,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	if (bVideo4Rec_SCROL)
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
-			IsNotWhat(iStride, iIndexCount))
+			IsNotIn_ExcludeList(iStride, iIndexCount))
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
@@ -2216,7 +2227,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotWhat(Stride, IndexCountPerInstance))
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext);
 		}
@@ -2225,7 +2236,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotWhat(Stride, IndexCountPerInstance))
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext);
 		}
@@ -2465,7 +2476,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	if (bVideo4Rec_SCROL)
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
-			IsNotWhat(iStride, iIndexCount))
+			IsNotIn_ExcludeList(iStride, iIndexCount))
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
@@ -2496,7 +2507,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) && 
-			IsNotWhat(Stride, IndexCountPerInstance))
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext);
 		}
@@ -2505,7 +2516,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotWhat(Stride, IndexCountPerInstance))
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext);
 		}
