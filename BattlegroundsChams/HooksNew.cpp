@@ -346,6 +346,8 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
  void InitListFromFiles()
  {
+	 std::cout << "lstAllStides.clear()..." << endl;
+	 lstAllStides.clear();
 	 //从文件读取列表
 	 {
 		 //WinExec("cmd /K CD ", SW_SHOW);
@@ -358,6 +360,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 lstAvatar2412.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
+		 std::cout << "逐行读取文件完成！ lstAvatar2412 << ..\\avatarList.txt" << endl;
 
 		 lstEqupm2412.clear();
 		 fin.open("..\\equpmList.txt");  //打开文件
@@ -367,6 +370,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 lstEqupm2412.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
+		 std::cout << "逐行读取文件完成！ lstEqupm2412 << ..\\equpmList.txt" << endl;
 
 		 lstNot2412.clear();
 		 fin.open(g_NotRedListFName.c_str());  //打开文件
@@ -376,7 +380,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 lstNot2412.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
-		 std::cout << "从3文件读取列表！" << g_NotRedListFName.c_str() << endl;
+		 std::cout << "逐行读取文件完成！ lstNot2412 << " << g_NotRedListFName.c_str() << endl;
 	 }
  }
 
@@ -598,12 +602,12 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 		 if (GetAsyncKeyState(VK_PAUSE) & 1)
 		 {
-			 lstAllStides.clear();
+			 //lstAllStides.clear();
 			 InitListFromFiles();
 		 }
 		 if (GetAsyncKeyState(VK_RIGHT) & 1)
 		 {
-			 iRed = iRed++ % 3;;
+			 iRed = iRed++ % 3;
 		 }
 
 		 if (GetAsyncKeyState('Q') & 1)
@@ -1929,43 +1933,45 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 	SetEvent(g_Event_CrossDraw);
 
-	if (bVideo4Rec_SCROL/* */ && !IsCenterRed())
+	if (bVideo4Rec_SCROL)
 	{
-		if (lstAllStides.size() > 0)
+		if (!IsCenterRed())
 		{
-			if (iPos >= lstAllStides.size())
+			if (lstAllStides.size() > 0)
 			{
-				iPos = 0;
+				if (iPos >= lstAllStides.size())
+				{
+					iPos = 0;
+				}
+
+				iiiii = lstAllStides.at(iPos);
+				iStride = iiiii % 100;
+				iIndexCount = iiiii / 100;;
+
+				//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
+				iPos++;
 			}
-
-			iiiii = lstAllStides.at(iPos);
-			iStride = iiiii % 100;
-			iIndexCount = iiiii / 100;;
-
-			//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
-			iPos++;
 		}
-	}
-	else if ((bVideo4Rec_SCROL) && IsNotIn_ExcludeList(iStride, iIndexCount))
-	{
-		bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
-		Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAllStides.size(), iiiii);
-				ofstream outfile;
-				outfile.open(g_NotRedListFName.c_str(), ios::app);
-				if (!outfile)
-				{
-					std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
-				}
-				else
-				{
-					outfile << iiiii << std::endl;
-					outfile.close();
-					std::cout << "写入文件完成！" << g_NotRedListFName.c_str() << endl;
-				}
-	}
-	if (bVideo4Rec_SCROL) //IsCenterRed()
-	{
-		//bVideo4Rec = !bVideo4Rec;
+		else if (IsNotIn_ExcludeList(iStride, iIndexCount)) //IsCenterRed()
+		{
+			bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
+			Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAllStides.size(), iiiii);
+
+			ofstream outfile;
+			outfile.open(g_NotRedListFName.c_str(), ios::app);
+			if (!outfile)
+			{
+				std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
+			}
+			else
+			{
+				outfile << iiiii << std::endl;
+				outfile.close();
+				std::cout << "写入文件完成！" << g_NotRedListFName.c_str() << endl;
+
+				InitListFromFiles();
+			}
+		}
 		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", iStride, iIndexCount, iPos, lstAllStides.size());
 	}
 
