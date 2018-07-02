@@ -37,6 +37,7 @@ bool bCheat = true;
 bool bHideOne = false;
 bool bLog2Txt = false;
 ofstream outfile;
+string  g_NotRedListFName = "..\\notListNEW.txt";
 
 void Thread_ExitHook(PVOID param);
 static HWND hOutWnd = NULL;
@@ -94,7 +95,7 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
 
  std::vector<UINT64> lstAllStride00;
 
- std::vector<UINT64> lstAll2412;
+ std::vector<UINT64> lstAllStides;
  std::vector<UINT64> lstAvatar2412;
  std::vector<UINT64> lstEqupm2412;
  std::vector<UINT64> lstNot2412;
@@ -367,13 +368,14 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 fin.close();
 
 		 lstNot2412.clear();
-		 fin.open("..\\notListNEW.txt");  //打开文件
+		 fin.open(g_NotRedListFName.c_str());  //打开文件
 									   //string ReadLine;
 		 while (getline(fin, ReadLine))  //逐行读取，直到结束
 		 {
 			 lstNot2412.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
+		 std::cout << "从3文件读取列表！" << g_NotRedListFName.c_str() << endl;
 	 }
  }
 
@@ -512,10 +514,12 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 CloseHandle(dirHandle);
  }
 
+ extern bool bStoped;
+
  void Thread_KeysSwitch(PVOID param)
  {
 	 int iBW_Pos = 0;
-	 while (true)
+	 while (!bStoped)
 	 {
 		 if (GetAsyncKeyState(VK_SCROLL) & 1)
 		 {
@@ -593,6 +597,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 		 if (GetAsyncKeyState(VK_PAUSE) & 1)
 		 {
+			 lstAllStides.clear();
 			 InitListFromFiles();
 		 }
 		 if (GetAsyncKeyState(VK_RIGHT) & 1)
@@ -685,7 +690,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 		 }
 
-		 Sleep(300);
+		 Sleep(100);
 	 }
  }
  //bool UpdateBuffers(ID3D11DeviceContext* d3dDeviceContext, int positionX, int positionY)
@@ -787,7 +792,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
  [3404] hkD3D11DrawIndexed**************Stride=24 IndexCount=948 StartIndexLocation=0 BaseVertexLocation=0
  */
 
- bool IsNotWhat(UINT Stride, UINT IndexCount)
+ bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
  {
 	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
 	 if (find(lstNot2412.begin(), lstNot2412.end(), IndexCountStride) != lstNot2412.end()) {
@@ -939,7 +944,6 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 SYSTEMTIME st = { 0 };
 	 GetLocalTime(&st);
 
-	 pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 
 	 //AutoShootIfCenter();
 	 //SetEvent(g_Event_Shoot);
@@ -954,6 +958,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 //if (ppDepthStencilStateNew == NULL)
 		 {
 			 D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+			 pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 			 ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
 
 			 //depthStencilDesc.DepthEnable = TRUE;
@@ -1095,17 +1100,17 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 //if ((Stride == 24))
 	 {
 		 UINT IndexCountStride = IndexCount * 100 + Stride;
-		 if (find(lstAll2412.begin(), lstAll2412.end(), IndexCountStride) != lstAll2412.end()) {
+		 if (find(lstAllStides.begin(), lstAllStides.end(), IndexCountStride) != lstAllStides.end()) {
 			 //找到
 		 }
 		 else {
 			 //没找到
-			 lstAll2412.push_back(IndexCountStride);
+			 lstAllStides.push_back(IndexCountStride);
 		 }
 	 }
 
 	 if (
-		 IsNotWhat(Stride, IndexCount) &&
+		 IsNotIn_ExcludeList(Stride, IndexCount) &&
 		 (IsAvatar(Stride, IndexCount) || IsEquipment(Stride, IndexCount))
 		)									
 	 //if(iIndexCnt == IndexCount)
@@ -1596,6 +1601,7 @@ bool IsCenterRed()
 	//return;
 	//Helpers::Log("==============AutoShootIfCenter");
 	::GetWindowRect(g_hWnd, &g_lpRect);
+	//Helpers::Log("IsCenterRed==============...0");
 
 	RECT lpRect;
 	int iW = g_lpRect.right - g_lpRect.left;
@@ -1616,12 +1622,14 @@ bool IsCenterRed()
 	// 选定区域坐标
 	int       nWidth, nHeight;
 
+	//Helpers::Log("IsCenterRed==============...1");
 	// 确保选定区域不为空矩形
 	if (IsRectEmpty(&lpRect))
 		return false;
 	//为屏幕创建设备描述表
 	hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
 
+	//Helpers::Log("IsCenterRed==============...2");
 
 	//为屏幕设备描述表创建兼容的内存设备描述表
 	hMemDC = CreateCompatibleDC(hScrDC);
@@ -1661,6 +1669,7 @@ bool IsCenterRed()
 		(BITMAPINFO *)&RGB32BitsBITMAPINFO,
 		DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
 
+	//Helpers::Log("IsCenterRed==============...3");
 
 	// 把新位图选到内存设备描述表中
 	hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
@@ -1680,6 +1689,7 @@ bool IsCenterRed()
 			hScrDC, nX, nY, SRCCOPY);
 	}
 	
+	//Helpers::Log("IsCenterRed==============...4");
 	// 转换 COLORREF 为 RGB  
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
@@ -1688,13 +1698,17 @@ bool IsCenterRed()
 	{
 		if (!ptPixels)
 		{
+			//Helpers::Log("IsCenterRed==============...5555555555555555555");
 			break;
 		}
 		//ptPixels[i]; //0xff 29 27 21 红绿蓝
 		//if (ptPixels[i] == 0xff800000)
 
+			//Helpers::LogFormat("%08x ", ptPixels[i]);
 		if( /*(ptPixels[i] == 0xff000080) 
-			||*/(ptPixels[i] == 0xff800000)
+			||*/(ptPixels[i] % 0x1000000 == 0x800000)
+			|| (ptPixels[i] % 0x1000000 == 0x790000)
+			|| (ptPixels[i] % 0x1000000 == 0x810000)
 			)
 		{
 			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
@@ -1793,7 +1807,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psBlue)
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psTmp)
-		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.6f, 0.3f, 0.1f);
+		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.25f, 0.25f, 0.25f);
 	if (!psd)
 		hr = GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
@@ -1913,16 +1927,16 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 
-	if (bVideo4Rec_SCROL && !IsCenterRed())
+	if (bVideo4Rec_SCROL/* */ && !IsCenterRed())
 	{
-		if (lstAll2412.size() > 0)
+		if (lstAllStides.size() > 0)
 		{
-			if (iPos >= lstAll2412.size())
+			if (iPos >= lstAllStides.size())
 			{
 				iPos = 0;
 			}
 
-			iiiii = lstAll2412.at(iPos);
+			iiiii = lstAllStides.at(iPos);
 			iStride = iiiii % 100;
 			iIndexCount = iiiii / 100;;
 
@@ -1930,36 +1944,38 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			iPos++;
 		}
 	}
-	else if (bVideo4Rec_SCROL) //IsCenterRed()
+	else if ((bVideo4Rec_SCROL) && IsNotIn_ExcludeList(iStride, iIndexCount))
 	{
 		bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
-		Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAll2412.size(), iiiii);
+		Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAllStides.size(), iiiii);
 				ofstream outfile;
-				outfile.open("..\\notListNew.txt", ios::app);
+				outfile.open(g_NotRedListFName.c_str(), ios::app);
 				if (!outfile)
 				{
-					std::cout << "打开文件失败！" << endl;
+					std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
 				}
 				else
 				{
 					outfile << iiiii << std::endl;
 					outfile.close();
+					std::cout << "写入文件完成！" << g_NotRedListFName.c_str() << endl;
 				}
 	}
 	if (bVideo4Rec_SCROL) //IsCenterRed()
 	{
 		//bVideo4Rec = !bVideo4Rec;
-		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", iStride, iIndexCount, iPos, lstAll2412.size());
+		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", iStride, iIndexCount, iPos, lstAllStides.size());
 	}
 
 	if (bHideOne)
 	{
 		bHideOne = !bHideOne;
-				ofstream outfile;
-				outfile.open("..\\1212.txt", ios::app);
-		for (int i=0;i<lstAll2412.size();i++)
+		ofstream outfile;
+
+		outfile.open("..\\AllStride.txt", ios::app);
+		for (int i=0;i<lstAllStides.size();i++)
 		{
-			if ((lstAll2412.at(i) % 100) == 12)
+			//if ((lstAllStides.at(i) % 100) == 12)
 			{
 				if (!outfile)
 				{
@@ -1967,24 +1983,25 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 				}
 				else
 				{
-					outfile << lstAll2412.at(i) << std::endl;
+					outfile << lstAllStides.at(i) << std::endl;
 				}
 			}
 		}
 		if (outfile)		outfile.close();
 
-		if (lstAll2412.size() > 0)
+
+		if (lstAllStides.size() > 0)
 		{
-			if (iPosHide >= lstAll2412.size())
+			if (iPosHide >= lstAllStides.size())
 			{
 				iPosHide = 0;
 			}
 
-			iiiii = lstAll2412.at(iPosHide);
+			iiiii = lstAllStides.at(iPosHide);
 			iStride = iiiii % 100;
 			iIndexCount = iiiii / 100;;
 
-			Helpers::LogFormat("hkD3D11Present bHideOne i=%d/%d (%d-%d) %ld", iPosHide, lstAll2412.size(), iStride, iIndexCount, lstAll2412.at(iPosHide));
+			Helpers::LogFormat("hkD3D11Present bHideOne i=%d/%d (%d-%d) %ld", iPosHide, lstAllStides.size(), iStride, iIndexCount, lstAllStides.at(iPosHide));
 			iPosHide++;
 		}
 	}
@@ -2148,10 +2165,213 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexed++++++++++++++++++++*===");
 	//CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
+	//Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 
-	Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+	DWORD bgtime = timeGetTime();
+	if (!bCheat)
+	{
+		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+		return;
+	}
 
-	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+	UINT IndexCountPerInstance = IndexCount;
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
+	{
+		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
+		if (find(lstAllStides.begin(), lstAllStides.end(), IndexCountStride) != lstAllStides.end()) {
+			//找到
+		}
+		else {
+			//没找到
+			lstAllStides.push_back(IndexCountStride);
+			Helpers::LogFormat("lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+		}
+	}
+
+	if (bVideo4Rec_SCROL)
+	{
+		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
+			IsNotIn_ExcludeList(iStride, iIndexCount))
+		{
+			//if ((Stride == 24) || (Stride == 12))
+			{
+				Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
+				pContext->PSSetShader(psRed, NULL, NULL);
+			}
+		}
+
+		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+		return;
+	}
+
+	if (bHideOne)
+	{
+		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
+		{
+			//if ((Stride == 24) || (Stride == 12))
+			{
+				Helpers::LogFormat("bHideOne==> iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
+				//pContext->PSSetShader(psRed, NULL, NULL);
+			}
+		}
+
+		//		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+		return;
+	}
+	if ((1 == g_StartSlot))
+	{
+		g_StartSlot = 0;
+		if (((12 == Stride) || (24 == Stride)) &&
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+		{
+			CheatItNew(pContext);
+		}
+	}
+	else if ((2 == g_StartSlot))
+	{
+		g_StartSlot = 0;
+		if (((12 == Stride) || (24 == Stride)) &&
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+		{
+			CheatItNew(pContext);
+		}
+	}
+
+	if (((Stride == gStride) && bHideTrees
+		/*&&(
+		(IndexCountPerInstance <= iMin) ||
+		(IndexCountPerInstance >= iMax))*/
+		))
+	{
+		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
+	}
+	else
+	{
+		if (bHideGrass &&
+			(Stride == 12) &&
+			(
+			(IndexCountPerInstance == 6) ||
+				(IndexCountPerInstance == 15) ||
+				(IndexCountPerInstance == 18) ||
+				(IndexCountPerInstance == 21) ||
+				(IndexCountPerInstance == 27) ||
+				(IndexCountPerInstance == 45)
+				)
+			)
+		{
+		}
+		else if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+			&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+			&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+			)
+		{
+
+			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+			Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+
+			if (ppDepthStencilState__Old)
+			{
+				pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+				ppDepthStencilState__Old = NULL;
+			}
+		}
+	}
+	//	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	return;
+	/////////////////////////////////////////////////////////
+	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+
+
+	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
+	//Send2Hwnd(IndexCountPerInstance, Stride);
+
+	////Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
+	//if (bCrossDraw)
+	//{
+	//	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
+	//}
+
+	////Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 3 usedTime = ", timeGetTime() - bgtime);
+
+	//std::string szCurIdx = std::to_string(IndexCountPerInstance);
+	//while (szCurIdx.length() < 5)
+	//{
+	//	szCurIdx = "0" + szCurIdx;
+	//}
+	//szCurIdx = std::to_string(Stride) + "_" + szCurIdx;
+
+	//list<string>::iterator iter;
+	//iter = std::find(sHideList.begin(), sHideList.end(), szCurIdx);
+
+	//bool bInList = false;
+	//if (iter != sHideList.end())
+	//{
+	//	//lst中存在 
+	//	bInList = true;
+	//}
+	//else
+	//{
+	//	//没找到
+	//	bInList = false;
+	//}
+	////Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 4 usedTime = ", timeGetTime() - bgtime);
+
+	///*if (!(bHideTrees && (Stride == 12) && (
+	//IndexCountPerInstance < abc ||
+
+	////IndexCountPerInstance == iIndexCnt ||
+	//IndexCountPerInstance == 6 ||
+	//IndexCountPerInstance == 18 ||
+	//IndexCountPerInstance == 27 ||
+	//IndexCountPerInstance == 45 ||
+	//IndexCountPerInstance == 2991 || //2991 42	3456
+	//IndexCountPerInstance == 600 || //2991 42	3456
+	//IndexCountPerInstance == 42 || //2991 42	3456
+	//IndexCountPerInstance == 3456  //2991 42	3456
+	//)))*/
+	////if (! (bHideTrees && (Stride == 12 ) && (IndexCountPerInstance <abc)))
+	////if ((IndexCountPerInstance>= abc))
+	//{
+	//	//if (!bInList)
+	//	if (((Stride == gStride) && bHideTrees
+	//		/*&&(
+	//		(IndexCountPerInstance <= iMin) ||
+	//		(IndexCountPerInstance >= iMax))*/
+	//		))
+	//	{
+	//		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
+	//	}
+	//	else
+	//	{
+	//		if (bHideGrass &&
+	//			(Stride == 12) &&
+	//			(
+	//			(IndexCountPerInstance == 6) ||
+	//				(IndexCountPerInstance == 15) ||
+	//				(IndexCountPerInstance == 18) ||
+	//				(IndexCountPerInstance == 21) ||
+	//				(IndexCountPerInstance == 27) ||
+	//				(IndexCountPerInstance == 45)
+	//				)
+	//			)
+	//		{
+	//		}
+	//		else if ((!bInList) && !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+	//			&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+	//			&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+	//			)
+	//		{
+
+	//			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+	//			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	//		}
+	//	}
+	//}
 	return;
 
 }
@@ -2243,20 +2463,20 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
 	{
 		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
-		if (find(lstAll2412.begin(), lstAll2412.end(), IndexCountStride) != lstAll2412.end()) {
+		if (find(lstAllStides.begin(), lstAllStides.end(), IndexCountStride) != lstAllStides.end()) {
 			//找到
 		}
 		else {
 			//没找到
-			lstAll2412.push_back(IndexCountStride);
-			Helpers::LogFormat("lstAll2412.push_back ++++++++ size=%d (%d) ", lstAll2412.size(), IndexCountStride);
+			lstAllStides.push_back(IndexCountStride);
+			Helpers::LogFormat("lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
 
 	if (bVideo4Rec_SCROL)
 	{
 		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
-			IsNotWhat(iStride, iIndexCount))
+			IsNotIn_ExcludeList(iStride, iIndexCount))
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
@@ -2287,7 +2507,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) && 
-			IsNotWhat(Stride, IndexCountPerInstance))
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext);
 		}
@@ -2296,7 +2516,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotWhat(Stride, IndexCountPerInstance))
+			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext);
 		}
@@ -2325,10 +2545,11 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 			)
 		{
 		}
-		else if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
-			&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
-			&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
-			)
+		else 
+			//if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+			//&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+			//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+			//)
 		{
 
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
