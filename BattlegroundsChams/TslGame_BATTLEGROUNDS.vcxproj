@@ -188,6 +188,12 @@
     <ClInclude Include="FW1FontWrapper\FW1FontWrapper.h" />
     <ClInclude Include="FW1FontWrapper\FW1Precompiled.h" />
     <Text Include="ReadMe.txt" />
+    <Text Include="txt\1212.txt" />
+    <Text Include="txt\avatarList.txt" />
+    <Text Include="txt\equpmList.txt" />
+    <Text Include="txt\notList.txt" />
+    <Text Include="txt\notListNEW.txt" />
+    <Text Include="txt\redCent.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCheat.h" />
