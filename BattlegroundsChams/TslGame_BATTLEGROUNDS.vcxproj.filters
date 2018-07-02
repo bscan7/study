@@ -138,6 +138,7 @@
     <ClInclude Include="FW1FontWrapper\FW1Precompiled.h">
       <Filter>3rd\FW1FontWrapper</Filter>
     </ClInclude>
+    <ClInclude Include="mainxxx.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\0_rec.txt" />
@@ -160,6 +161,7 @@
     <Text Include="txt\redCent.txt">
       <Filter>TxT</Filter>
     </Text>
+    <Text Include="..\0_Todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="3rd">
