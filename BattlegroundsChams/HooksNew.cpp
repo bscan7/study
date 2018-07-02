@@ -32,6 +32,7 @@ UINT pStencilRef = 0;
 extern HWND g_hWnd;
 extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
+extern HANDLE  g_Event_CrossDraw;
 extern bool bCrossDraw;
 bool bCheat = true;
 bool bHideOne = false;
@@ -1926,6 +1927,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	*/
 
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+	SetEvent(g_Event_CrossDraw);
 
 	if (bVideo4Rec_SCROL/* */ && !IsCenterRed())
 	{
@@ -2554,6 +2556,11 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
 			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+			if (ppDepthStencilState__Old)
+			{
+				pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+				ppDepthStencilState__Old = NULL;
+			}
 		}
 	}
 //	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);

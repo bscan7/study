@@ -143,24 +143,6 @@
   <ItemGroup>
     <Text Include="..\0_rec.txt" />
     <Text Include="ReadMe.txt" />
-    <Text Include="txt\1212.txt">
-      <Filter>TxT</Filter>
-    </Text>
-    <Text Include="txt\avatarList.txt">
-      <Filter>TxT</Filter>
-    </Text>
-    <Text Include="txt\equpmList.txt">
-      <Filter>TxT</Filter>
-    </Text>
-    <Text Include="txt\notList.txt">
-      <Filter>TxT</Filter>
-    </Text>
-    <Text Include="txt\notListNEW.txt">
-      <Filter>TxT</Filter>
-    </Text>
-    <Text Include="txt\redCent.txt">
-      <Filter>TxT</Filter>
-    </Text>
     <Text Include="..\0_Todo.txt" />
   </ItemGroup>
   <ItemGroup>

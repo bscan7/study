@@ -14,6 +14,7 @@ RECT g_lpRect;
 bool bCrossDraw = true;
 
 HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
+HANDLE  g_Event_CrossDraw = CreateEvent(NULL, FALSE, FALSE, NULL);
 bool bStoped = false;
 
 void AutoShootIfCenter(PVOID param);
@@ -27,7 +28,8 @@ void Thread_DrawCrossOnCenter(PVOID param)
 	RECT lpRect;
 	while (!bStoped)
 	{
-		Sleep(100);
+		//Sleep(100);
+		DWORD res = WaitForSingleObject(g_Event_CrossDraw, INFINITE);
 
 		if (!bCrossDraw)
 		{
