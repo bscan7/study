@@ -58,11 +58,15 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
 
 		//EndPaint(hWnd, &ps);
+		int xxLeft = (lpRect.right + lpRect.left) / 2 - 200;
+		int xxRight = (lpRect.right + lpRect.left) / 2 + 200;
+		int yyTop = (lpRect.bottom + lpRect.top) / 2 - 200;
+		int yyBottom = (lpRect.bottom + lpRect.top) / 2 + 200;
 
-		MoveToEx(hScrDC, lpRect.left, (lpRect.bottom - lpRect.top)/ 2 + lpRect.top, NULL);
-		LineTo(hScrDC, lpRect.right, (lpRect.bottom - lpRect.top) / 2 + lpRect.top);
-		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, lpRect.top,  NULL);
-		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, lpRect.bottom);
+		MoveToEx(hScrDC, xxLeft, (lpRect.bottom - lpRect.top)/ 2 + lpRect.top, NULL);
+		LineTo(hScrDC, xxRight, (lpRect.bottom - lpRect.top) / 2 + lpRect.top);
+		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, yyTop,  NULL);
+		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, yyBottom);
 
 		SelectObject(hScrDC, hPenOld);
 		DeleteObject(hPen);
@@ -72,10 +76,10 @@ void Thread_DrawCrossOnCenter(PVOID param)
 
 		//EndPaint(hWnd, &ps);
 
-		MoveToEx(hScrDC, lpRect.left, (lpRect.bottom - lpRect.top)/ 2 + lpRect.top + 1, NULL);
-		LineTo(hScrDC, lpRect.right, (lpRect.bottom - lpRect.top) / 2 + lpRect.top + 1);
-		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, lpRect.top,  NULL);
-		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, lpRect.bottom);
+		MoveToEx(hScrDC, xxLeft, (lpRect.bottom - lpRect.top)/ 2 + lpRect.top + 1, NULL);
+		LineTo(hScrDC, xxRight, (lpRect.bottom - lpRect.top) / 2 + lpRect.top + 1);
+		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyTop,  NULL);
+		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyBottom);
 
 		SelectObject(hScrDC, hPenOld);
 		DeleteObject(hPen);
