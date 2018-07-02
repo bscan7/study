@@ -806,7 +806,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 }
 	 else {
 		 //√ª’“µΩ
-		 if (/*(Stride == 24) &&*/ (IndexCount <= 200))
+		 if (!bVideo4Rec_SCROL && (/*(Stride == 24) &&*/ (IndexCount <= 200)))
 		 {
 			 return false;
 		 }
@@ -1699,6 +1699,8 @@ bool IsCenterRed()
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
 	// ÃÊªª—’…´  
+	if (ptPixels)
+		Helpers::LogFormat("ptPixels[0] = %08x ", ptPixels[0]);
 	for (int i = ((nWidth * nHeight) - 1); i >= 0; i--)
 	{
 		if (!ptPixels)
@@ -1709,7 +1711,7 @@ bool IsCenterRed()
 		//ptPixels[i]; //0xff 29 27 21 ∫Ï¬Ã¿∂
 		//if (ptPixels[i] == 0xff800000)
 
-			//Helpers::LogFormat("%08x ", ptPixels[i]);
+		//Helpers::LogFormat("%08x ", ptPixels[i]);
 		if( /*(ptPixels[i] == 0xff000080) 
 			||*/(ptPixels[i] % 0x1000000 == 0x800000)
 			|| (ptPixels[i] % 0x1000000 == 0x790000)
