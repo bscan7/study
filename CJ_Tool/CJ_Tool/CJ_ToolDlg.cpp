@@ -51,6 +51,7 @@ BEGIN_MESSAGE_MAP(CCJ_ToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON9, &CCJ_ToolDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON10, &CCJ_ToolDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON11, &CCJ_ToolDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON12, &CCJ_ToolDlg::OnBnClickedButton12)
 END_MESSAGE_MAP()
 
 
@@ -75,6 +76,251 @@ HANDLE GetProcessHandleByName(LPCSTR lpName)
 	}
 	return NULL;
 }
+using namespace std;
+
+BOOL SaveDcToBMP(BYTE *pBmpBuffer,
+	HBITMAP hbitmapSave,
+	BITMAPINFO srcdibbmap,
+	string sBmpPath)
+{
+	BOOL        bReturn = TRUE;
+	HANDLE    hFile = NULL;  //handle of bitmap file which will be saved  
+	DWORD     dwWritten = 0;     //written count  
+	DWORD     dwOffsetSize = 0;
+	DWORD     dwBufferSize = 0;
+	WORD      wBitCount = 32;   //位图中每个像素所占字节数    
+								//HBITMAP   hbitmapSave = NULL;
+								//HBITMAP   hbitmapOld = NULL;
+								//HDC       hDcDev = NULL;
+	HDC       hDcMem = NULL;
+	//BYTE      *pBmpBuffer = NULL;
+	int       iBits = 0;
+	BITMAP           stSrcbmp;
+	//;
+	BITMAPFILEHEADER bmFileHeader; //位图文件头结构  
+								   //SecureZeroMemory(&stSrcbmp, sizeof(BITMAP));
+								   ////SecureZeroMemory(&srcdibbmap, sizeof(BITMAPINFO));
+	SecureZeroMemory(&bmFileHeader, sizeof(BITMAPFILEHEADER));
+	//// Fill bitmap information constructor  
+	////srcdibbmap.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	////srcdibbmap.bmiHeader.biWidth = WVGA_WIDTH;
+	////srcdibbmap.bmiHeader.biHeight = WVGA_HIGHT;
+	////srcdibbmap.bmiHeader.biPlanes = 1;
+	////srcdibbmap.bmiHeader.biBitCount = wBitCount;
+	////srcdibbmap.bmiHeader.biCompression = BI_RGB;
+	//hDcMem = CreateCompatibleDC(NULL);
+	//if (NULL == hDcMem)
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+	//hbitmapSave = CreateDIBSection(hDcMem, &srcdibbmap, DIB_RGB_COLORS, (void**)&pBmpBuffer, NULL, 0);
+	//if (NULL == hbitmapSave)
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+	//hbitmapOld = (HBITMAP)SelectObject(hDcMem, hbitmapSave);
+	//if (NULL == hbitmapOld)
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+	////将传进来的DC画到定义的内存DC上去  
+	//if (!StretchBlt(hDcMem,
+	//	0,
+	//	0,
+	//	WVGA_WIDTH,
+	//	WVGA_HIGHT,
+	//	m_hdcMem,
+	//	0,
+	//	0,
+	//	m_iScaleWidth,
+	//	m_iScaleHight,
+	//	SRCCOPY))
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+
+	if (0 == GetObject(hbitmapSave, sizeof(stSrcbmp), &stSrcbmp))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	dwBufferSize = stSrcbmp.bmWidth * stSrcbmp.bmHeight * wBitCount / 8;
+	dwOffsetSize = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+	// Fill bitmap header constructor  
+	bmFileHeader.bfType = 0x4D42;
+	bmFileHeader.bfSize = dwOffsetSize + dwBufferSize;
+	bmFileHeader.bfReserved1 = 0;
+	bmFileHeader.bfReserved2 = 0;
+	bmFileHeader.bfOffBits = dwOffsetSize;
+
+	hFile = CreateFileA(sBmpPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (INVALID_HANDLE_VALUE == hFile)
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	if (!WriteFile(hFile, &bmFileHeader, sizeof(BITMAPFILEHEADER), &dwWritten, NULL))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	if (!WriteFile(hFile, &srcdibbmap, sizeof(BITMAPINFO), &dwWritten, NULL))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	if (!WriteFile(hFile, pBmpBuffer, dwBufferSize, &dwWritten, NULL))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	bReturn = TRUE;
+Exit:
+	if (INVALID_HANDLE_VALUE != hFile)
+	{
+		CloseHandle(hFile);
+		hFile = INVALID_HANDLE_VALUE;
+	}
+	return bReturn;
+}
+
+HWND g_hWnd = NULL;
+RECT g_lpRect;
+#define SHOOT_AREA  5
+static BOOL bDoneOnShoot = false;
+
+bool IsCenterRed()
+//lpRect 代表选定区域
+{
+	bool bOK = false;
+	//return;
+	//Helpers::Log("==============AutoShootIfCenter");
+	::GetWindowRect(g_hWnd, &g_lpRect);
+
+	RECT lpRect;
+	int iW = g_lpRect.right - g_lpRect.left;
+	int iH = g_lpRect.bottom - g_lpRect.top;
+	int iCenterX = iW / 2 + g_lpRect.left;
+	int iCenterY = iH / 2 + g_lpRect.top;
+
+	lpRect.top = iCenterY - SHOOT_AREA;
+	lpRect.bottom = iCenterY + SHOOT_AREA;
+	lpRect.left = iCenterX - SHOOT_AREA;
+	lpRect.right = iCenterX + SHOOT_AREA;
+
+	HDC       hScrDC, hMemDC;
+	// 屏幕和内存设备描述表
+	HBITMAP    hBitmap, hOldBitmap;
+	// 位图句柄
+	int       nX, nY, nX2, nY2;
+	// 选定区域坐标
+	int       nWidth, nHeight;
+
+	// 确保选定区域不为空矩形
+	if (IsRectEmpty(&lpRect))
+		return false;
+	//为屏幕创建设备描述表
+	hScrDC = CreateDC("DISPLAY", NULL, NULL, NULL);
+
+
+	//为屏幕设备描述表创建兼容的内存设备描述表
+	hMemDC = CreateCompatibleDC(hScrDC);
+	// 获得选定区域坐标
+	nX = lpRect.left;
+	nY = lpRect.top;
+	nX2 = lpRect.right;
+	nY2 = lpRect.bottom;
+
+
+	//确保选定区域是可见的
+	if (nX < 0)
+		nX = 0;
+	if (nY < 0)
+		nY = 0;
+	//if (nX2 > m_xScreen)
+	//	nX2 = m_xScreen;
+	//if (nY2 > m_yScreen)
+	//	nY2 = m_yScreen;
+	nWidth = nX2 - nX;
+	nHeight = nY2 - nY;
+	// 创建一个与屏幕设备描述表兼容的位图
+	//hBitmap = CreateCompatibleBitmap
+	//(hScrDC, nWidth, nHeight);
+
+	// 初始化BITMAPINFO信息，以便使用CreateDIBSection
+	BITMAPINFO RGB32BitsBITMAPINFO;
+	ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
+	RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	RGB32BitsBITMAPINFO.bmiHeader.biWidth = nWidth;
+	RGB32BitsBITMAPINFO.bmiHeader.biHeight = nHeight;
+	RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
+	RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
+	UINT * ptPixels;
+
+	HBITMAP DirectBitmap = CreateDIBSection(hMemDC,
+		(BITMAPINFO *)&RGB32BitsBITMAPINFO,
+		DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
+
+
+	// 把新位图选到内存设备描述表中
+	hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
+	// 把屏幕设备描述表拷贝到内存设备描述表中
+	//if (bSave)
+	//{
+	//	CDC dcCompatible;
+	//	dcCompatible.CreateCompatibleDC(CDC::FromHandle(hMemDC));
+	//	dcCompatible.SelectObject(m_pBitmap);
+
+	//	BitBlt(hMemDC, 0, 0, nWidth, nHeight,
+	//		dcCompatible, nX, nY, SRCCOPY);
+	//}
+	//else
+	{
+		BitBlt(hMemDC, 0, 0, nWidth, nHeight,
+			hScrDC, nX, nY, SRCCOPY);
+	}
+
+	SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, ".\\000.bmp");
+	// 转换 COLORREF 为 RGB  
+	//cOldColor = COLORREF2RGB(cOldColor);
+	//cNewColor = COLORREF2RGB(cNewColor);
+	// 替换颜色  
+	for (int i = ((nWidth * nHeight) - 1); i >= 0; i--)
+	{
+		if (!ptPixels)
+		{
+			break;
+		}
+		//ptPixels[i]; //0xff 29 27 21 红绿蓝
+		//if (ptPixels[i] == 0xff800000)
+
+		if ( /*(ptPixels[i] == 0xff000080)
+			 ||*/(ptPixels[i] == 0xff800000)
+			)
+		{
+			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
+			//Helpers::Log("==============+-+-+-+- 射击射击射击");
+			bOK = true;
+
+			break;
+		}
+		//	ptPixels[i] = cNewColor;
+	}
+
+	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+	//得到屏幕位图的句柄
+	//清除 
+	DeleteDC(hScrDC);
+	DeleteDC(hMemDC);
+
+	return bOK;
+}
+
 
 BOOL CCJ_ToolDlg::OnInitDialog()
 {
@@ -309,3 +555,10 @@ void CCJ_ToolDlg::OnBnClickedButton1()
 	GetDlgItem(IDC_COMBO1)->SetFocus();
 }
 
+
+
+void CCJ_ToolDlg::OnBnClickedButton12()
+{
+	g_hWnd = (HWND)0x00720DB4;
+	IsCenterRed();
+}

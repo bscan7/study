@@ -1597,7 +1597,118 @@ S_OK*/
 
 #define SHOOT_AREA  5
 
+BOOL SaveDcToBMP(BYTE *pBmpBuffer, 
+	HBITMAP hbitmapSave, 
+	BITMAPINFO srcdibbmap, 
+	string sBmpPath)
+{
+	BOOL        bReturn = TRUE;
+	HANDLE    hFile = NULL;  //handle of bitmap file which will be saved  
+	DWORD     dwWritten = 0;     //written count  
+	DWORD     dwOffsetSize = 0;
+	DWORD     dwBufferSize = 0;
+	WORD      wBitCount = 32;   //位图中每个像素所占字节数    
+	//HBITMAP   hbitmapSave = NULL;
+	//HBITMAP   hbitmapOld = NULL;
+	//HDC       hDcDev = NULL;
+	HDC       hDcMem = NULL;
+	//BYTE      *pBmpBuffer = NULL;
+	int       iBits = 0;
+	BITMAP           stSrcbmp;
+	//;
+	BITMAPFILEHEADER bmFileHeader; //位图文件头结构  
+	//SecureZeroMemory(&stSrcbmp, sizeof(BITMAP));
+	////SecureZeroMemory(&srcdibbmap, sizeof(BITMAPINFO));
+	SecureZeroMemory(&bmFileHeader, sizeof(BITMAPFILEHEADER));
+	//// Fill bitmap information constructor  
+	////srcdibbmap.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	////srcdibbmap.bmiHeader.biWidth = WVGA_WIDTH;
+	////srcdibbmap.bmiHeader.biHeight = WVGA_HIGHT;
+	////srcdibbmap.bmiHeader.biPlanes = 1;
+	////srcdibbmap.bmiHeader.biBitCount = wBitCount;
+	////srcdibbmap.bmiHeader.biCompression = BI_RGB;
+	//hDcMem = CreateCompatibleDC(NULL);
+	//if (NULL == hDcMem)
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+	//hbitmapSave = CreateDIBSection(hDcMem, &srcdibbmap, DIB_RGB_COLORS, (void**)&pBmpBuffer, NULL, 0);
+	//if (NULL == hbitmapSave)
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+	//hbitmapOld = (HBITMAP)SelectObject(hDcMem, hbitmapSave);
+	//if (NULL == hbitmapOld)
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+	////将传进来的DC画到定义的内存DC上去  
+	//if (!StretchBlt(hDcMem,
+	//	0,
+	//	0,
+	//	WVGA_WIDTH,
+	//	WVGA_HIGHT,
+	//	m_hdcMem,
+	//	0,
+	//	0,
+	//	m_iScaleWidth,
+	//	m_iScaleHight,
+	//	SRCCOPY))
+	//{
+	//	bReturn = FALSE;
+	//	goto Exit;
+	//}
+
+	if (0 == GetObject(hbitmapSave, sizeof(stSrcbmp), &stSrcbmp))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	dwBufferSize = stSrcbmp.bmWidth * stSrcbmp.bmHeight * wBitCount / 8;
+	dwOffsetSize = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+	// Fill bitmap header constructor  
+	bmFileHeader.bfType = 0x4D42;
+	bmFileHeader.bfSize = dwOffsetSize + dwBufferSize;
+	bmFileHeader.bfReserved1 = 0;
+	bmFileHeader.bfReserved2 = 0;
+	bmFileHeader.bfOffBits = dwOffsetSize;
+
+	hFile = CreateFileA(sBmpPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (INVALID_HANDLE_VALUE == hFile)
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	if (!WriteFile(hFile, &bmFileHeader, sizeof(BITMAPFILEHEADER), &dwWritten, NULL))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	if (!WriteFile(hFile, &srcdibbmap, sizeof(BITMAPINFO), &dwWritten, NULL))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	if (!WriteFile(hFile, pBmpBuffer, dwBufferSize, &dwWritten, NULL))
+	{
+		bReturn = FALSE;
+		goto Exit;
+	}
+	bReturn = TRUE;
+Exit:
+	if (INVALID_HANDLE_VALUE != hFile)
+	{
+		CloseHandle(hFile);
+		hFile = INVALID_HANDLE_VALUE;
+	}
+	return bReturn;
+}
+
 static BOOL bDoneOnShoot = false;
+UINT iBmpNamePreFix = 0;
 
 bool IsCenterRed()
 //lpRect 代表选定区域
@@ -1698,15 +1809,29 @@ bool IsCenterRed()
 	// 转换 COLORREF 为 RGB  
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
-	// 替换颜色  
+	// 替换颜色 
+	string sFName = to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center";
 	if (ptPixels)
-		Helpers::LogFormat("ptPixels[0] = %08x ", ptPixels[0]);
+		SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName+ ".bmp");
+
+		/*Helpers::LogFormat("ptPixels[0] = %08x ", ptPixels[0]);*/
+	ofstream outfile;
+	outfile.open((sFName + ".raw").c_str(), ios::app);
+
 	for (int i = ((nWidth * nHeight) - 1); i >= 0; i--)
 	{
 		if (!ptPixels)
 		{
 			//Helpers::Log("IsCenterRed==============...5555555555555555555");
 			break;
+		}
+		if (outfile)
+		{
+			outfile << std::hex << std::setw(8) << std::setfill('0') << ptPixels[i] << " ";
+			if (i % nWidth == 0)
+			{
+				outfile << std::endl;
+			}
 		}
 		//ptPixels[i]; //0xff 29 27 21 红绿蓝
 		//if (ptPixels[i] == 0xff800000)
@@ -1726,6 +1851,10 @@ bool IsCenterRed()
 			break;
 		}
 		//	ptPixels[i] = cNewColor;
+	}
+	if (outfile)
+	{
+		outfile.close();
 	}
 
 	hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
