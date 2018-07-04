@@ -279,6 +279,32 @@ HWND _EnumChildWindows(HWND hParent, char* pCap)
 	return NULL;
 }
 
+void Thread_CloseMsgBox(PVOID param)
+{
+	Helpers::LogFormat("--------Thread_CloseMsgBox---------Started ");
+	int iBW_Pos = 0;
+	while (!bStoped)
+	{
+		HWND hWndTemp = ::GetForegroundWindow();
+		//Helpers::LogFormat("*****************hWndTemp = < %x >, ", hWndTemp);
+		if (hWndTemp)
+		{
+			char szWndTitle[256] = { 0 };
+			GetWindowTextA(hWndTemp, szWndTitle, 256);
+			//Helpers::LogFormat("*****************szWndTitle = < %s >, ", szWndTitle);
+			//GetClassNameA(hWndTemp, szClsName, 64);
+			if (strstr(szWndTitle, "AndroidEmulator.exe"))
+			{
+				Helpers::LogFormat("-----------------szWndTitle = < %s >, ", szWndTitle);
+
+				::SendMessage(hWndTemp, WM_SYSCOMMAND, SC_CLOSE, 0);
+			}
+		}
+
+		Sleep(100);
+	}
+}
+
 int HotKeyId;
 
 void InitForHook(IDXGISwapChain* pSwapChain);
@@ -296,6 +322,7 @@ void CCheat::Initialise()
 
 	Helpers::Log("\r\nCheat Initialising");
 
+	_beginthread(Thread_CloseMsgBox, 0, NULL);
 	//MessageBoxA(NULL, "如果需要请附加进程先，再点确定!", "uBoos?", MB_ICONINFORMATION);
 
 	//D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;

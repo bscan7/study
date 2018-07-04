@@ -523,6 +523,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
  void Thread_KeysSwitch(PVOID param)
  {
+	 Helpers::LogFormat("--------Thread_KeysSwitch---------Started ");
 	 int iBW_Pos = 0;
 	 while (!bStoped)
 	 {
@@ -698,6 +699,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 Sleep(100);
 	 }
  }
+
  //bool UpdateBuffers(ID3D11DeviceContext* d3dDeviceContext, int positionX, int positionY)
  //{
  //	//在顶点缓存最原始的数据被改变了,属于动态顶点缓存(以前教程那些原始顶点数据虽然后面诚意变换矩阵，但是未曾改变原始数据)  
@@ -1595,7 +1597,7 @@ S_OK*/
 //	CCheat::pContext->OMSetDepthStencilState(myDepthStencilStates[aState], 1);
 //}
 
-#define SHOOT_AREA  5
+#define SHOOT_AREA  7
 
 BOOL SaveDcToBMP(BYTE *pBmpBuffer, 
 	HBITMAP hbitmapSave, 
