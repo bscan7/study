@@ -11,10 +11,10 @@ void Thread_LoadUnloadDLL(PVOID param)
 		if (GetAsyncKeyState(VK_HOME) & 1)
 		{
 			if (hinst == NULL)
-				hinst = LoadLibrary(L"E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
+				hinst = ::LoadLibrary(L"E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
 			else
 			{
-				FreeLibrary(hinst);
+				::FreeLibrary(hinst);
 				hinst = NULL;
 			}
 		}
@@ -31,6 +31,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hModule); 
+		hinst = LoadLibrary(L"E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
 		_beginthread(Thread_LoadUnloadDLL, 0, NULL);
 		break;
 
