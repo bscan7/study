@@ -531,6 +531,10 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 {
 			 bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		 }
+		 if (GetAsyncKeyState(VK_HOME) & 1)
+		 {
+			 CCheat::Release();
+		 }
 		 if (GetAsyncKeyState(VK_ADD) & 1)
 		 {
 			 bShoot = !bShoot;
@@ -611,14 +615,9 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 iRed = iRed++ % 3;
 		 }
 
-		 if (GetAsyncKeyState('Q') & 1)
-		 {
-			 //bShoot = !bShoot;
-		 }
-
 		 if (bShoot)
 		 {
-			 SetEvent(g_Event_Shoot);
+			 PulseEvent(g_Event_Shoot);
 		 }
 
 
@@ -1812,7 +1811,7 @@ bool IsCenterRed()
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
 	// Ìæ»»ÑÕÉ« 
-	string sFName = to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center";
+	string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center";
 	if (ptPixels)
 		SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName+ ".bmp");
 
@@ -2064,7 +2063,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	*/
 
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
-	SetEvent(g_Event_CrossDraw);
+	PulseEvent(g_Event_CrossDraw);
 
 	if (bVideo4Rec_SCROL)
 	{

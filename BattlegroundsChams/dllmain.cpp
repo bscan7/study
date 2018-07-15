@@ -1,23 +1,46 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
+#define DLL_API extern "C" __declspec(dllexport)
+
 #include "stdafx.h"
 #include "CCheat.h"
 #include "Helpers.h"
 
+HANDLE  g_Event_UnHook = NULL;
+DLL_API void SetUnHookEvent(HANDLE  Event_UnHook)
+{
+	g_Event_UnHook = Event_UnHook;
+	return ;
+} 
+   
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
 					 )
 {
 	//MessageBoxA(NULL, "DllMain...!", "uBoos?", MB_ICONINFORMATION);
+	AllocConsole();
+	freopen("CON", "w", stdout);
+	SetConsoleTitle(L"Bscan_LookLook");
+	Helpers::LogFormat("\r\n--------DllMain %d", ul_reason_for_call);
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
+		Helpers::LogFormat("\r\n--------DLL_PROCESS_ATTACH ");
 		DisableThreadLibraryCalls(hModule); // PERFOMANCE? 不确定的call，有可能影响到DLL的移除，暂时屏蔽。
 		CreateThread(NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(CCheat::Initialise), NULL, NULL, NULL);
 		break;
 
 	case DLL_PROCESS_DETACH:
+		Helpers::LogFormat("\r\n--------DLL_PROCESS_		DETACH ");
 		CCheat::Release();
+		break;
+	case DLL_THREAD_ATTACH:
+		Helpers::LogFormat("\r\n--------DLL_线程_A TTACH ");
+		;
+		break;
+	case DLL_THREAD_DETACH:
+		Helpers::LogFormat("\r\n--------DLL_线程_		DETACH ");
+		;
 		break;
 	}
 	return TRUE;

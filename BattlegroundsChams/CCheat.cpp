@@ -4,7 +4,10 @@
 #include "Hooks.h"
 #include <process.h>
 #include <atltypes.h>
+#include <string>
+#include <timeapi.h>
 //#include "mainxxx.h"
+using namespace std;
 
 ID3D11Device *CCheat::pDevice = NULL;
 ID3D11DeviceContext *CCheat::pContext = NULL;
@@ -86,6 +89,7 @@ void Thread_DrawCrossOnCenter(PVOID param)
 	}
 }
 #define SHOOT_AREA  5
+#define SEARCH_AREA  150
 int pp = 0;
 
 void AutoShootIfCenter(PVOID param)
@@ -208,6 +212,140 @@ void AutoShootIfCenter(PVOID param)
 	//}
 }
 
+BOOL SaveDcToBMP(BYTE *pBmpBuffer,
+	HBITMAP hbitmapSave,
+	BITMAPINFO srcdibbmap,
+	string sBmpPath);
+
+extern bool bShoot;
+void AutoCenterAndShoot(PVOID param)
+{
+	LONG iEdgeLen = SEARCH_AREA * 2;
+	RECT lpRect, lpWatchRect;
+	//while (1)
+	//{
+		//Sleep(100);
+
+		//if (!bCrossDraw)
+		//{
+		//	continue;
+		//}
+		::GetWindowRect(g_hWnd, &lpRect);
+		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
+		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
+		point.x = nFullWidth / 2;
+		point.y = nFullHeight / 2;
+		*/
+
+		//HDC	hClientDC = ::GetDC(g_hWnd);
+
+		//为屏幕创建设备描述表
+		//if (!hScrDC)
+		{
+			hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
+		}
+		//为屏幕设备描述表创建兼容的内存设备描述表
+		//if (!hMemDC)
+		{
+			hMemDC = CreateCompatibleDC(hScrDC);
+		}
+
+		int iW = lpRect.right - lpRect.left;
+		int iH = lpRect.bottom - lpRect.top;
+		int iCenterX = iW / 2 + lpRect.left;
+		int iCenterY = iH / 2 + lpRect.top;
+
+		lpWatchRect.top = iCenterY - SEARCH_AREA;
+		lpWatchRect.bottom = iCenterY + SEARCH_AREA;
+		lpWatchRect.left = iCenterX - SEARCH_AREA;
+		lpWatchRect.right = iCenterX + SEARCH_AREA;
+		// 确保选定区域不为空矩形
+		if (IsRectEmpty(&lpWatchRect))
+			return /*NULL*/;
+
+		HPEN hPen;
+		HPEN hPenOld;
+		//hdc = BeginPaint(hWnd, &ps);
+		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 0));
+		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
+
+		MoveToEx(hScrDC, lpWatchRect.left, lpWatchRect.top, NULL);
+		LineTo(hScrDC, lpWatchRect.right, lpWatchRect.top);
+		MoveToEx(hScrDC, lpWatchRect.left, lpWatchRect.bottom, NULL);
+		LineTo(hScrDC, lpWatchRect.right, lpWatchRect.bottom);
+
+		MoveToEx(hScrDC, lpWatchRect.left, lpWatchRect.top, NULL);
+		LineTo(hScrDC, lpWatchRect.left, lpWatchRect.bottom);
+		MoveToEx(hScrDC, lpWatchRect.right, lpWatchRect.top, NULL);
+		LineTo(hScrDC, lpWatchRect.right, lpWatchRect.bottom);
+
+		SelectObject(hScrDC, hPenOld);
+		DeleteObject(hPen);
+
+		// 初始化BITMAPINFO信息，以便使用CreateDIBSection
+		BITMAPINFO RGB32BitsBITMAPINFO;
+		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
+		RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		RGB32BitsBITMAPINFO.bmiHeader.biWidth = iEdgeLen;
+		RGB32BitsBITMAPINFO.bmiHeader.biHeight = iEdgeLen;
+		RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
+		RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
+
+		//if (!DirectBitmap)
+		{
+			DirectBitmap = CreateDIBSection(hMemDC,
+				(BITMAPINFO *)&RGB32BitsBITMAPINFO,
+				DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
+		}
+		HBITMAP    hBitmap, hOldBitmap;
+		// 把新位图选到内存设备描述表中
+		hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
+
+		BitBlt(hMemDC, 0, 0, iEdgeLen, iEdgeLen,
+			hScrDC, lpWatchRect.left, lpWatchRect.top, SRCCOPY);
+
+		extern UINT iBmpNamePreFix;
+		string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center";
+		if (ptPixels)
+			SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName + ".bmp");
+		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
+		// 替换颜色  
+		for (int i = 0; i<=((iEdgeLen * iEdgeLen) - 1); i++)
+		{
+			if (!ptPixels)
+			{
+				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
+				break;
+			}
+			//std::cout << ptPixels[i] << " ";
+			//ptPixels[i]; //0xff 29 27 21 红绿蓝
+			if (/*   (ptPixels[i] & 0x00ffffff == 0x00800000)
+				|| (ptPixels[i] & 0x00ffffff == 0x007f0000)
+				|| (ptPixels[i] & 0x00ffffff == 0x00810000)*/
+				(ptPixels[i] % 0x1000000 == 0x800000)
+				|| (ptPixels[i] % 0x1000000 == 0x790000)
+				|| (ptPixels[i] % 0x1000000 == 0x810000)
+				)
+			{
+				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
+				std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE x=" << std::dec << SEARCH_AREA - (iEdgeLen - i % (iEdgeLen)) << " y=" << SEARCH_AREA - (i / (iEdgeLen)) << " iX=" << (iEdgeLen - i % (iEdgeLen)) << " iY=" << (i / (iEdgeLen)) << std::endl;
+
+				mouse_event(MOUSEEVENTF_MOVE, (SEARCH_AREA-(iEdgeLen - i % (iEdgeLen)))/2, (SEARCH_AREA - (i / (iEdgeLen))) / 2, 0, NULL);
+				//bDoneOnShoot = false;
+				bShoot = false;
+				break;
+			}
+			//bDoneOnShoot = true;
+		}
+		std::cout << std::endl;
+		pp++;
+		hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+
+	//}
+}
+
+int iM = 1;
 void Thread_AutoShootIfCenter(PVOID param)
 {
 	while (!bStoped)
@@ -226,8 +364,11 @@ void Thread_AutoShootIfCenter(PVOID param)
 		switch (res)
 		{
 		case WAIT_OBJECT_0:
-			AutoShootIfCenter(NULL);
-
+			//AutoShootIfCenter(NULL);
+			AutoCenterAndShoot(NULL);
+			//::SetCursorPos(100, 50);
+			//mouse_event(MOUSEEVENTF_MOVE, 5, 0, 0, NULL);
+			//Helpers::LogFormat("::SetCursorPos(100, 50);********** ");
 			break;
 		case WAIT_TIMEOUT:
 			break;
@@ -314,15 +455,17 @@ void CCheat::Initialise()
 {
 	/*HotKeyId = GlobalAddAtom("D3DHotKey") - 0xC000;
 	RegisterHotKey(Handle, HotKeyId, MOD_CONTROL, 'X');*/
+	bStoped = false;
 
 	HRESULT xxx;
 	AllocConsole();
 	freopen("CON", "w", stdout);
 	SetConsoleTitle(L"Bscan_LookLook");
 
-	Helpers::Log("\r\nCheat Initialising");
+	Helpers::Log("Cheat Initialising");
 
 	_beginthread(Thread_CloseMsgBox, 0, NULL);
+	Helpers::Log("Cheat _beginthread(Thread_CloseMsgBox, 0, NULL)");
 	//MessageBoxA(NULL, "如果需要请附加进程先，再点确定!", "uBoos?", MB_ICONINFORMATION);
 
 	//D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
@@ -430,7 +573,9 @@ void CCheat::Initialise()
 	}
 	::GetWindowRect(g_hWnd, &g_lpRect);
 
+	Helpers::Log("Cheat _beginthread(Thread_AutoShootIfCenter, 0, NULL);");
 	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
+	Helpers::Log("Cheat Thread_DrawCrossOnCenter");
 	_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC
@@ -479,6 +624,8 @@ void CCheat::Initialise()
 		Helpers::LogError("D3D11CreateDevice Error Error Error*****************************");
 		return;
 	}
+
+	Helpers::Log("Cheat D3D11CreateDeviceAndSwapChain");
 
 	// GET VTABLE POINTERS
 	DWORD_PTR*  pSwapChainVT = reinterpret_cast<DWORD_PTR*>(CCheat::pSwapChain);
@@ -544,12 +691,13 @@ void CCheat::Initialise()
 	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
 }
 
+extern HANDLE  g_Event_UnHook;
 void CCheat::Release()
 {
 	Helpers::Log("DLL抽离主进程。。。");
 
 	bStoped = true;
-	::SetEvent(g_Event_Shoot);
+	::PulseEvent(g_Event_Shoot);
 
 	Sleep(300);
 	//bStoped = true;
@@ -583,7 +731,12 @@ void CCheat::Release()
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstanced), Hooks::hkD3D11DrawIndexedInstanced);
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstancedIndirect), Hooks::hkD3D11DrawInstancedIndirect);
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstancedIndirect), Hooks::hkD3D11DrawIndexedInstancedIndirect);
-	Helpers::Log("DLL抽离主进程。。。Done");
+	Helpers::LogFormat("DLL抽离主进程。。。Done g_Event_UnHook=%x", g_Event_UnHook);
+
+	if (g_Event_UnHook)
+	{
+		::PulseEvent(g_Event_UnHook);
+	}
 }
 
 

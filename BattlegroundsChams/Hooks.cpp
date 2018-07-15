@@ -603,7 +603,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 		 if (bShoot)
 		 {
-			 SetEvent(g_Event_Shoot);
+			 PulseEvent(g_Event_Shoot);
 		 }
 
 
