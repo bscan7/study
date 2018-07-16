@@ -263,7 +263,7 @@ void AutoCenterAndShoot(PVOID param)
 		if (IsRectEmpty(&lpWatchRect))
 			return /*NULL*/;
 
-		HPEN hPen;
+/*		HPEN hPen;
 		HPEN hPenOld;
 		//hdc = BeginPaint(hWnd, &ps);
 		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 0));
@@ -281,7 +281,7 @@ void AutoCenterAndShoot(PVOID param)
 
 		SelectObject(hScrDC, hPenOld);
 		DeleteObject(hPen);
-
+*/
 		// 初始化BITMAPINFO信息，以便使用CreateDIBSection
 		BITMAPINFO RGB32BitsBITMAPINFO;
 		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
@@ -305,7 +305,7 @@ void AutoCenterAndShoot(PVOID param)
 			hScrDC, lpWatchRect.left, lpWatchRect.top, SRCCOPY);
 
 		extern UINT iBmpNamePreFix;
-		string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center";
+		string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center_";
 		if (ptPixels)
 			SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName + ".bmp");
 		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
@@ -332,6 +332,10 @@ void AutoCenterAndShoot(PVOID param)
 				std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE x=" << std::dec << SEARCH_AREA - (iEdgeLen - i % (iEdgeLen)) << " y=" << SEARCH_AREA - (i / (iEdgeLen)) << " iX=" << (iEdgeLen - i % (iEdgeLen)) << " iY=" << (i / (iEdgeLen)) << std::endl;
 
 				mouse_event(MOUSEEVENTF_MOVE, (SEARCH_AREA-(iEdgeLen - i % (iEdgeLen)))/2, (SEARCH_AREA - (i / (iEdgeLen))) / 2, 0, NULL);
+				Sleep(5);
+				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+				Sleep(5);
+				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 				//bDoneOnShoot = false;
 				bShoot = false;
 				break;
@@ -350,6 +354,7 @@ void Thread_AutoShootIfCenter(PVOID param)
 {
 	while (!bStoped)
 	{
+		Helpers::LogFormat("----Thread_AutoShootIfCenter-----WaitForSingleObject(g_Event_Shoot, 500)");
 		DWORD res = WaitForSingleObject(g_Event_Shoot, 500);
 		if (bStoped)
 		{

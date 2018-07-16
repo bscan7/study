@@ -539,6 +539,10 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 {
 			 bShoot = !bShoot;
 			 //red24.push_back(lst24[iPos]);
+			 if (bShoot)
+			 {
+				 WinExec("cmd /C del /Q ..\\tmp\\*_Center_.*", SW_HIDE);
+			 }
 		 }
 
 		 if (GetAsyncKeyState(VK_NUMPAD0) & 1)
@@ -1806,7 +1810,7 @@ bool IsCenterRed()
 	//cOldColor = COLORREF2RGB(cOldColor);
 	//cNewColor = COLORREF2RGB(cNewColor);
 	// Ìæ»»ÑÕÉ« 
-	string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center";
+	string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center_";
 	if (ptPixels)
 		SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName+ ".bmp");
 
