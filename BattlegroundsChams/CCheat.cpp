@@ -364,6 +364,7 @@ void Thread_AutoShootIfCenter(PVOID param)
 		switch (res)
 		{
 		case WAIT_OBJECT_0:
+			Helpers::LogFormat("--------Thread_AutoShootIfCenter---------WAIT_OBJECT_0 ");
 			//AutoShootIfCenter(NULL);
 			AutoCenterAndShoot(NULL);
 			//::SetCursorPos(100, 50);
@@ -371,10 +372,13 @@ void Thread_AutoShootIfCenter(PVOID param)
 			//Helpers::LogFormat("::SetCursorPos(100, 50);********** ");
 			break;
 		case WAIT_TIMEOUT:
+			//Helpers::LogFormat("--------Thread_AutoShootIfCenter---------WAIT_TIMEOUT 500ms");
 			break;
 		case WAIT_ABANDONED:
+			Helpers::LogFormat("--------Thread_AutoShootIfCenter---------WAIT_ABANDONED ");
 			break;
 		case WAIT_FAILED:
+			Helpers::LogFormat("--------Thread_AutoShootIfCenter---------WAIT_FAILED ");
 			printf("\nOL_ The function has failed. To get extended error information, callGetLastError.\n");
 			break;
 		default:

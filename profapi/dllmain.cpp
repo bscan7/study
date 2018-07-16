@@ -14,6 +14,10 @@ void Thread_LoadUnloadDLL(PVOID param)
 	{
 		std::cout << "£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡£¡LoadLibrary" << std::endl;
 		hinst = LoadLibrary(L"E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
+		if (!hinst)
+		{
+			hinst = LoadLibrary(L"D:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
+		}
 		if (hinst)
 		{
 			typedef void( *LPFNC_SETEVENT)(HANDLE);
@@ -53,6 +57,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                        LPVOID lpReserved
 					 )
 {
+	//MessageBoxA(NULL, "DllMain...DllMain!", "uBoos?", MB_ICONINFORMATION);
 	AllocConsole();
 	freopen("CON", "w", stdout);
 	SetConsoleTitle(L"Bscan_LookLook");

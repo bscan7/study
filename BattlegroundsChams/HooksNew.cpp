@@ -615,11 +615,6 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 iRed = iRed++ % 3;
 		 }
 
-		 if (bShoot)
-		 {
-			 PulseEvent(g_Event_Shoot);
-		 }
-
 
 		 //if (GetAsyncKeyState(VK_RETURN) & 1)
 		 //{
@@ -1870,6 +1865,12 @@ bool IsCenterRed()
 UINT iName = 0;
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
+	if (bShoot)
+	{
+		std::cout << "hkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
+		PulseEvent(g_Event_Shoot);
+	}
+
 	if (bLog2Txt)
 	{
 		;
@@ -2329,7 +2330,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		else {
 			//没找到
 			lstAllStides.push_back(IndexCountStride);
-			Helpers::LogFormat("lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+			Helpers::LogFormat("hkD3D11DrawIndexed  lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
 
@@ -2609,7 +2610,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		else {
 			//没找到
 			lstAllStides.push_back(IndexCountStride);
-			Helpers::LogFormat("lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+			Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
 
