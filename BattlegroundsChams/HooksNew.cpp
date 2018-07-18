@@ -970,6 +970,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 //depthStencilDesc.DepthEnable = FALSE;
 			 //depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 			 depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+			 depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 			 //depthStencilDesc.StencilEnable = FALSE;
 			 ID3D11Device *ppDevice;
 			 pContext->GetDevice(&ppDevice);

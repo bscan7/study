@@ -308,8 +308,45 @@ void AutoCenterAndShoot(PVOID param)
 		string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center_";
 		if (ptPixels)
 			SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName + ".bmp");
+
+		//判断中心点区域
+		int iTmp = SEARCH_AREA - SHOOT_AREA;
+		;
+		int iTmp2 = SEARCH_AREA + SHOOT_AREA;
+		iTmp2*SEARCH_AREA * 2 - iTmp;
+
+		for (int i = iTmp*SEARCH_AREA * 2 + iTmp; i <= (iTmp2*SEARCH_AREA * 2 - iTmp); i++)
+		{
+			if (!ptPixels)
+			{
+				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
+				break;
+			}
+			if ((i%(SEARCH_AREA * 2) >= iTmp) && 
+				(i % (SEARCH_AREA * 2) <= iTmp2))
+			{
+				if (/*   (ptPixels[i] & 0x00ffffff == 0x00800000)
+					|| (ptPixels[i] & 0x00ffffff == 0x007f0000)
+					|| (ptPixels[i] & 0x00ffffff == 0x00810000)*/
+					(ptPixels[i] % 0x1000000 == 0x800000)
+					|| (ptPixels[i] % 0x1000000 == 0x790000)
+					|| (ptPixels[i] % 0x1000000 == 0x810000)
+					)
+				{
+					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+					Sleep(5);
+					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+					std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- 射击射击射击 " << ptPixels[i] << std::endl;
+					//break;
+					pp++;
+					hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+					return;
+				}
+
+			}
+		}
 		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
-		// 替换颜色  
+		//判断正方形区域  
 		for (int i = 0; i<=((iEdgeLen * iEdgeLen) - 1); i++)
 		{
 			if (!ptPixels)
@@ -332,13 +369,17 @@ void AutoCenterAndShoot(PVOID param)
 				std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE x=" << std::dec << SEARCH_AREA - (iEdgeLen - i % (iEdgeLen)) << " y=" << SEARCH_AREA - (i / (iEdgeLen)) << " iX=" << (iEdgeLen - i % (iEdgeLen)) << " iY=" << (i / (iEdgeLen)) << std::endl;
 
 				mouse_event(MOUSEEVENTF_MOVE, (SEARCH_AREA-(iEdgeLen - i % (iEdgeLen)))/2, (SEARCH_AREA - (i / (iEdgeLen))) / 2, 0, NULL);
-				Sleep(5);
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-				Sleep(5);
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+				//Sleep(5);
+				//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+				//Sleep(5);
+				//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 				//bDoneOnShoot = false;
-				bShoot = false;
 				break;
+			}
+
+			if (i == ((iEdgeLen * iEdgeLen) - 1))
+			{
+				bShoot = false;
 			}
 			//bDoneOnShoot = true;
 		}
