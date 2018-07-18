@@ -88,8 +88,8 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		DeleteObject(hPen);
 	}
 }
-#define SHOOT_AREA  5
-#define SEARCH_AREA  150
+#define SHOOT_AREA  6
+#define SEARCH_AREA  100
 int pp = 0;
 
 void AutoShootIfCenter(PVOID param)
@@ -356,19 +356,20 @@ void AutoCenterAndShoot(PVOID param)
 			}
 			//std::cout << ptPixels[i] << " ";
 			//ptPixels[i]; //0xff 29 27 21 红绿蓝
-			if (/*   (ptPixels[i] & 0x00ffffff == 0x00800000)
+			if ((/*   (ptPixels[i] & 0x00ffffff == 0x00800000)
 				|| (ptPixels[i] & 0x00ffffff == 0x007f0000)
 				|| (ptPixels[i] & 0x00ffffff == 0x00810000)*/
 				(ptPixels[i] % 0x1000000 == 0x800000)
 				|| (ptPixels[i] % 0x1000000 == 0x790000)
 				|| (ptPixels[i] % 0x1000000 == 0x810000)
-				)
+				) 
+				|| (ptPixels[i] % 0x1000000 == 0x404040))
 			{
 				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
 				std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE x=" << std::dec << SEARCH_AREA - (iEdgeLen - i % (iEdgeLen)) << " y=" << SEARCH_AREA - (i / (iEdgeLen)) << " iX=" << (iEdgeLen - i % (iEdgeLen)) << " iY=" << (i / (iEdgeLen)) << std::endl;
 
-				mouse_event(MOUSEEVENTF_MOVE, (SEARCH_AREA-(iEdgeLen - i % (iEdgeLen)))/2, (SEARCH_AREA - (i / (iEdgeLen))) / 2, 0, NULL);
+				mouse_event(MOUSEEVENTF_MOVE, (SEARCH_AREA-(iEdgeLen - i % (iEdgeLen)))/4, (SEARCH_AREA - (i / (iEdgeLen))) /4, 0, NULL);
 				//Sleep(5);
 				//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				//Sleep(5);
@@ -380,6 +381,7 @@ void AutoCenterAndShoot(PVOID param)
 			if (i == ((iEdgeLen * iEdgeLen) - 1))
 			{
 				bShoot = false;
+				Helpers::LogFormat("----===区域内无色，，关闭自动射击========");
 			}
 			//bDoneOnShoot = true;
 		}
