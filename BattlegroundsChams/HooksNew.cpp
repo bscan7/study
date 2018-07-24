@@ -100,6 +100,7 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  std::vector<UINT64> lstAvatar2412;
  std::vector<UINT64> lstEqupm2412;
  std::vector<UINT64> lstNot2412;
+ std::vector<UINT64> lstHideList;
  //std::vector<int> lstRed24;
  //std::vector<int> lstBase12;
  //std::vector<int> lstRed12;
@@ -381,6 +382,16 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 }
 		 fin.close();
 		 std::cout << "逐行读取文件完成！ lstNot2412 << " << g_NotRedListFName.c_str() << endl;
+
+		 lstHideList.clear();
+		 fin.open("..\\HideList.txt");  //打开文件
+									   //string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstHideList.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+		 std::cout << "逐行读取文件完成！ lstHideList << ..\\HideList.txt"  << endl;
 	 }
  }
 
@@ -834,6 +845,17 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		// );
  }
 
+ bool IsIn_HideList(UINT Stride, UINT IndexCount)
+ {
+	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	 if (find(lstHideList.begin(), lstHideList.end(), IndexCountStride) != lstHideList.end()) {
+		 //找到
+		 return true;
+	 }
+	 else {
+		 return false;
+	 }
+ }
 
  bool IsEquipment(UINT Stride, UINT IndexCount)
  {
@@ -2668,7 +2690,12 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		}
 	}
 
-	if (((Stride == gStride) && bHideTrees
+	//if (IsIn_HideList(Stride, IndexCountPerInstance))
+	//{
+	//	return;
+	//}
+
+	if ((((Stride == gStride) || IsIn_HideList(Stride, IndexCountPerInstance)) && bHideTrees
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
 		(IndexCountPerInstance >= iMax))*/
@@ -2678,18 +2705,11 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	}
 	else
 	{
-		if (bHideGrass &&
-			(Stride == 12) &&
-			(
-			(IndexCountPerInstance == 6) ||
-				(IndexCountPerInstance == 15) ||
-				(IndexCountPerInstance == 18) ||
-				(IndexCountPerInstance == 21) ||
-				(IndexCountPerInstance == 27) ||
-				(IndexCountPerInstance == 45)
-				)
+		if (bHideGrass && 
+			IsIn_HideList(Stride, IndexCountPerInstance)
 			)
 		{
+			return;
 		}
 		else 
 			//if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
@@ -2714,109 +2734,109 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 
 
 	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
-	Send2Hwnd(IndexCountPerInstance, Stride);
+	//Send2Hwnd(IndexCountPerInstance, Stride);
 
-	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
-	if (bCrossDraw)
-	{
-		CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
-	}
-
-	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 3 usedTime = ", timeGetTime() - bgtime);
-
-	std::string szCurIdx = std::to_string(IndexCountPerInstance);
-	while (szCurIdx.length() < 5)
-	{
-		szCurIdx = "0" + szCurIdx;
-	}
-	szCurIdx = std::to_string(Stride) + "_" + szCurIdx;
-
-	list<string>::iterator iter;
-	iter = std::find(sHideList.begin(), sHideList.end(), szCurIdx);
-
-	bool bInList = false;
-	if (iter != sHideList.end())
-	{
-		//lst中存在 
-		bInList = true;
-	}
-	else
-	{
-		//没找到
-		bInList = false;
-	}
-	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 4 usedTime = ", timeGetTime() - bgtime);
-
-	/*if (!(bHideTrees && (Stride == 12) && (
-		IndexCountPerInstance < abc ||
-
-		//IndexCountPerInstance == iIndexCnt ||
-		IndexCountPerInstance == 6 ||
-		IndexCountPerInstance == 18 ||
-		IndexCountPerInstance == 27 ||
-		IndexCountPerInstance == 45 ||
-		IndexCountPerInstance == 2991 || //2991 42	3456
-		IndexCountPerInstance == 600 || //2991 42	3456
-		IndexCountPerInstance == 42 || //2991 42	3456
-		IndexCountPerInstance == 3456  //2991 42	3456
-		)))*/
-		//if (! (bHideTrees && (Stride == 12 ) && (IndexCountPerInstance <abc)))
-		//if ((IndexCountPerInstance>= abc))
-	{
-		//if (!bInList)
-		if (((Stride == gStride) && bHideTrees 
-			 /*&&(
-									(IndexCountPerInstance <= iMin) ||
-									(IndexCountPerInstance >= iMax))*/
-			))
-		{
-			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
-		}
-		else
-		{
-			if (bHideGrass && 
-				(Stride == 12) &&
-				(
-				(IndexCountPerInstance == 6) ||
-					(IndexCountPerInstance == 15) ||
-					(IndexCountPerInstance == 18) ||
-					(IndexCountPerInstance == 21) ||
-					(IndexCountPerInstance == 27) ||
-					(IndexCountPerInstance == 45)
-					)
-				)
-			{
-			}
-			else if ((!bInList) && !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
-				&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
-				&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
-				)
-			{
-
-				//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
-				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-			}
-		}
-	}
-
-	//if (bShow24)
+	////Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
+	//if (bCrossDraw)
 	//{
-	//	if ((Stride != 12))
-	//	{
-	//			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-	//	}
+	//	CheatIt(pContext, IndexCountPerInstance, InstanceCount/**/, StartIndexLocation, BaseVertexLocation, StartInstanceLocation/**/);
+	//}
+
+	////Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 3 usedTime = ", timeGetTime() - bgtime);
+
+	//std::string szCurIdx = std::to_string(IndexCountPerInstance);
+	//while (szCurIdx.length() < 5)
+	//{
+	//	szCurIdx = "0" + szCurIdx;
+	//}
+	//szCurIdx = std::to_string(Stride) + "_" + szCurIdx;
+
+	//list<string>::iterator iter;
+	//iter = std::find(sHideList.begin(), sHideList.end(), szCurIdx);
+
+	//bool bInList = false;
+	//if (iter != sHideList.end())
+	//{
+	//	//lst中存在 
+	//	bInList = true;
 	//}
 	//else
 	//{
-	//	if ((Stride != 24))
-	//	{
-	//			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-	//	}
-
+	//	//没找到
+	//	bInList = false;
 	//}
-				//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
-	return;
+	////Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 4 usedTime = ", timeGetTime() - bgtime);
+
+	///*if (!(bHideTrees && (Stride == 12) && (
+	//	IndexCountPerInstance < abc ||
+
+	//	//IndexCountPerInstance == iIndexCnt ||
+	//	IndexCountPerInstance == 6 ||
+	//	IndexCountPerInstance == 18 ||
+	//	IndexCountPerInstance == 27 ||
+	//	IndexCountPerInstance == 45 ||
+	//	IndexCountPerInstance == 2991 || //2991 42	3456
+	//	IndexCountPerInstance == 600 || //2991 42	3456
+	//	IndexCountPerInstance == 42 || //2991 42	3456
+	//	IndexCountPerInstance == 3456  //2991 42	3456
+	//	)))*/
+	//	//if (! (bHideTrees && (Stride == 12 ) && (IndexCountPerInstance <abc)))
+	//	//if ((IndexCountPerInstance>= abc))
+	//{
+	//	//if (!bInList)
+	//	if (((Stride == gStride) && bHideTrees 
+	//		 /*&&(
+	//								(IndexCountPerInstance <= iMin) ||
+	//								(IndexCountPerInstance >= iMax))*/
+	//		))
+	//	{
+	//		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
+	//	}
+	//	else
+	//	{
+	//		if (bHideGrass && 
+	//			(Stride == 12) &&
+	//			(
+	//			(IndexCountPerInstance == 6) ||
+	//				(IndexCountPerInstance == 15) ||
+	//				(IndexCountPerInstance == 18) ||
+	//				(IndexCountPerInstance == 21) ||
+	//				(IndexCountPerInstance == 27) ||
+	//				(IndexCountPerInstance == 45)
+	//				)
+	//			)
+	//		{
+	//		}
+	//		else if ((!bInList) && !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+	//			&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+	//			&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+	//			)
+	//		{
+
+	//			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+	//			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	//		}
+	//	}
+	//}
+
+	////if (bShow24)
+	////{
+	////	if ((Stride != 12))
+	////	{
+	////			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	////	}
+	////}
+	////else
+	////{
+	////	if ((Stride != 24))
+	////	{
+	////			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	////	}
+
+	////}
+	//			//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	////pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+	//return;
 }
 
 //==========================================================================================================================
