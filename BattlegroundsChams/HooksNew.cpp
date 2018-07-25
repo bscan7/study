@@ -34,6 +34,7 @@ extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
 extern HANDLE  g_Event_CrossDraw;
 extern bool bCrossDraw;
+extern bool bHideFog;
 bool bCheat = true;
 bool bHideOne = false;
 bool bLog2Txt = false;
@@ -563,6 +564,10 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 if (GetAsyncKeyState(VK_NUMPAD1) & 1)
 		 {
 			 sHideList.clear();
+		 }
+		 if (GetAsyncKeyState(VK_NUMPAD2) & 1)
+		 {
+			 bHideFog = !bHideFog;
 		 }
 		 if (GetAsyncKeyState(VK_NUMPAD3) & 1)
 		 {
@@ -2695,7 +2700,14 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	//	return;
 	//}
 
-	if ((((Stride == gStride) || IsIn_HideList(Stride, IndexCountPerInstance)) && bHideTrees
+	if (bHideFog &&
+		((Stride == 16) && (IndexCountPerInstance == 6))
+		)
+	{
+		return;
+	}
+
+	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideTrees
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
 		(IndexCountPerInstance >= iMax))*/

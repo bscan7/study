@@ -15,6 +15,7 @@ IDXGISwapChain* CCheat::pSwapChain = NULL;
 HWND g_hWnd = NULL;
 RECT g_lpRect;
 bool bCrossDraw = true;
+bool bHideFog = false;
 
 HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
 HANDLE  g_Event_CrossDraw = CreateEvent(NULL, FALSE, FALSE, NULL);
