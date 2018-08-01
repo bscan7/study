@@ -102,6 +102,7 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  std::vector<UINT64> lstEqupm2412;
  std::vector<UINT64> lstNot2412;
  std::vector<UINT64> lstHideList;
+ std::vector<UINT64> lstCarOrBoat;
  //std::vector<int> lstRed24;
  //std::vector<int> lstBase12;
  //std::vector<int> lstRed12;
@@ -390,6 +391,16 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 while (getline(fin, ReadLine))  //逐行读取，直到结束
 		 {
 			 lstHideList.push_back(atoi(ReadLine.c_str()));
+		 }
+		 fin.close();
+		 std::cout << "逐行读取文件完成！ lstHideList << ..\\HideList.txt"  << endl;
+
+		 lstCarOrBoat.clear();
+		 fin.open("..\\CarOrBoatList.txt");  //打开文件
+									   //string ReadLine;
+		 while (getline(fin, ReadLine))  //逐行读取，直到结束
+		 {
+			 lstCarOrBoat.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
 		 std::cout << "逐行读取文件完成！ lstHideList << ..\\HideList.txt"  << endl;
@@ -850,6 +861,18 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		// );
  }
 
+ bool Is_CarOrBoat(UINT Stride, UINT IndexCount)
+ {
+	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	 if (find(lstCarOrBoat.begin(), lstCarOrBoat.end(), IndexCountStride) != lstCarOrBoat.end()) {
+		 //找到
+		 return true;
+	 }
+	 else {
+		 return false;
+	 }
+ }
+
  bool IsIn_HideList(UINT Stride, UINT IndexCount)
  {
 	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
@@ -944,7 +967,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
  ////(Stride == 12 && IndexCount > 3800) ||
  //	(Stride == 12 && IndexCount == 14136) // 汽车
  //	)
- void CheatItNew(ID3D11DeviceContext* pContext)
+ void CheatItNew(ID3D11DeviceContext* pContext, ID3D11PixelShader* psSSS)
  {
 	 if (ppDepthStencilState__New != NULL)
 	 {
@@ -967,11 +990,11 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 else
 		 bRed = true;
 
-	 if (cover != timeGetTime() / INTVL)
-	 {
-		 // bFlashIt = !bFlashIt;
-		 cover = timeGetTime() / INTVL;
-	 }
+	 //if (cover != timeGetTime() / INTVL)
+	 //{
+		// // bFlashIt = !bFlashIt;
+		// cover = timeGetTime() / INTVL;
+	 //}
 
 	 SYSTEMTIME st = { 0 };
 	 GetLocalTime(&st);
@@ -983,7 +1006,6 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 //pContext->PSSetShader(psYellow, NULL, NULL);
 	 //ppDepthStencilState->GetDesc(&depthStencilDesc);
 
-	 ID3D11PixelShader* psSSS = psRed;
 	 if (bFlashIt)
 	 {
 		 // Create the depth stencil state.
@@ -2402,7 +2424,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		if (((12 == Stride) || (24 == Stride)) &&
 			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
-			CheatItNew(pContext);
+			CheatItNew(pContext, psRed);
 		}
 	}
 	else if ((2 == g_StartSlot))
@@ -2411,7 +2433,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		if (((12 == Stride) || (24 == Stride)) &&
 			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
-			CheatItNew(pContext);
+			CheatItNew(pContext, psRed);
 		}
 	}
 
@@ -2676,22 +2698,18 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
 	}
-	if ((1 == g_StartSlot) )
-	{
-		g_StartSlot = 0;
-		if (((12 == Stride) || (24 == Stride)) && 
-			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-		{
-			CheatItNew(pContext);
-		}
-	}
-	else if ( (2 == g_StartSlot))
+	if ((1 == g_StartSlot) || (2 == g_StartSlot))
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) &&
 			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
-			CheatItNew(pContext);
+			if (Is_CarOrBoat(Stride, IndexCountPerInstance))
+			{
+				CheatItNew(pContext, psGreen);
+			}
+			else
+				CheatItNew(pContext, psRed);
 		}
 	}
 
