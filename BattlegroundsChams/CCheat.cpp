@@ -398,7 +398,7 @@ void Thread_AutoShootIfCenter(PVOID param)
 {
 	while (!bStoped)
 	{
-		Helpers::LogFormat("----Thread_AutoShootIfCenter-----WaitForSingleObject(g_Event_Shoot, 500)");
+		//Helpers::LogFormat("----Thread_AutoShootIfCenter-----WaitForSingleObject(g_Event_Shoot, 500)");
 		DWORD res = WaitForSingleObject(g_Event_Shoot, 500);
 		if (bStoped)
 		{

@@ -403,7 +403,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 lstCarOrBoat.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
-		 std::cout << "逐行读取文件完成！ lstHideList << ..\\HideList.txt"  << endl;
+		 std::cout << "逐行读取文件完成！ lstCarOrBoat << ..\\CarOrBoatList.txt"  << endl;
 	 }
  }
 
