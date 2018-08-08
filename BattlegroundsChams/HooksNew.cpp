@@ -1008,9 +1008,8 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 	 if (bFlashIt)
 	 {
-		 // Create the depth stencil state.
-	 //if (ppDepthStencilStateNew == NULL)
 		 {
+		 // Create the depth stencil state.
 			 D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 			 pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 			 ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
@@ -1025,8 +1024,9 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 			 pContext->GetDevice(&ppDevice);
 			 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 			 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-			 psSSS = psTmp;
 		 }
+			 psSSS = psTmp;
+	 //if (ppDepthStencilStateNew == NULL)
 	 }
 	 if ((bRed))
 	 {
@@ -1999,7 +1999,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psBlue)
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psTmp)
-		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.25f, 0.25f, 0.25f);
+		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.4f, 0.4f, 0.25f);
 	if (!psd)
 		hr = GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
 
