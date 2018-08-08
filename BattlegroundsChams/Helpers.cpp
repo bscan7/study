@@ -2,6 +2,9 @@
 #include "Helpers.h"
 #include "iostream"
 #include "fstream"
+#include <MMSystem.h>
+#include <string>
+#include <iomanip>
 using namespace std;
 //HOOKING
 void Helpers::HookFunction(PVOID *oFunction, PVOID pDetour)
@@ -18,7 +21,7 @@ void Helpers::UnhookFunction(PVOID *oFunction, PVOID pDetour)
 	DetourDetach(oFunction, pDetour);
 	DetourTransactionCommit();
 }
-extern bool bLog2Txt;
+extern bool bLog2Txt_F7;
 extern ofstream outfile;
 
 //MISCELLANEOUS
@@ -41,23 +44,37 @@ void Helpers::LogAddress(char* szName, int64_t iAddress)
 	//}
 	std::cout << "[+] " << szName << ": 0x" << std::hex << iAddress << std::endl;
 }
-//void Helpers::Log2Txt(char* szLog, int64_t iAddress)
-//{
-//	if (bLog2Txt && iAddress>0)
-//	{
-//		ofstream outfile;
-//		outfile.open("..\\Log2Txt.txt", ios::app);
-//		if (!outfile)
-//		{
-//			std::cout << "打开Log2Txt.txt文件失败！" << endl;
-//		}
-//		else
-//		{
-//			outfile << "[+] " << szLog << ": " << iAddress << std::endl;
-//			outfile.close();
-//		}
-//	}
-//}
+
+void Helpers::LogBuf2Txt(string sPre, const void* pBuf, int64_t iSize)
+{
+	//if (timeGetTime()%10 == 0)
+	if (bLog2Txt_F7)
+	{
+		ofstream outfile;
+		outfile.open("..\\" + sPre + to_string(timeGetTime()) + ".txt", ios::app);
+		//outfile.open("..\\" + to_string(timeGetTime()), ios::app);
+		if (!outfile)
+		{
+			std::cout << "打开Log2Txt.txt文件失败！" << endl;
+		}
+		else
+		{
+					outfile << std::endl;
+					outfile << std::endl;
+			for (int i=0; i <iSize; i+=sizeof(int))
+			{
+				if (i>0 && i%16==0)
+				{
+					outfile << std::endl;
+				}
+				int xxx = *(int*)((int)pBuf + i);
+				outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)((int)pBuf+i) << " ";
+			}
+			
+			outfile.close();
+		}
+	}
+}
 
 void Helpers::LogError(char* szMessage)
 {
@@ -80,7 +97,7 @@ void Helpers::LogFormat(const char* strFormat, ...)
 	// The va_end macro just zeroes out pArgList for no good reason  
 	va_end(args);
 
-	if (bLog2Txt)
+	if (bLog2Txt_F7)
 	{
 		//outfile.open("..\\Log2Txt.txt", ios::app);
 		if (!outfile)

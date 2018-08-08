@@ -34,7 +34,7 @@ extern RECT g_lpRect;
 extern HANDLE  g_Event_Shoot;
 extern bool bCrossDraw;
 bool bCheat = true;
-bool bLog2Txt = false;
+bool bLog2Txt_F7 = false;
 ofstream outfile;
 
 void Thread_ExitHook(PVOID param);
@@ -75,7 +75,7 @@ std::list<std::string> sHideList;
 tD3D11CreateQuery Hooks::oCreateQuery = NULL;
 tD3D11Present Hooks::oPresent = NULL;
 tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
-tD3D11Map Hooks::oMap = NULL;
+tD3D11UnMap Hooks::oUnMap = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
 tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
@@ -565,7 +565,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 }
 		 if (GetAsyncKeyState(VK_F7) & 1)
 		 {
-			 bLog2Txt = !bLog2Txt;
+			 bLog2Txt_F7 = !bLog2Txt_F7;
 		 }
 		 if (GetAsyncKeyState(VK_F5) & 1)
 		 {
@@ -1624,7 +1624,7 @@ bool IsCenterRed()
 UINT iName = 0;
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
-	if (bLog2Txt)
+	if (bLog2Txt_F7)
 	{
 		;
 		if (outfile.is_open())
@@ -2153,7 +2153,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 }
 
-void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resource *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
+void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, _In_ ID3D11Resource *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
 {
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -2164,7 +2164,7 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resou
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+	Hooks::oUnMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
 
 	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 

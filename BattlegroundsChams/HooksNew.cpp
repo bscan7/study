@@ -37,7 +37,7 @@ extern bool bCrossDraw;
 extern bool bHideFog;
 bool bCheat = true;
 bool bHideOne = false;
-bool bLog2Txt = false;
+bool bLog2Txt_F7 = false;
 ofstream outfile;
 string  g_NotRedListFName = "..\\notListNEW.txt";
 
@@ -79,7 +79,7 @@ std::list<std::string> sHideList;
 tD3D11CreateQuery Hooks::oCreateQuery = NULL;
 tD3D11Present Hooks::oPresent = NULL;
 tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
-tD3D11Map Hooks::oMap = NULL;
+tD3D11UnMap Hooks::oUnMap = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
 tD3D11PSSetSamplers Hooks::oPSSetSamplers = NULL;
@@ -610,7 +610,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 }
 		 if (GetAsyncKeyState(VK_F7) & 1)
 		 {
-			 bLog2Txt = !bLog2Txt;
+			 bLog2Txt_F7 = !bLog2Txt_F7;
 		 }
 		 if (GetAsyncKeyState(VK_F6) & 1)
 		 {
@@ -1925,22 +1925,22 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		PulseEvent(g_Event_Shoot);
 	}
 
-	if (bLog2Txt)
+	if (bLog2Txt_F7)
 	{
-		;
-		if (outfile.is_open())
-		{
-			outfile.close();
-		}
-		
-		outfile.open("..\\xFrame_" + to_string(iName++), ios::app);
-		if (!outfile)
-		{
-			std::cout << "打开Log2Txt.txt文件失败！" << endl;
-		}
-		else
-		{
-		}
+		//;
+		//if (outfile.is_open())
+		//{
+		//	outfile.close();
+		//}
+		//
+		//outfile.open("..\\xFrame_" + to_string(iName++), ios::app);
+		//if (!outfile)
+		//{
+		//	std::cout << "打开Log2Txt.txt文件失败！" << endl;
+		//}
+		//else
+		//{
+		//}
 	}
 	//Helpers::LogFormat("hkD3D11Present+++++++-------------------------------- bUp = %d", bFlashIt);
 	DWORD bgtime = timeGetTime();
@@ -2310,15 +2310,16 @@ void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID
 	//	*(float*)((int)pSrcData + 32), *(float*)((int)pSrcData + 32 + 4), *(float*)((int)pSrcData + 32 + 8), *(float*)((int)pSrcData + 32 + 12),
 	//	*(float*)((int)pSrcData + 48), *(float*)((int)pSrcData + 48 + 4), *(float*)((int)pSrcData + 48 + 8), *(float*)((int)pSrcData + 48 + 12)
 	//);
-	//UINT Stride;
-	//ID3D11Buffer *veBuffer;
-	//UINT veBufferOffset = 0;
-	//pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	//int i = 0;
 
-	//if (Stride == 24)
+	if ((Stride == 24) || (Stride == 56))
 	{
+		Helpers::LogBuf2Txt("UpdateSubresource_", pSrcData, 0xa0);
 		//system("cls");
 		//std::cout << *(float*)((int)pSrcData + 0) << " " << *(float*)((int)pSrcData + 4) << " " << *(float*)((int)pSrcData + 8) << " " << *(float*)((int)pSrcData + 12) << std::endl;
 		//std::cout << *(float*)((int)pSrcData + 16) << " " << *(float*)((int)pSrcData + 16 + 4) << " " << *(float*)((int)pSrcData + 16 + 8) << " " << *(float*)((int)pSrcData + 16 + 12) << std::endl;
@@ -2571,18 +2572,18 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 }
 
-void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resource *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
+void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Resource *pResource, __in UINT Subresource)
 {
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
 	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 
-	//UINT Stride;
-	//ID3D11Buffer *veBuffer;
-	//UINT veBufferOffset = 0;
-	//pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+	Hooks::oUnMap(pContext, pResource, Subresource);
 
 	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 
@@ -2594,19 +2595,19 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Resou
 	//	//Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x Slot=%d Stride=%d", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28), g_StartSlot, Stride);
 	//}
 
-	////if (Stride == 24)
-	////{
-	////	//获取指向顶点缓存的指针  
-	////	Vertex* verticesPtr;
-	////	verticesPtr = (Vertex*)pMappedResource->pData;
+	if ((Stride == 24) || (Stride == 56))
+	{
+		//获取指向顶点缓存的指针  
+		//Vertex* verticesPtr;
+		//verticesPtr = (Vertex*)pResource;
 
-	////	////把数据复制进顶点缓存  
-	////	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+		////把数据复制进顶点缓存  
+		//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
 
-	////	////解锁顶点缓存  
-	////	//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
-	////	Helpers::LogFormat("hkD3D11Map...(Stride:24) %03.8f %03.8f %03.8f %03.8f", *(float*)((int)verticesPtr + 28), *(float*)((int)verticesPtr + 32), *(float*)((int)verticesPtr + 36), *(float*)((int)verticesPtr + 40));
-	////}
+		////解锁顶点缓存  
+		//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+		Helpers::LogBuf2Txt("UnMap_", pResource, 0xa0);
+	}
 	return;
 }
 

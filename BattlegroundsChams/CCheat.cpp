@@ -713,7 +713,7 @@ void CCheat::Initialise()
 	// GET FUNCTIONS
 	Hooks::oPresent = reinterpret_cast<tD3D11Present>(pSwapChainVT[8]/*D3D11PRESENT*/);
 	Hooks::oDrawIndexed = reinterpret_cast<tD3D11DrawIndexed>(pContextVT[12]/*D3D11DRAWINDEXED*/);
-	Hooks::oMap = reinterpret_cast<tD3D11Map>(pContextVT[14]/*D3D11Map*/);
+	Hooks::oUnMap = reinterpret_cast<tD3D11UnMap>(pContextVT[15]/*D3D11UnMap*/);
 	Hooks::oCreateQuery = reinterpret_cast<tD3D11CreateQuery>(pDeviceVT[24]/*D3D11CreateQuery*/);
 	Hooks::oVSSetConstantBuffers = reinterpret_cast<tD3D11VSSetConstantBuffers>(pContextVT[7]/*D3D11VSSetConstantBuffers*/);
 	Hooks::oPSSetShaderResources = reinterpret_cast<tD3D11PSSetShaderResources>(pContextVT[8]/*D3D11PSSetShaderResources*/);
@@ -733,7 +733,7 @@ void CCheat::Initialise()
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetSamplers),					Hooks::hkD3D11PSSetSamplers);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oUpdateSubresource),				Hooks::hkD3D11UpdateSubresource);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexed),					Hooks::hkD3D11DrawIndexed);
-	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oMap),							Hooks::hkD3D11Map);
+	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oUnMap),							Hooks::hkD3D11UnMap);
 
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstanced),					Hooks::hkD3D11DrawInstanced);
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstanced),			Hooks::hkD3D11DrawIndexedInstanced);
@@ -768,7 +768,7 @@ void CCheat::Release()
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oPSSetSamplers), Hooks::hkD3D11PSSetSamplers);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oUpdateSubresource), Hooks::hkD3D11UpdateSubresource);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexed), Hooks::hkD3D11DrawIndexed);
-	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oMap), Hooks::hkD3D11Map);
+	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oUnMap), Hooks::hkD3D11UnMap);
 
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstanced), Hooks::hkD3D11DrawInstanced);
 	Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstanced), Hooks::hkD3D11DrawIndexedInstanced);
