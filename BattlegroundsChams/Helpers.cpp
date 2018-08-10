@@ -59,9 +59,13 @@ void Helpers::LogBuf2Txt(string sPre, const void* pBuf, int64_t iSize)
 		}
 		else
 		{
-					outfile << std::endl;
-					outfile << std::endl;
-			for (int i=0; i <iSize; i+=sizeof(int))
+			D3D11_BUFFER_DESC desc;
+			((ID3D11Buffer*)pBuf)->GetDesc(&desc);
+
+			outfile << std::endl;
+			outfile << " BindFlags=" << desc.BindFlags << " ByteWidth=" << desc.ByteWidth << " MiscFlags=" << desc.MiscFlags << " StructureByteStride=" << desc.StructureByteStride << " Usage=" << desc.Usage << std::hex << " CPUAccessFlags=0x" << desc.CPUAccessFlags << std::endl;
+			outfile << std::hex << " pBuf=0x" << pBuf << std::endl;
+			for (int i = 0; i < iSize; i += sizeof(int))
 			{
 				if (i>0 && i%16==0)
 				{

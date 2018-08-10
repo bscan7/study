@@ -2572,7 +2572,39 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 }
 
-void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Resource *pResource, __in UINT Subresource)
+void tmpCode(ID3D11DeviceContext* d3dDeviceContext, ID3D11Resource *md3dVertexBuffer)
+{
+	UINT mVertexCount=88;
+
+	//填充(顶点)缓存形容结构体和子资源数据结构体,并创建顶点缓存(这里用的是动态缓存)
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	//这里此时每帧进行该缓存资源的更新应该用MAP和UMAP进行资源更新
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * mVertexCount;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = 0;
+
+
+
+	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	d3dDeviceContext->Map(md3dVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+	//获取指向顶点缓存的指针
+	Vertex* verticesPtr;
+	verticesPtr = (Vertex*)mappedResource.pData;
+
+	//把数据复制进顶点缓存
+	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+
+	//解锁顶点缓存
+	d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+}
+
+void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -2583,7 +2615,7 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Res
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	Hooks::oUnMap(pContext, pResource, Subresource);
+	Hooks::oUnMap(pContext, pStageBuffer, Subresource);
 
 	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 
@@ -2606,7 +2638,7 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Res
 
 		////解锁顶点缓存  
 		//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
-		Helpers::LogBuf2Txt("UnMap_", pResource, 0xa0);
+		Helpers::LogBuf2Txt("UnMap_", pStageBuffer, 0xa0);
 	}
 	return;
 }
