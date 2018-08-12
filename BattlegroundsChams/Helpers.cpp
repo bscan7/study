@@ -59,11 +59,11 @@ void Helpers::LogBuf2Txt(string sPre, const void* pBuf, int64_t iSize)
 		}
 		else
 		{
-			D3D11_BUFFER_DESC desc;
-			((ID3D11Buffer*)pBuf)->GetDesc(&desc);
+			//D3D11_BUFFER_DESC desc;
+			//((ID3D11Buffer*)pBuf)->GetDesc(&desc);
 
 			outfile << std::endl;
-			outfile << " BindFlags=" << desc.BindFlags << " ByteWidth=" << desc.ByteWidth << " MiscFlags=" << desc.MiscFlags << " StructureByteStride=" << desc.StructureByteStride << " Usage=" << desc.Usage << std::hex << " CPUAccessFlags=0x" << desc.CPUAccessFlags << std::endl;
+			//outfile << " BindFlags=" << desc.BindFlags << " ByteWidth=" << desc.ByteWidth << " MiscFlags=" << desc.MiscFlags << " StructureByteStride=" << desc.StructureByteStride << " Usage=" << desc.Usage << std::hex << " CPUAccessFlags=0x" << desc.CPUAccessFlags << std::endl;
 			outfile << std::hex << " pBuf=0x" << pBuf << std::endl;
 			for (int i = 0; i < iSize; i += sizeof(int))
 			{
@@ -80,6 +80,41 @@ void Helpers::LogBuf2Txt(string sPre, const void* pBuf, int64_t iSize)
 	}
 }
 
+//void Helpers::LogBuf2Txt(string sPre, const void* pBuf, int64_t iSize) //FOR UnMap use only!!!
+//{
+//	//if (timeGetTime()%10 == 0)
+//	if (bLog2Txt_F7)
+//	{
+//		ofstream outfile;
+//		outfile.open("..\\" + sPre + to_string(timeGetTime()) + ".txt", ios::app);
+//		//outfile.open("..\\" + to_string(timeGetTime()), ios::app);
+//		if (!outfile)
+//		{
+//			std::cout << "打开Log2Txt.txt文件失败！" << endl;
+//		}
+//		else
+//		{
+//			D3D11_BUFFER_DESC desc;
+//			((ID3D11Buffer*)pBuf)->GetDesc(&desc);
+//
+//			outfile << std::endl;
+//			outfile << " BindFlags=" << desc.BindFlags << " ByteWidth=" << desc.ByteWidth << " MiscFlags=" << desc.MiscFlags << " StructureByteStride=" << desc.StructureByteStride << " Usage=" << desc.Usage << std::hex << " CPUAccessFlags=0x" << desc.CPUAccessFlags << std::endl;
+//			outfile << std::hex << " pBuf=0x" << pBuf << std::endl;
+//			for (int i = 0; i < iSize; i += sizeof(int))
+//			{
+//				if (i>0 && i%16==0)
+//				{
+//					outfile << std::endl;
+//				}
+//				int xxx = *(int*)((int)pBuf + i);
+//				outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)((int)pBuf+i) << " ";
+//			}
+//			
+//			outfile.close();
+//		}
+//	}
+//}
+//
 void Helpers::LogError(char* szMessage)
 {
 	std::cout << "[Error] " << szMessage << std::endl;

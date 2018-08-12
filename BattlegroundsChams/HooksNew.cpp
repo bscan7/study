@@ -79,6 +79,7 @@ std::list<std::string> sHideList;
 tD3D11CreateQuery Hooks::oCreateQuery = NULL;
 tD3D11Present Hooks::oPresent = NULL;
 tD3D11DrawIndexed Hooks::oDrawIndexed = NULL;
+tD3D11Map Hooks::oMap = NULL;
 tD3D11UnMap Hooks::oUnMap = NULL;
 tD3D11VSSetConstantBuffers Hooks::oVSSetConstantBuffers = NULL;
 tD3D11PSSetShaderResources Hooks::oPSSetShaderResources = NULL;
@@ -2604,18 +2605,32 @@ void tmpCode(ID3D11DeviceContext* d3dDeviceContext, ID3D11Resource *md3dVertexBu
 	d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
 }
 
+D3D11_MAPPED_SUBRESOURCE *pHooksMappedResource = NULL;
+
+void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffer *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
+{
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	if ((Stride == 12) || (Stride == 24) || (Stride == 56))
+	{
+		pHooksMappedResource = pMappedResource;
+	}
+	else
+		pHooksMappedResource = NULL;
+
+	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+}
+
+ID3D11Buffer* pHooksStageBuffer = NULL;
 void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
 	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
-
-	Hooks::oUnMap(pContext, pStageBuffer, Subresource);
 
 	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 
@@ -2626,20 +2641,17 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 	//	UINT* p = (UINT*)pMappedResource->pData;
 	//	//Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x Slot=%d Stride=%d", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28), g_StartSlot, Stride);
 	//}
+	pHooksStageBuffer = pStageBuffer;
 
-	if ((Stride == 24) || (Stride == 56))
+	if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
 	{
-		//获取指向顶点缓存的指针  
-		//Vertex* verticesPtr;
-		//verticesPtr = (Vertex*)pResource;
-
-		////把数据复制进顶点缓存  
-		//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
-
-		////解锁顶点缓存  
-		//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
-		Helpers::LogBuf2Txt("UnMap_", pStageBuffer, 0xa0);
+		Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
 	}
+	pHooksMappedResource = NULL;
+	pHooksStageBuffer = NULL;
+
+
+	Hooks::oUnMap(pContext, pStageBuffer, Subresource);
 	return;
 }
 
@@ -2731,21 +2743,6 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 		//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
 	}
-	if ((1 == g_StartSlot) || (2 == g_StartSlot))
-	{
-		g_StartSlot = 0;
-		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-		{
-			if (Is_CarOrBoat(Stride, IndexCountPerInstance))
-			{
-				CheatItNew(pContext, psGreen);
-			}
-			else
-				CheatItNew(pContext, psRed);
-		}
-	}
-
 	//if (IsIn_HideList(Stride, IndexCountPerInstance))
 	//{
 	//	return;
@@ -2780,6 +2777,39 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 			//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
 			//)
 		{
+
+			if ((1 == g_StartSlot) || (2 == g_StartSlot))
+			{
+				g_StartSlot = 0;
+				if (((12 == Stride) || (24 == Stride)) &&
+					IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+				{
+					if (Is_CarOrBoat(Stride, IndexCountPerInstance))
+					{
+						CheatItNew(pContext, psGreen);
+					}
+					else
+					{
+						if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+						{
+							//获取指向顶点缓存的指针  
+							//Vertex* verticesPtr;
+							//verticesPtr = (Vertex*)pResource;
+
+							////把数据复制进顶点缓存  
+							//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+
+							////解锁顶点缓存  
+							//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+							Helpers::LogBuf2Txt("DrawIdxIns_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+						}
+						pHooksMappedResource = NULL;
+						pHooksStageBuffer = NULL;
+
+						CheatItNew(pContext, psRed);
+					}
+				}
+			}
 
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
 			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
