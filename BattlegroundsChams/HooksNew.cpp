@@ -19,6 +19,8 @@ extern "C"
 using namespace std;
 #include "xnamath.h"
 #include "D3DX11tex.h"
+#include <map>
+#include <list>
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
@@ -2625,6 +2627,9 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 }
 
 ID3D11Buffer* pHooksStageBuffer = NULL;
+
+static map<string, list<byte*>> mapLogList;
+
 void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
@@ -2645,7 +2650,34 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 
 	if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
 	{
-		Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+		//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+		string sKey = std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData);
+
+		if (mapLogList[sKey].size() > 0)
+		{
+			bool bDiff = false;
+			byte* pLastBuf = mapLogList[sKey].back();
+			for (int i=0;i<16;i++)
+			{
+				if (((byte*)(pHooksMappedResource->pData))[i] != pLastBuf[i])
+				{//Keep it
+					bDiff = true;
+					break;
+				}
+			}
+			if (bDiff)
+			{
+				byte* pBuf = new byte[16];
+				memcpy(pBuf, (byte*)pHooksMappedResource->pData, 16);
+				mapLogList[sKey].push_back(pBuf);
+			}
+		}
+		else
+		{
+			byte* pBuf = new byte[16];
+			memcpy(pBuf, (byte*)pHooksMappedResource->pData, 16);
+			mapLogList[sKey].push_back(pBuf);
+		}
 	}
 	pHooksMappedResource = NULL;
 	pHooksStageBuffer = NULL;
