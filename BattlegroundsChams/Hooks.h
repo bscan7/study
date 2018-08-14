@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include <string>
 
 // DEFINITIONS
 
@@ -55,4 +56,5 @@ namespace Hooks
 	void __stdcall hkD3D11DrawInstancedIndirect (ID3D11DeviceContext* pContext, ID3D11Buffer *pBufferForArgs, UINT AlignedByteOffsetForArgs);
 	void __stdcall hkD3D11DrawIndexedInstancedIndirect (ID3D11DeviceContext* pContext, ID3D11Buffer *pBufferForArgs, UINT AlignedByteOffsetForArgs);
 }
+
 
