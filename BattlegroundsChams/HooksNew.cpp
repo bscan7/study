@@ -19,6 +19,9 @@ extern "C"
 using namespace std;
 #include "xnamath.h"
 #include "D3DX11tex.h"
+#include <map>
+#include <list>
+#include <mutex>
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
@@ -40,6 +43,10 @@ bool bHideOne = false;
 bool bLog2Txt_F7 = false;
 ofstream outfile;
 string  g_NotRedListFName = "..\\notListNEW.txt";
+
+static map<string, list<byte*>> mapLogList;
+mutex g_lock;
+string sKey = "";
 
 void Thread_ExitHook(PVOID param);
 static HWND hOutWnd = NULL;
@@ -545,6 +552,65 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
  extern bool bStoped;
 
+
+ void SaveMapToFile()
+ {
+	 //save map to file
+	//del old files 
+	 g_lock.lock();
+	 //loop map
+	 map<string, list<byte*>>::iterator it;
+	 for (it = mapLogList.begin(); it != mapLogList.end(); ++it)
+	 {
+		 if (it->second.size() > 1)
+		 {
+			 //save to file
+			 ofstream outfile;
+			 outfile.open("..\\" + it->first + to_string(timeGetTime()) + ".txt", ios::app);
+			 if (outfile)
+			 {
+				 outfile << std::endl;
+				 list<byte*>::iterator itor;
+				 for (itor = it->second.begin(); itor != it->second.end(); itor++)
+				 {
+					 byte* pBuf = *itor;
+					 //outfile.open("..\\" + to_string(timeGetTime()), ios::app);
+						 //D3D11_BUFFER_DESC desc;
+						 //((ID3D11Buffer*)pBuf)->GetDesc(&desc);
+
+					 //outfile << " BindFlags=" << desc.BindFlags << " ByteWidth=" << desc.ByteWidth << " MiscFlags=" << desc.MiscFlags << " StructureByteStride=" << desc.StructureByteStride << " Usage=" << desc.Usage << std::hex << " CPUAccessFlags=0x" << desc.CPUAccessFlags << std::endl;
+					 //outfile << std::hex << " pBuf=0x" << pBuf << std::endl;
+					 for (int i = 0; i < 16; i += sizeof(int))
+					 {
+						 if (i > 0 && i % 16 == 0)
+						 {
+							 outfile << std::endl;
+						 }
+						 int xxx = *(int*)((int)pBuf + i);
+						 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)((int)pBuf + i) << "[" << *(float*)((int)pBuf + i) << "] ";
+					 }
+					 outfile << std::endl;
+				 }
+				 outfile.close();
+			 }
+		 }
+		 //Clear byte[16]
+		 if (it->second.size() > 0)
+		 {
+			 list<byte*>::iterator itor;
+			 for (itor = it->second.begin(); itor != it->second.end(); itor++)
+			 {
+				 delete[] * itor;
+			 }
+			 //Clear list
+			 it->second.clear();
+		 }
+	 }
+	 //Clear map
+	 mapLogList.clear();
+	 g_lock.unlock();
+ }
+
  void Thread_KeysSwitch(PVOID param)
  {
 	 Helpers::LogFormat("--------Thread_KeysSwitch---------Started ");
@@ -612,6 +678,10 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 if (GetAsyncKeyState(VK_F7) & 1)
 		 {
 			 bLog2Txt_F7 = !bLog2Txt_F7;
+			 if (!bLog2Txt_F7)
+			 {
+				 SaveMapToFile();
+			 }
 		 }
 		 if (GetAsyncKeyState(VK_F6) & 1)
 		 {
@@ -1925,6 +1995,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		std::cout << "hkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
 		PulseEvent(g_Event_Shoot);
 	}
+	SaveMapToFile();
 
 	if (bLog2Txt_F7)
 	{
@@ -2370,6 +2441,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 		return;
 	}
+	SaveMapToFile();
 
 	UINT IndexCountPerInstance = IndexCount;
 	UINT Stride;
@@ -2438,7 +2510,23 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			CheatItNew(pContext, psRed);
 		}
 	}
+	if (1)
+	{
+		ofstream outfile;
+		outfile.open("..\\UnMap_Draw.txt", ios::app);
+		if (!outfile)
+		{
+			std::cout << "打开UnMap_Draw.txt文件失败！" << endl;
+		}
+		else
+		{
+			//D3D11_BUFFER_DESC desc;
+			//((ID3D11Buffer*)pBuf)->GetDesc(&desc);
 
+			outfile << sKey.c_str() << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl;
+			outfile.close();
+		}
+	}
 	if (((Stride == gStride) && bHideTrees
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
@@ -2624,7 +2712,58 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
 }
 
+int SehFilter(DWORD dwExceptionCode)
+{
+	switch (dwExceptionCode)
+	{
+	case EXCEPTION_ACCESS_VIOLATION:
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
+	return EXCEPTION_CONTINUE_SEARCH;
+}
 ID3D11Buffer* pHooksStageBuffer = NULL;
+void FillData()
+{
+	sKey = "UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "___";
+	if (mapLogList[sKey].size() > 0)
+	{
+		bool bDiff = false;
+		byte* pLastBuf = mapLogList[sKey].back();
+		for (int i = 0; i < 16; i++)
+		{
+			if (((byte*)(pHooksMappedResource->pData))[i] != pLastBuf[i])
+			{//Keep it
+				bDiff = true;
+				break;
+			}
+		}
+		if (bDiff)
+		{
+			byte* pBuf = new byte[16];
+			memcpy(pBuf, (byte*)pHooksMappedResource->pData, 16);
+			mapLogList[sKey].push_back(pBuf);
+		}
+	}
+	else
+	{
+		byte* pBuf = new byte[16];
+		memcpy(pBuf, (byte*)pHooksMappedResource->pData, 16);
+		mapLogList[sKey].push_back(pBuf);
+	}
+}
+
+void FillData2()
+{
+	__try
+	{
+		FillData();
+	}
+	__except (SehFilter(GetExceptionCode()))
+	{
+		printf("EXCEPTION_ACCESS_VIOLATION");
+	}
+}
+
 void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
@@ -2645,7 +2784,15 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 
 	if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
 	{
-		Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+		//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+		g_lock.lock();
+
+		FillData2();
+		//catch (...)
+		//{
+		//	printf("UnMap_ Error\n");
+		//}
+		g_lock.unlock();
 	}
 	pHooksMappedResource = NULL;
 	pHooksStageBuffer = NULL;
