@@ -2510,7 +2510,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			CheatItNew(pContext, psRed);
 		}
 	}
-	if (1)
+	if (0)
 	{
 		ofstream outfile;
 		outfile.open("..\\UnMap_Draw.txt", ios::app);
@@ -2787,7 +2787,10 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 		//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
 		g_lock.lock();
 
-		FillData2();
+		if (0)
+		{
+			FillData2();
+		}
 		//catch (...)
 		//{
 		//	printf("UnMap_ Error\n");
