@@ -10,10 +10,10 @@
 #include <iomanip>
 #include <iosfwd>
 #include <string>
-extern "C"
-{ 
-#include "..\Subliminal-Fortnite\FW1FontWrapper\FW1FontWrapper.h"
-};
+//extern "C"
+//{ 
+//#include "..\Subliminal-Fortnite\FW1FontWrapper\FW1FontWrapper.h"
+//};
 
 #include<fstream>
 using namespace std;
@@ -26,8 +26,8 @@ using namespace std;
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
 
-IFW1Factory *pFW1Factory = NULL;
-IFW1FontWrapper *pFontWrapper = NULL;
+//IFW1Factory *pFW1Factory = NULL;
+//IFW1FontWrapper *pFontWrapper = NULL;
 
 ID3D11DepthStencilState *ppDepthStencilState__New = NULL;
 ID3D11DepthStencilState *ppDepthStencilState__Old = NULL;
@@ -1647,17 +1647,17 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
 
 	 //create font
-	 HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
-	 hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
-	 pFW1Factory->Release();
+	 //HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
+	 //hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
+	 //pFW1Factory->Release();
 
 	 // use the back buffer address to create the render target
 	 //if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&RenderTargetTexture))))
-	 if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
-	 {
-		 CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
-		 RenderTargetTexture->Release();
-	 }
+	 //if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
+	 //{
+		// CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
+		// RenderTargetTexture->Release();
+	 //}
 
 	 InitListFromFiles();
 	 //tmppp(CCheat::pContext);
