@@ -65,7 +65,7 @@ float ScreenCenterY;
 
 //vertex
 ID3D11Buffer *veBuffer;
-UINT Stride = 0;
+//UINT Stride = 0;
 UINT veBufferOffset = 0;
 D3D11_BUFFER_DESC vedesc;
 

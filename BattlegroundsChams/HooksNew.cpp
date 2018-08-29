@@ -44,9 +44,22 @@ bool bLog2Txt_F7 = false;
 ofstream outfile;
 string  g_NotRedListFName = "..\\notListNEW.txt";
 
+ID3D11Buffer* pHooksStageBuffer = NULL;
+D3D11_MAPPED_SUBRESOURCE *pHooksMappedResource = NULL;
 static map<string, list<byte*>> mapLogList;
+static map<DWORD, void*> mapThreadList;
 mutex g_lock;
-string sKey = "";
+
+template<class T>
+struct DisableCompare :public std::binary_function<T, T, bool>
+{
+	bool operator()(T lhs, T rhs)  const
+	{
+		return true;
+	}
+};
+static map<string, XMFLOAT4, DisableCompare<string>> mapTID_PTR_DATA;
+//string sKey = "";
 
 void Thread_ExitHook(PVOID param);
 static HWND hOutWnd = NULL;
@@ -225,6 +238,17 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 Helpers::LogFormat("Done create glyph sheet texture 000000000000000000");
  }
 
+ void* FindByTID(DWORD tid)
+ {
+	 std::map<DWORD, void*>::iterator iter = mapThreadList.find(tid);
+
+	 if (mapThreadList.end() != iter)
+
+		 return iter->second;
+
+	 return NULL;
+ }
+
  struct Vertex	//Overloaded Vertex Structure
  {
 	 Vertex() {}
@@ -354,7 +378,50 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 Helpers::LogFormat("SMTexture=[%x] d2dTexture=[[ %x ]] ", SMTexture, d2dTexture);
 	 system("pause");
  }
+ void Save_UnMapData_New(UINT Stride, UINT IndexCountPerInstance)
+ {
+	 return;
+		 g_lock.lock();
+	 if ((Stride == 24) && (IndexCountPerInstance == 3234))
+	 {
+		 ofstream outfile;
+		 outfile.open("..\\UnMap_New__.txt", ios::app);
+		 if (outfile)
+		 {
+			 outfile << ::GetCurrentThreadId() << "_DrawIndexed()===================== " << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl << std::endl;
 
+			 map<string, XMFLOAT4, DisableCompare<string>>::iterator iter;//定义一个迭代指针iter
+			 for (iter = mapTID_PTR_DATA.begin(); iter != mapTID_PTR_DATA.end(); iter++)
+			 {
+				 if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
+				 {
+					 //if (*(UINT*)(&(iter->second.x)) == 0x88888888)
+					 //{
+					 //	continue;
+					 //}
+					 //UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
+					 //iter->second.x = *(FLOAT*)ppp;
+					 //iter->second.y = *(FLOAT*)(ppp + 4);
+					 //iter->second.z = *(FLOAT*)(ppp + 8);
+					 //iter->second.w = *(FLOAT*)(ppp + 12);
+					 //break;
+
+			 outfile << iter->first << ": ";
+					 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&iter->second.x) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&iter->second.x) << "] ";
+					 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&iter->second.y) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&iter->second.y) << "] ";
+					 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&iter->second.z) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&iter->second.z) << "] ";
+					 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&iter->second.w) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&iter->second.w) << "] " << std::endl ;
+
+				 }
+			 }
+			 outfile << "mapSize=" << std::dec << mapTID_PTR_DATA.size() << std::endl;
+			 outfile << std::endl;
+			 outfile.close();
+		 }
+	 }
+		 mapTID_PTR_DATA.clear();
+		 g_lock.unlock();
+ }
  void InitListFromFiles()
  {
 	 std::cout << "lstAllStides.clear()..." << endl;
@@ -562,7 +629,8 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 map<string, list<byte*>>::iterator it;
 	 for (it = mapLogList.begin(); it != mapLogList.end(); ++it)
 	 {
-		 if (it->second.size() > 1)
+		 //UINT xxx = *(UINT*)((UINT)it->second.front());
+		 if ((it->second.size() > 1))
 		 {
 			 //save to file
 			 ofstream outfile;
@@ -574,7 +642,16 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 				 for (itor = it->second.begin(); itor != it->second.end(); itor++)
 				 {
 					 byte* pBuf = *itor;
-					 //outfile.open("..\\" + to_string(timeGetTime()), ios::app);
+					 UINT xxx = *(UINT*)((UINT)pBuf);
+
+					 if ((xxx == 0xb896d4bc) ||
+						 (xxx / 0x100 == 0xb9a30c) ||
+						 (xxx == 0xb9a30cae)
+						 )
+					 {
+						 continue;
+					 }
+						 					 //outfile.open("..\\" + to_string(timeGetTime()), ios::app);
 						 //D3D11_BUFFER_DESC desc;
 						 //((ID3D11Buffer*)pBuf)->GetDesc(&desc);
 
@@ -587,7 +664,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 							 outfile << std::endl;
 						 }
 						 int xxx = *(int*)((int)pBuf + i);
-						 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)((int)pBuf + i) << "[" << *(float*)((int)pBuf + i) << "] ";
+						 outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)((int)pBuf + i) << "[" << std::setw(10) << std::setfill(' ') << *(float*)((int)pBuf + i) << "] ";
 					 }
 					 outfile << std::endl;
 				 }
@@ -608,6 +685,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 }
 	 //Clear map
 	 mapLogList.clear();
+	 mapThreadList.clear();
 	 g_lock.unlock();
  }
 
@@ -2441,13 +2519,24 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 		return;
 	}
-	SaveMapToFile();
 
 	UINT IndexCountPerInstance = IndexCount;
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	Save_UnMapData_New(Stride, IndexCountPerInstance);
+	if ((Stride == 24) && (IndexCountPerInstance == 3234))
+		return;
+
+	//ofstream outfile;
+	//outfile.open("..\\UnMap_Map__.txt", ios::app);
+	//if (outfile)
+	//{
+	//	outfile <<::GetCurrentThreadId() << "_DrawIndexed()===================== " << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl << std::endl ;
+	//	outfile.close();
+	//}
 
 	//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
 	{
@@ -2492,41 +2581,51 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		//		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
 		return;
 	}
-	if ((1 == g_StartSlot))
+	if ((1 == g_StartSlot) || (2 == g_StartSlot))
 	{
 		g_StartSlot = 0;
 		if (((12 == Stride) || (24 == Stride)) &&
 			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		{
 			CheatItNew(pContext, psRed);
-		}
-	}
-	else if ((2 == g_StartSlot))
-	{
-		g_StartSlot = 0;
-		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-		{
-			CheatItNew(pContext, psRed);
-		}
-	}
-	if (0)
-	{
-		ofstream outfile;
-		outfile.open("..\\UnMap_Draw.txt", ios::app);
-		if (!outfile)
-		{
-			std::cout << "打开UnMap_Draw.txt文件失败！" << endl;
-		}
-		else
-		{
-			//D3D11_BUFFER_DESC desc;
-			//((ID3D11Buffer*)pBuf)->GetDesc(&desc);
+///////////////////////////////////////////////////////////////////////
+			void * ptr = FindByTID(::GetCurrentThreadId());
+			if (0)
+			{
+				if (NULL != ptr)
+				{
+					string sKey = "";
+					sKey = "UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) /*+ "_" + std::to_string((UINT)pHooksStageBuffer)*/
+						+ "_" + std::to_string((UINT)ptr) + "___";
 
-			outfile << sKey.c_str() << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl;
-			outfile.close();
+					ofstream outfile;
+					outfile.open("..\\UnMap_Draw.txt", ios::app);
+					if (!outfile)
+					{
+						std::cout << "打开UnMap_Draw.txt文件失败！" << endl;
+					}
+					else
+					{
+						//D3D11_BUFFER_DESC desc;
+						//((ID3D11Buffer*)pBuf)->GetDesc(&desc);
+
+						outfile << sKey.c_str() << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl;
+						outfile.close();
+					}
+
+					bool bTTmp = false;
+					if (bTTmp)
+					{
+						SaveMapToFile();
+					}
+				}
+			}
+///////////////////////////////////////////////////////////////////////
 		}
 	}
+	pHooksMappedResource = NULL;
+	pHooksStageBuffer = NULL;
+
 	if (((Stride == gStride) && bHideTrees
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
@@ -2693,7 +2792,6 @@ void tmpCode(ID3D11DeviceContext* d3dDeviceContext, ID3D11Resource *md3dVertexBu
 	d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
 }
 
-D3D11_MAPPED_SUBRESOURCE *pHooksMappedResource = NULL;
 
 void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffer *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
 {
@@ -2702,14 +2800,37 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	if ((Stride == 12) || (Stride == 24) || (Stride == 56))
+	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+
+	//if ((Stride == 24))
 	{
+		g_lock.lock();
+
+		*(UINT*)(&(mapTID_PTR_DATA[to_string(::GetCurrentThreadId()) +  "_" + to_string((UINT)(pMappedResource->pData))].x)) = 0x88888888;
+		g_lock.unlock();
+	}
+	if (0)
+	{
+		ofstream outfile;
+		outfile.open("..\\UnMap_Map__.txt", ios::app);
+		if (outfile)
+		{
+			outfile << ::GetCurrentThreadId() << "_" << (UINT)(pMappedResource->pData) << " MapType=" << MapType << " MapFlags=" << MapFlags << " Stride=" << Stride << std::endl;
+			outfile.close();
+		}
+	}
+	//58784_126877696  = 5  = 0 Stride = 24
+	//if ((Stride == 12) || (Stride == 24) || (Stride == 56))
+	if ((Stride == 24) && (MapType == 4) && (MapFlags == 0))
+	{
+		if ((UINT)pMappedResource->pData > 0xf)
+		{
+			mapThreadList[::GetCurrentThreadId()] = pMappedResource->pData;
+		}
 		pHooksMappedResource = pMappedResource;
 	}
 	else
 		pHooksMappedResource = NULL;
-
-	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
 }
 
 int SehFilter(DWORD dwExceptionCode)
@@ -2721,38 +2842,46 @@ int SehFilter(DWORD dwExceptionCode)
 	}
 	return EXCEPTION_CONTINUE_SEARCH;
 }
-ID3D11Buffer* pHooksStageBuffer = NULL;
 void FillData()
 {
-	sKey = "UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "___";
-	if (mapLogList[sKey].size() > 0)
+	void * ptr  = FindByTID(::GetCurrentThreadId());
+	if (NULL == ptr)
+		return;
+
+	if (0)
 	{
-		bool bDiff = false;
-		byte* pLastBuf = mapLogList[sKey].back();
-		for (int i = 0; i < 16; i++)
+		string sKey = "";
+		sKey = "UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) /*+ "_" + std::to_string((UINT)pHooksStageBuffer)*/
+			+ "_" + std::to_string((UINT)ptr) + "___";
+		if (mapLogList[sKey].size() > 0)
 		{
-			if (((byte*)(pHooksMappedResource->pData))[i] != pLastBuf[i])
-			{//Keep it
-				bDiff = true;
-				break;
+			bool bDiff = false;
+			byte* pLastBuf = mapLogList[sKey].back();
+			for (int i = 0; i < 16; i++)
+			{
+				if (((byte*)(ptr))[i] != pLastBuf[i])
+				{//Keep it
+					bDiff = true;
+					break;
+				}
+			}
+			if (bDiff)
+			{
+				byte* pBuf = new byte[16];
+				memcpy(pBuf, (byte*)ptr, 16);
+				mapLogList[sKey].push_back(pBuf);
 			}
 		}
-		if (bDiff)
+		else
 		{
 			byte* pBuf = new byte[16];
-			memcpy(pBuf, (byte*)pHooksMappedResource->pData, 16);
+			memcpy(pBuf, (byte*)ptr, 16);
 			mapLogList[sKey].push_back(pBuf);
 		}
 	}
-	else
-	{
-		byte* pBuf = new byte[16];
-		memcpy(pBuf, (byte*)pHooksMappedResource->pData, 16);
-		mapLogList[sKey].push_back(pBuf);
-	}
 }
 
-void FillData2()
+void CloneData()
 {
 	__try
 	{
@@ -2766,6 +2895,44 @@ void FillData2()
 
 void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
+	if (0)
+	{
+		ofstream outfile;
+		outfile.open("..\\UnMap_Map__.txt", ios::app);
+		if (outfile)
+		{
+			outfile << ::GetCurrentThreadId() << "_UnMap() ";
+			g_lock.lock();
+			map<string, XMFLOAT4, DisableCompare<string>>::reverse_iterator iter;//定义一个迭代指针iter
+			for (iter = mapTID_PTR_DATA.rbegin(); iter != mapTID_PTR_DATA.rend(); iter++)
+			{
+				if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
+				{
+					if (*(UINT*)(&(iter->second.x)) != 0x88888888)
+					{
+						continue;
+					}
+					UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
+					iter->second.x = *(FLOAT*)ppp;
+					iter->second.y = *(FLOAT*)(ppp + 4);
+					iter->second.z = *(FLOAT*)(ppp + 8);
+					iter->second.w = *(FLOAT*)(ppp + 12);
+
+					outfile << iter->first << ": ";
+					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)ppp) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)ppp) << "] ";
+					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 4)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 4)) << "] ";
+					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 8)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 8)) << "] ";
+					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 12)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 12)) << "] " << std::endl;
+
+					break;
+				}
+			}
+			g_lock.unlock();
+
+			//outfile << std::endl;
+			outfile.close();
+		}
+	}
 	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
 	//D3D11_MAPPED_SUBRESOURCE mappedResource;
 	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
@@ -2780,6 +2947,35 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 	//	UINT* p = (UINT*)pMappedResource->pData;
 	//	//Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x Slot=%d Stride=%d", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28), g_StartSlot, Stride);
 	//}
+
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	//if ((Stride == 24))
+	//{
+	//	g_lock.lock();
+	//	map<string, XMFLOAT4, DisableCompare<string>>::reverse_iterator iter;//定义一个迭代指针iter
+	//	for (iter = mapTID_PTR_DATA.rbegin(); iter != mapTID_PTR_DATA.rend(); iter++)
+	//	{
+	//		if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
+	//		{
+	//			if (*(UINT*)(&(iter->second.x)) != 0x88888888)
+	//			{
+	//				continue;
+	//			}
+	//			UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
+	//			iter->second.x = *(FLOAT*)ppp;
+	//			iter->second.y = *(FLOAT*)(ppp + 4);
+	//			iter->second.z = *(FLOAT*)(ppp + 8);
+	//			iter->second.w = *(FLOAT*)(ppp + 12);
+	//			break;
+	//		}
+	//	}
+	//	g_lock.unlock();
+	//}
+
 	pHooksStageBuffer = pStageBuffer;
 
 	if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
@@ -2787,19 +2983,13 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 		//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
 		g_lock.lock();
 
-		if (0)
-		{
-			FillData2();
-		}
+		CloneData();
 		//catch (...)
 		//{
 		//	printf("UnMap_ Error\n");
 		//}
 		g_lock.unlock();
 	}
-	pHooksMappedResource = NULL;
-	pHooksStageBuffer = NULL;
-
 
 	Hooks::oUnMap(pContext, pStageBuffer, Subresource);
 	return;
@@ -2831,6 +3021,19 @@ void __stdcall Hooks::hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT V
 	//OutputDebugStringA("hkD3D11DrawInstanced++++++++++++++++++++*===");
 	//if (GetAsyncKeyState(VK_F9) & 1)
 	//	Log("DrawInstanced called");
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	ofstream outfile;
+	//outfile.open("..\\UnMap_Map__.txt", ios::app);
+	//if (outfile)
+	//{
+	//	outfile << ::GetCurrentThreadId() << "hkD3D11DrawIndexedInstancedIndirect()===================== " << " Stride=" << Stride << " IdxCount=" << VertexCountPerInstance << std::endl << std::endl;
+	//	outfile.close();
+	//}
+
 
 	return oDrawInstanced(pContext, VertexCountPerInstance, InstanceCount, StartVertexLocation, StartInstanceLocation);
 }
@@ -2849,6 +3052,15 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	Save_UnMapData_New(Stride, IndexCountPerInstance);
+	//ofstream outfile;
+	//outfile.open("..\\UnMap_Map__.txt", ios::app);
+	//if (outfile)
+	//{
+	//	outfile << ::GetCurrentThreadId() << "_hkD3D11DrawIndexedInstanced()===================== " << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl << std::endl;
+	//	outfile.close();
+	//}
 
 			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
 	{
@@ -3094,6 +3306,19 @@ void __stdcall Hooks::hkD3D11DrawInstancedIndirect(ID3D11DeviceContext* pContext
 	//if (GetAsyncKeyState(VK_RETURN) & 1)
 	//	bHideTrees = bHideTrees ? false : true;
 
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	//ofstream outfile;
+	//outfile.open("..\\UnMap_Map__.txt", ios::app);
+	//if (outfile)
+	//{
+	//	outfile << ::GetCurrentThreadId() << "hkD3D11DrawInstancedIndirect()===================== " << " Stride=" << Stride  << std::endl << std::endl;
+	//	outfile.close();
+	//}
+
 	//if (!bHideTrees)
 	{
 		return oDrawInstancedIndirect(pContext, pBufferForArgs, AlignedByteOffsetForArgs);
@@ -3108,6 +3333,19 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstancedIndirect(ID3D11DeviceContext* p
 	//OutputDebugStringA("hkD3D11DrawIndexedInstancedIndirect++++++++++++++++++++*===");
 	//if (GetAsyncKeyState(VK_F9) & 1)
 	//	Log("DrawIndexedInstancedIndirect called");
+	UINT Stride;
+	ID3D11Buffer *veBuffer;
+	UINT veBufferOffset = 0;
+	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	//ofstream outfile;
+	//outfile.open("..\\UnMap_Map__.txt", ios::app);
+	//if (outfile)
+	//{
+	//	outfile << ::GetCurrentThreadId() << "hkD3D11DrawIndexedInstancedIndirect()===================== " << " Stride=" << Stride <<std::endl << std::endl;
+	//	outfile.close();
+	//}
+
 	
 	return oDrawIndexedInstancedIndirect(pContext, pBufferForArgs, AlignedByteOffsetForArgs);
 }
