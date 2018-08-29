@@ -2507,34 +2507,32 @@ void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT S
 	return Hooks::oPSSetSamplers(pContext, StartSlot, NumSamplers, ppSamplers);
 }
 
-void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
+void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
-	//Helpers::LogAddress("\r\n hkD3D11DrawIndexed++++++++++++++++++++*===");
-	//CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
-	//Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
-
 	DWORD bgtime = timeGetTime();
 	if (!bCheat)
 	{
-		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+		if ((InstanceCount==9999) && (StartInstanceLocation == 9999))
+		{
+			Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+		} 
+		else
+		{
+			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		}
 		return;
 	}
-
-	UINT IndexCountPerInstance = IndexCount;
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	Save_UnMapData_New(Stride, IndexCountPerInstance);
-	if ((Stride == 24) && (IndexCountPerInstance == 3234))
-		return;
-
 	//ofstream outfile;
 	//outfile.open("..\\UnMap_Map__.txt", ios::app);
 	//if (outfile)
 	//{
-	//	outfile <<::GetCurrentThreadId() << "_DrawIndexed()===================== " << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl << std::endl ;
+	//	outfile << ::GetCurrentThreadId() << "_hkD3D11DrawIndexedInstanced()===================== " << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl << std::endl;
 	//	outfile.close();
 	//}
 
@@ -2547,7 +2545,7 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 		else {
 			//没找到
 			lstAllStides.push_back(IndexCountStride);
-			Helpers::LogFormat("hkD3D11DrawIndexed  lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+			Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
 
@@ -2563,7 +2561,14 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			}
 		}
 
-		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+		if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
+		{
+			Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+		}
+		else
+		{
+			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		}
 		return;
 	}
 
@@ -2578,55 +2583,22 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			}
 		}
 
-		//		Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+		//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 		return;
 	}
-	if ((1 == g_StartSlot) || (2 == g_StartSlot))
+	//if (IsIn_HideList(Stride, IndexCountPerInstance))
+	//{
+	//	return;
+	//}
+
+	if (bHideFog &&
+		((Stride == 16) && (IndexCountPerInstance == 6))
+		)
 	{
-		g_StartSlot = 0;
-		if (((12 == Stride) || (24 == Stride)) &&
-			IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-		{
-			CheatItNew(pContext, psRed);
-///////////////////////////////////////////////////////////////////////
-			void * ptr = FindByTID(::GetCurrentThreadId());
-			if (0)
-			{
-				if (NULL != ptr)
-				{
-					string sKey = "";
-					sKey = "UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) /*+ "_" + std::to_string((UINT)pHooksStageBuffer)*/
-						+ "_" + std::to_string((UINT)ptr) + "___";
-
-					ofstream outfile;
-					outfile.open("..\\UnMap_Draw.txt", ios::app);
-					if (!outfile)
-					{
-						std::cout << "打开UnMap_Draw.txt文件失败！" << endl;
-					}
-					else
-					{
-						//D3D11_BUFFER_DESC desc;
-						//((ID3D11Buffer*)pBuf)->GetDesc(&desc);
-
-						outfile << sKey.c_str() << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl;
-						outfile.close();
-					}
-
-					bool bTTmp = false;
-					if (bTTmp)
-					{
-						SaveMapToFile();
-					}
-				}
-			}
-///////////////////////////////////////////////////////////////////////
-		}
+		return;
 	}
-	pHooksMappedResource = NULL;
-	pHooksStageBuffer = NULL;
 
-	if (((Stride == gStride) && bHideTrees
+	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideTrees
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
 		(IndexCountPerInstance >= iMax))*/
@@ -2637,26 +2609,60 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 	else
 	{
 		if (bHideGrass &&
-			(Stride == 12) &&
-			(
-			(IndexCountPerInstance == 6) ||
-				(IndexCountPerInstance == 15) ||
-				(IndexCountPerInstance == 18) ||
-				(IndexCountPerInstance == 21) ||
-				(IndexCountPerInstance == 27) ||
-				(IndexCountPerInstance == 45)
-				)
+			IsIn_HideList(Stride, IndexCountPerInstance)
 			)
 		{
+			return;
 		}
-		else if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
-			&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
-			&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
-			)
+		else
+			//if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+			//&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+			//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+			//)
 		{
 
+			if ((1 == g_StartSlot) || (2 == g_StartSlot))
+			{
+				g_StartSlot = 0;
+				if (((12 == Stride) || (24 == Stride)) &&
+					IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+				{
+					if (Is_CarOrBoat(Stride, IndexCountPerInstance))
+					{
+						CheatItNew(pContext, psGreen);
+					}
+					else
+					{
+						if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+						{
+							//获取指向顶点缓存的指针  
+							//Vertex* verticesPtr;
+							//verticesPtr = (Vertex*)pResource;
+
+							////把数据复制进顶点缓存  
+							//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+
+							////解锁顶点缓存  
+							//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+							Helpers::LogBuf2Txt("DrawIdxIns_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+						}
+						pHooksMappedResource = NULL;
+						pHooksStageBuffer = NULL;
+
+						CheatItNew(pContext, psRed);
+					}
+				}
+			}
+
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
-			Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+			if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
+			{
+				Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+			}
+			else
+			{
+				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+			}
 
 			if (ppDepthStencilState__Old)
 			{
@@ -2665,8 +2671,16 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 			}
 		}
 	}
-	//	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 	return;
+}
+
+void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
+{
+	//Helpers::LogAddress("\r\n hkD3D11DrawIndexed++++++++++++++++++++*===");
+	//CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
+	//Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
+
+	return DrawIdxed_Or_Instanced(pContext, IndexCount, 9999, StartIndexLocation, BaseVertexLocation, 9999);
 	/////////////////////////////////////////////////////////
 	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
@@ -3042,148 +3056,7 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext,
 {
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	//	OutputDebugStringA("hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
-	DWORD bgtime = timeGetTime();
-	if (!bCheat)
-	{
-		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		return;
-	}
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
-
-	Save_UnMapData_New(Stride, IndexCountPerInstance);
-	//ofstream outfile;
-	//outfile.open("..\\UnMap_Map__.txt", ios::app);
-	//if (outfile)
-	//{
-	//	outfile << ::GetCurrentThreadId() << "_hkD3D11DrawIndexedInstanced()===================== " << " Stride=" << Stride << " IdxCount=" << IndexCountPerInstance << std::endl << std::endl;
-	//	outfile.close();
-	//}
-
-			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
-	{
-		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
-		if (find(lstAllStides.begin(), lstAllStides.end(), IndexCountStride) != lstAllStides.end()) {
-			//找到
-		}
-		else {
-			//没找到
-			lstAllStides.push_back(IndexCountStride);
-			Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
-		}
-	}
-
-	if (bVideo4Rec_SCROL)
-	{
-		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
-			IsNotIn_ExcludeList(iStride, iIndexCount))
-		{
-			//if ((Stride == 24) || (Stride == 12))
-			{
-				Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
-				pContext->PSSetShader(psRed, NULL, NULL);
-			}
-		}
-
-		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		return;
-	}
-
-	if (bHideOne)
-	{
-		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
-		{
-			//if ((Stride == 24) || (Stride == 12))
-			{
-				Helpers::LogFormat("bHideOne==> iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
-				//pContext->PSSetShader(psRed, NULL, NULL);
-			}
-		}
-
-		//Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		return;
-	}
-	//if (IsIn_HideList(Stride, IndexCountPerInstance))
-	//{
-	//	return;
-	//}
-
-	if (bHideFog &&
-		((Stride == 16) && (IndexCountPerInstance == 6))
-		)
-	{
-		return;
-	}
-
-	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideTrees
-		/*&&(
-		(IndexCountPerInstance <= iMin) ||
-		(IndexCountPerInstance >= iMax))*/
-		))
-	{
-		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
-	}
-	else
-	{
-		if (bHideGrass && 
-			IsIn_HideList(Stride, IndexCountPerInstance)
-			)
-		{
-			return;
-		}
-		else 
-			//if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
-			//&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
-			//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
-			//)
-		{
-
-			if ((1 == g_StartSlot) || (2 == g_StartSlot))
-			{
-				g_StartSlot = 0;
-				if (((12 == Stride) || (24 == Stride)) &&
-					IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-				{
-					if (Is_CarOrBoat(Stride, IndexCountPerInstance))
-					{
-						CheatItNew(pContext, psGreen);
-					}
-					else
-					{
-						if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
-						{
-							//获取指向顶点缓存的指针  
-							//Vertex* verticesPtr;
-							//verticesPtr = (Vertex*)pResource;
-
-							////把数据复制进顶点缓存  
-							//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
-
-							////解锁顶点缓存  
-							//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
-							Helpers::LogBuf2Txt("DrawIdxIns_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
-						}
-						pHooksMappedResource = NULL;
-						pHooksStageBuffer = NULL;
-
-						CheatItNew(pContext, psRed);
-					}
-				}
-			}
-
-			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
-			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-			if (ppDepthStencilState__Old)
-			{
-				pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
-				ppDepthStencilState__Old = NULL;
-			}
-		}
-	}
-//	Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-	return;
+	return DrawIdxed_Or_Instanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 	/////////////////////////////////////////////////////////
 	//MyTraceA("hkD3D11DrawIndexedInstanced**************Stride=%d IndexCountPerInstance=%d InstanceCount=%d StartIndexLocation=%d BaseVertexLocation=%d StartInstanceLocation=%d \r\n", Stride, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 
