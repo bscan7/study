@@ -2073,7 +2073,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		std::cout << "hkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
 		PulseEvent(g_Event_Shoot);
 	}
-	SaveMapToFile();
+	//SaveMapToFile();
 
 	if (bLog2Txt_F7)
 	{
@@ -2815,6 +2815,7 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+	return;
 
 	//if ((Stride == 24))
 	{
@@ -2992,17 +2993,20 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 
 	pHooksStageBuffer = pStageBuffer;
 
-	if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+	if (0)
 	{
-		//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
-		g_lock.lock();
+		if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+		{
+			//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+			g_lock.lock();
 
-		CloneData();
-		//catch (...)
-		//{
-		//	printf("UnMap_ Error\n");
-		//}
-		g_lock.unlock();
+			CloneData();
+			//catch (...)
+			//{
+			//	printf("UnMap_ Error\n");
+			//}
+			g_lock.unlock();
+		}
 	}
 
 	Hooks::oUnMap(pContext, pStageBuffer, Subresource);
