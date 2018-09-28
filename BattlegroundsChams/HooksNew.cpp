@@ -1682,7 +1682,13 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 		" fake.r = %f;"
 		" fake.g = %f;"
 		" fake.b = %f;"
+
+		//" fake.a = input.Color.a;"
+		//" fake.r = input.Color.r;"
+		//" fake.g = input.Color.g;"
+		//" fake.b = input.Color.b;"
 		" return fake;"
+		//"return input.Color;"
 		"}";
 	ID3D10Blob* pBlob = NULL;
 	char szPixelShader[1000];
@@ -2151,7 +2157,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psTmp)
 		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.4f, 0.4f, 0.25f);
 	if (!psd)
-		hr = GenerateShader(CCheat::pDevice, &psd, 0.6f, 0.6f, 0);
+		hr = GenerateShader(CCheat::pDevice, &psd, 0.65f, 0.60f, 0.83f);
 
 	if (S_OK == hr)
 	{
@@ -2649,7 +2655,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 						pHooksMappedResource = NULL;
 						pHooksStageBuffer = NULL;
 
-						CheatItNew(pContext, psRed);
+						CheatItNew(pContext, psd);
 					}
 				}
 			}
