@@ -4,8 +4,14 @@
 #include "stdafx.h"
 #include "CCheat.h"
 #include "Helpers.h"
+#include <winuser.h>
+#include "resource.h"
 
 HANDLE  g_Event_UnHook = NULL;
+HMODULE g_hModule = NULL;
+HICON icn;
+HICON icnB;
+
 DLL_API void SetUnHookEvent(HANDLE  Event_UnHook)
 {
 	g_Event_UnHook = Event_UnHook;
@@ -27,6 +33,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	case DLL_PROCESS_ATTACH:
 		Helpers::LogFormat("\r\n--------DLL_PROCESS_ATTACH ");
 		DisableThreadLibraryCalls(hModule); // PERFOMANCE? 不确定的call，有可能影响到DLL的移除，暂时屏蔽。
+		g_hModule = hModule;
+		icn = ::LoadIcon(g_hModule, MAKEINTRESOURCE(IDI_ICON2));
+		icnB = ::LoadIcon(g_hModule, MAKEINTRESOURCE(IDI_ICON3));
+
 		CreateThread(NULL, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(CCheat::Initialise), NULL, NULL, NULL);
 		break;
 

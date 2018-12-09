@@ -4,7 +4,7 @@
 #include <ostream>
 #include <iostream>
 
-HMODULE  hinst = NULL;
+HMODULE  Hook_Dll_Instance = NULL;
 void Thread_LoadUnloadDLL(PVOID param)
 {
 	//Helpers::LogFormat("--------Thread_KeysSwitch---------Started ");
@@ -12,18 +12,41 @@ void Thread_LoadUnloadDLL(PVOID param)
 
 	while (1)
 	{
-		std::cout << "！！！！！！！！！！！！！！！！！！！LoadLibrary" << std::endl;
-		hinst = LoadLibrary(L"E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
-		if (!hinst)
+		char path[MAX_PATH];
+		//保存当前路径
+		GetCurrentDirectoryA(MAX_PATH, path);
+		std::cout << "！！！！！！！！！！！！！！！！！！！LoadLibrary, path="<< path << std::endl;
+
+		TCHAR chCurDir[MAX_PATH] = { 0 };
+		GetCurrentDirectory(MAX_PATH, chCurDir);
+		SetCurrentDirectory(L"c:\\upload\\");
+		Hook_Dll_Instance = LoadLibrary(L"00TslGame_BATTLEGROUNDS_Release.dll");
+		SetCurrentDirectory(chCurDir);
+		if (!Hook_Dll_Instance)
 		{
-			hinst = LoadLibrary(L"D:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
+			Hook_Dll_Instance = LoadLibrary(L".\\00TslGame_BATTLEGROUNDS_Release.dll");
 		}
-		if (hinst)
+		if (!Hook_Dll_Instance)
+		{
+			Hook_Dll_Instance = LoadLibrary(L"c:\\upload\\00TslGame_BATTLEGROUNDS_Release.dll");
+			std::cout << "111！！！！！！！！！！！！！！！！！！！LoadLibrary, hinst=" << Hook_Dll_Instance << std::endl;
+		}
+		if (!Hook_Dll_Instance)
+		{
+			Hook_Dll_Instance = LoadLibrary(L"D:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
+			std::cout << "222！！！！！！！！！！！！！！！！！！！LoadLibrary, hinst=" << Hook_Dll_Instance << std::endl;
+		}
+		if (!Hook_Dll_Instance)
+		{
+			Hook_Dll_Instance = LoadLibrary(L"E:\\Dev\\GitHub\\study\\BattlegroundsChams\\Release\\00TslGame_BATTLEGROUNDS_Release.dll");
+			std::cout << "333！！！！！！！！！！！！！！！！！！！LoadLibrary, hinst=" << Hook_Dll_Instance << std::endl;
+		}
+		if (Hook_Dll_Instance)
 		{
 			typedef void( *LPFNC_SETEVENT)(HANDLE);
 			LPFNC_SETEVENT lpfunc;
-			lpfunc = (LPFNC_SETEVENT)GetProcAddress(hinst, "SetUnHookEvent");
-			std::cout << "！！！！！！！！！！！！！！！！！！！SetUnHookEvent lpfunc=" << lpfunc << std::endl;
+			lpfunc = (LPFNC_SETEVENT)GetProcAddress(Hook_Dll_Instance, "SetUnHookEvent");
+			std::cout << "444！！！！！！！！！！！！！！！！！！！SetUnHookEvent lpfunc=" << lpfunc << std::endl;
 
 			if (lpfunc)
 			{
@@ -31,23 +54,23 @@ void Thread_LoadUnloadDLL(PVOID param)
 			}
 		}
 
-		std::cout << "！！！！！！！！！！！！！！！！！！！WaitForSingleObject" << std::endl;
+		std::cout << "555！！！！！！！！！！！！！！！！！！！WaitForSingleObject LastError=" << ::GetLastError()<< std::endl;
 		WaitForSingleObject(g_Event_UnHook, INFINITE);
-		std::cout << "！！！！！！！！！！！！！！！！！！！::FreeLibrary(hinst)" << hinst << std::endl;
-		if (hinst)
-			::FreeLibrary(hinst);
+		std::cout << "！！！！！！！！！！！！！！！！！！！::FreeLibrary(hinst)" << Hook_Dll_Instance << std::endl;
+		if (Hook_Dll_Instance)
+			std::cout << "::FreeLibrary() =" << ::FreeLibrary(Hook_Dll_Instance);
 
-		hinst = NULL;
-		std::cout << "！！！！！！！！！！！！！！！！！！！g_Event_UnHook =" << g_Event_UnHook << std::endl;
+		Hook_Dll_Instance = NULL;
+		std::cout << "！！！！！！！！！！！！！！！！！！！g_Event_UnHook =" << g_Event_UnHook <<" LastError=" << ::GetLastError()<< std::endl;
 
 		while (1)
 		{
+			Sleep(500);
 			if (GetAsyncKeyState(VK_HOME) & 1)
 			{
-				std::cout << "！！！！！！！！！！！！！！！！！！！VK_HOME！VK_HOME！VK_HOME！" << hinst << std::endl;
+				std::cout << "！！！！！！！！！！！VK_HOME！VK_HOME！VK_HOME！Hook_Dll_Instance=" << Hook_Dll_Instance << std::endl;
 				break;
 			}
-			Sleep(100);
 		}
 	}
 }

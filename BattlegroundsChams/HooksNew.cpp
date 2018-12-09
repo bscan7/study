@@ -8,7 +8,7 @@
 //#include <d3dx11async.h>
 #include <process.h>
 #include <iomanip>
-#include <iosfwd>
+//#include <iosfwd>
 #include <string>
 //extern "C"
 //{ 
@@ -22,6 +22,8 @@ using namespace std;
 #include <map>
 #include <list>
 #include <mutex>
+//#include <iosfwd>
+#include <sstream>  
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
@@ -41,6 +43,7 @@ extern bool bHideFog;
 bool bCheat = true;
 bool bHideOne = false;
 bool bLog2Txt_F7 = false;
+bool bLog2Txt_DOWN = false;
 ofstream outfile;
 string  g_NotRedListFName = "..\\notListNEW.txt";
 
@@ -48,7 +51,19 @@ ID3D11Buffer* pHooksStageBuffer = NULL;
 D3D11_MAPPED_SUBRESOURCE *pHooksMappedResource = NULL;
 static map<string, list<byte*>> mapLogList;
 static map<DWORD, void*> mapThreadList;
+static map<void*, void*> mapMapBufList;
+map<string, string> mapBuf;
 mutex g_lock;
+
+float fXYZ[3];
+list <XMFLOAT3> g_lstPositions;
+DWORD minX, minY, maxX, maxY = 0;
+int g_iSelfIdx = -1;
+
+ list <XMFLOAT3> g_lstPositions2;
+ DWORD minX2, minY2, maxX2, maxY2 = 0;
+int g_iSelfIdx2 = -1;
+
 
 template<class T>
 struct DisableCompare :public std::binary_function<T, T, bool>
@@ -727,7 +742,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 }
 		 if (GetAsyncKeyState(VK_NUMPAD3) & 1)
 		 {
-			 bCrossDraw = !bCrossDraw;
+			 //bCrossDraw = !bCrossDraw;
 		 }
 		 if (GetAsyncKeyState(VK_F12) & 1)
 		 {
@@ -748,10 +763,15 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 		 if (GetAsyncKeyState(VK_F9) & 1)
 		 {
 			 //bLogTxt = !bLogTxt;
+			 bCrossDraw = !bCrossDraw;
 		 }
 		 if (GetAsyncKeyState(VK_F8) & 1)
 		 {
 			 bCheat = !bCheat;
+		 }
+		 if (GetAsyncKeyState(VK_DOWN) & 1)
+		 {
+			 bLog2Txt_DOWN = true;
 		 }
 		 if (GetAsyncKeyState(VK_F7) & 1)
 		 {
@@ -1673,6 +1693,13 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 		"{"
 		" float4 Position : SV_Position;"
 		" float4 Color : COLOR;"
+		" float4 Color1 : COLOR;"
+		" float4 Color2 : COLOR;"
+		" float4 Color3 : COLOR;"
+		" float4 Color4 : COLOR;"
+		" float4 Color5 : COLOR;"
+		" float4 Color6 : COLOR;"
+		" float4 Color8 : COLOR;"
 		"};"
 
 		"float4 ColorPixelShader( VS_OUT input ) : SV_Target"
@@ -2071,15 +2098,61 @@ bool IsCenterRed()
 	return bOK;
 }
 
+UINT iFrames = 0;
 UINT iName = 0;
+stringstream g_ssCallsInFrame;
+
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
+	iFrames++;
 	if (bShoot)
 	{
 		std::cout << "hkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
 		PulseEvent(g_Event_Shoot);
 	}
 	//SaveMapToFile();
+
+	if (bLog2Txt_DOWN)
+	{
+		//outfile.open("..\\Log2Txt.txt", ios::app);
+		ofstream outFile;
+		//outFile.open("..\\3632_" + to_string(iFrames) + ".txt", ios::app);
+		outFile.open("..\\FrameOf_" + to_string(iFrames) + ".txt", ios::app);
+		if (!outFile)
+		{
+			std::cout << "打开Frame***文件失败！" << endl;
+		}
+		else
+		{
+			//std::map<string, string>::iterator it;// = mapIconIdx.find(sKey.c_str());
+			//for (it = mapBuf.begin(); it != mapBuf.end(); ++it)
+			//{
+			//	outFile << (*it).first << std::endl;
+			//	outFile << (*it).second << std::endl;
+			//}
+			//string text = g_ssCallsInFrame.str();
+			outFile << g_ssCallsInFrame.str().c_str() << std::endl;
+			outfile.close();
+		}
+	}
+	bLog2Txt_DOWN = false;
+	mapBuf.clear();
+	g_ssCallsInFrame.str("");
+	g_ssCallsInFrame.clear();
+
+	//if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
+	//{
+	//	minX2 = minX;
+	//	minY2 = minY;
+	//	maxX2 = maxX;
+	//	maxY2 = maxY;
+	//	g_lstPositions2 = g_lstPositions;
+	//}
+	//g_lstPositions.clear();
+	//minX = 0;
+	//minY = 0;
+	//maxX = 0;
+	//maxY = 0;
 
 	if (bLog2Txt_F7)
 	{
@@ -2157,7 +2230,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psTmp)
 		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.4f, 0.4f, 0.25f);
 	if (!psd)
-		hr = GenerateShader(CCheat::pDevice, &psd, 0.65f, 0.60f, 0.83f);
+		hr = GenerateShader(CCheat::pDevice, &psd, 0.94f, 0.78f, 0.01f);
 
 	if (S_OK == hr)
 	{
@@ -2274,7 +2347,27 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	*/
 
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
-	PulseEvent(g_Event_CrossDraw);
+	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
+	{
+		minX2 = minX;
+		minY2 = minY;
+		maxX2 = maxX;
+		maxY2 = maxY;
+		g_lstPositions2 = g_lstPositions;
+		g_iSelfIdx2 = g_iSelfIdx;
+	}
+	g_lstPositions.clear();
+	minX = 0;
+	minY = 0;
+	maxX = 0;
+	maxY = 0;
+	g_iSelfIdx = -1;
+
+	if (bCrossDraw)
+	{
+		PulseEvent(g_Event_CrossDraw);
+	}
+
 
 	if (bVideo4Rec_SCROL)
 	{
@@ -2362,7 +2455,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	return S_OK;
 }
 
-void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers)
+void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer */*const*/ *ppConstantBuffers)
 {
 	//Helpers::LogAddress("\r\n hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
 	//OutputDebugStringA("hkD3D11VSSetConstantBuffers++++++++++++++++++++*===");
@@ -2372,6 +2465,18 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 	//AddModel(pContext);//w2s
 	//}
 	//MyTraceA("hkD3D11VSSetConstantBuffers**************pContext=%x StartSlot=%d NumBuffers=%d ppConstantBuffers=%x ", pContext, StartSlot, NumBuffers, ppConstantBuffers);
+
+	//if ((NumBuffers == 1) && ppConstantBuffers)
+	//{
+	//	D3D11_BUFFER_DESC pDesc;
+	//	if ((*ppConstantBuffers))
+	//	{
+	//		(*ppConstantBuffers)->GetDesc(&pDesc);
+	//		if (pDesc.ByteWidth == 3632)
+	//			//Helpers::Log("VSSetConstantBuffers 3632 --------------->>>>>>>>>>>>>>> ");
+	//			Helpers::LogAddress("VSSetConstantBuffers 3632 ---------------> ", reinterpret_cast<int64_t>(*ppConstantBuffers));
+	//	}
+	//}
 
 
 
@@ -2458,6 +2563,11 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 
 void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID3D11Resource *pDstResource, UINT DstSubresource, const D3D11_BOX *pDstBox, const void *pSrcData, UINT SrcRowPitch, UINT SrcDepthPitch)
 {
+	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() <<std::hex << " 0x" << pContext << std::dec << " UpdateSubresource(" << std::hex << "0x" << pDstResource << std::dec << "," << DstSubresource << "," 
+		<< std::hex << "0x" << pDstBox << std::dec << ","
+		<< std::hex << "0x" << pSrcData << std::dec << ","
+		<< SrcRowPitch << "," << SrcDepthPitch << ")" << std::endl;;
+
 	//system("cls");
 	//int i = 0;
 	//Helpers::LogFormat("====\r\n%03.8f %03.8f %03.8f %03.8f\r\n%03.8f %03.8f %03.8f %03.8f\r\n%03.8f %03.8f %03.8f %03.8f\r\n%03.8f %03.8f %03.8f %03.8f", 
@@ -2532,6 +2642,102 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+
+	if ((IndexCountPerInstance == 3234) ||
+		(IndexCountPerInstance == 2898) ||
+		(IndexCountPerInstance == 1878) ||
+		(IndexCountPerInstance == 1002) ||
+		(IndexCountPerInstance == 762) ||
+		(IndexCountPerInstance == 570) ||
+		(IndexCountPerInstance == 498) ||
+		(IndexCountPerInstance == 450) ||
+		(IndexCountPerInstance == 552)//整个小人
+		)
+	{
+		
+		if (!(abs(fXYZ[0]) <= 1e-6))
+		{
+			g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+			g_ssCallsInFrame << "  x=" << std::dec << fXYZ[0];
+			g_ssCallsInFrame << "  y=" << std::dec << fXYZ[1];
+			g_ssCallsInFrame << "  z=" << std::dec << fXYZ[2];
+			g_ssCallsInFrame << std::endl;;
+
+			if ((minX > fXYZ[0]) || (minX == 0))
+			{
+				minX = fXYZ[0];
+			}
+			if ((maxX < fXYZ[0]) || (maxX == 0))
+			{
+				maxX = fXYZ[0];
+			}
+			if ((minY > fXYZ[1]) || (minY == 0))
+			{
+				minY = fXYZ[1];
+			}
+			if ((maxY < fXYZ[1]) || (maxY == 0))
+			{
+				maxY = fXYZ[1];
+			}
+			g_lstPositions.push_back(XMFLOAT3(fXYZ[0], fXYZ[1], fXYZ[2]));
+			if ((IndexCountPerInstance == 3234))
+				g_iSelfIdx = g_lstPositions.size();
+		}
+	}
+
+	fXYZ[0] = 0.0;
+	fXYZ[1] = 0.0;
+	fXYZ[2] = 0.0;
+	//////////////////////////////////////////////////////
+	////测试代码
+	////D3D11_BUFFER_DESC pDesc;
+	////(cbPerObjectBuffer)->GetDesc(&pDesc);
+	////if (pDesc.ByteWidth == 3632);
+
+	//ID3D11Buffer* pConstBuf = nullptr;
+	//ID3D11Buffer* m_pCurConstBuf = nullptr;
+	//pContext->VSGetConstantBuffers(0, 1, &pConstBuf);//
+
+	//if (pConstBuf != NULL)
+	//	m_pCurConstBuf = CopyBufferToCpu(pConstBuf);
+	//SAFE_RELEASE(pConstBuf);
+	//UINT bByteWidth = 0;
+	//float matWorldView[4][4];
+	//{
+	//	float* WorldViewCB;
+	//	MapBuffer(m_pCurConstBuf, (void**)&WorldViewCB, &bByteWidth);
+	//	memcpy(matWorldView, &WorldViewCB[0], sizeof(matWorldView));
+	//	//matWorldView[3][2] = matWorldView[3][2] + (aimheight*20);	//aimheight is usually done here for body parts
+
+	//	DWORD* xxx = (DWORD*)WorldViewCB;
+	//	if (bByteWidth == 3632)
+	//	{
+	//		//Helpers::Log("VSSetConstantBuffers 3632 --------------->>>>>>>>>>>>>>> ");
+	//		Helpers::LogFormat("3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36)), (*(float*)(xxx + 37)), (*(float*)(xxx + 38)), IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation);
+
+	//		//string sTmp = "";
+	//		//for (int i = 0; i < 908; i++)
+	//		//{
+	//		//	sTmp += to_string((*(float*)(xxx + i)));
+	//		//	if (((i + 1) % 8) == 0)
+	//		//	{
+	//		//		sTmp += "\r\n";
+	//		//	}
+	//		//	else
+	//		//	{
+	//		//		sTmp += " ";
+	//		//	}
+	//		//}
+	//		//mapBuf[to_string(Stride) + "_" + to_string(IndexCountPerInstance)] = sTmp;
+	//	}
+
+	//	UnmapBuffer(m_pCurConstBuf);
+	//	SAFE_RELEASE(m_pCurConstBuf);
+	//}
+	////测试代码 Done
+	////////////////////////////////////////
+
 
 	Save_UnMapData_New(Stride, IndexCountPerInstance);
 	//ofstream outfile;
@@ -2682,6 +2888,8 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
 {
+	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() <<std::hex << " 0x" << pContext << std::dec << "==DrawIndexed(" << IndexCount << "," << StartIndexLocation << "," << BaseVertexLocation << ")================" << std::endl;;
+
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexed++++++++++++++++++++*===");
 	//CheatIt(pContext, IndexCount, 0, StartIndexLocation, BaseVertexLocation, 0);
 	//Hooks::oDrawIndexed(pContext, IndexCount, StartIndexLocation, BaseVertexLocation);
@@ -2812,15 +3020,32 @@ void tmpCode(ID3D11DeviceContext* d3dDeviceContext, ID3D11Resource *md3dVertexBu
 	d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
 }
 
+//void *g_pMappedResourcepData = NULL;
 
 void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffer *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
 {
+
+	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
+
+	if (pMappedResource->DepthPitch == 3840 && pMappedResource->RowPitch == 3840)
+	{
+		mapMapBufList[pResource] = pMappedResource->pData;
+	}
+
+	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " Map(" << std::hex << "0x" << pResource << std::dec << "," << Subresource << "," << MapType << "," << MapFlags << ","
+		<< std::hex << "0x" << pMappedResource << std::dec
+		<< ") pData=" << pMappedResource->pData
+		<< " DepthPitch=" << pMappedResource->DepthPitch
+		<< " RowPitch=" << pMappedResource->RowPitch
+
+		<< std::endl;;
+
+
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
 	return;
 
 	//if ((Stride == 24))
@@ -2916,6 +3141,57 @@ void CloneData()
 
 void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
+	void * g_pMappedResourcepData = mapMapBufList[pStageBuffer];
+	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
+
+
+	if (g_pMappedResourcepData != nullptr)
+	{
+		D3D11_BUFFER_DESC desc;
+		pStageBuffer->GetDesc(&desc);
+		g_ssCallsInFrame << " byteWid=" << desc.ByteWidth  ;
+		g_ssCallsInFrame << std::endl;
+
+		if (desc.ByteWidth == 3632)
+		{
+			//for (int i=0;i<4;i++)
+			//{
+			//	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+
+			//	for (int b = 0; b < 16; b++)
+			//	{
+			//		g_ssCallsInFrame << "  " << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData +(i*16)+ b)));
+			//	}
+			//	g_ssCallsInFrame << std::endl;;
+			//}
+			fXYZ[0] = (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
+			fXYZ[1] = (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
+			fXYZ[2] = (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
+
+			//g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+			//g_ssCallsInFrame << "  x=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
+			//g_ssCallsInFrame << "  y=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
+			//g_ssCallsInFrame << "  z=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
+			//g_ssCallsInFrame << std::endl;;
+
+			//Helpers::LogFormat("3632-帧-%5d- =[%.3f,%.3f,%.3f]", iFrames, /*pConstBuf, *(xxx + 0), *(xxx + 1), *(xxx + 2),*/ 
+			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 36))),
+			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 37))),
+			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 38)))
+			//);
+
+		}
+		g_ssCallsInFrame << std::endl;;
+	}
+	mapMapBufList.erase(pStageBuffer);
+
+	g_ssCallsInFrame << std::endl;
+
+	//DWORD* xxx = (DWORD*)WorldViewCB;
+	//	if (bByteWidth == 3632)
+	//	{
+	//		//Helpers::Log("VSSetConstantBuffers 3632 --------------->>>>>>>>>>>>>>> ");
+	//		Helpers::LogFormat("3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36))
 	if (0)
 	{
 		ofstream outfile;
@@ -3064,6 +3340,8 @@ void __stdcall Hooks::hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT V
 
 void __stdcall Hooks::hkD3D11DrawIndexedInstanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
+	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() <<std::hex << " 0x" << pContext << std::dec << "==DrawIndexedInstanced(" << IndexCountPerInstance << "," << InstanceCount << "," << StartIndexLocation << "," << BaseVertexLocation << "," << StartInstanceLocation << ")================" << std::endl;;
+
 	//Helpers::LogAddress("\r\n hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	//	OutputDebugStringA("hkD3D11DrawIndexedInstanced++++++++++++++++++++*===");
 	return DrawIdxed_Or_Instanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);

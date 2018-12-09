@@ -45,7 +45,7 @@ namespace Hooks
 	void __stdcall hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffer *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource);
 	void __stdcall hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer *pResource, __in UINT Subresource);
 	void __stdcall hkD3D11CreateQuery(ID3D11Device* pDevice, const D3D11_QUERY_DESC *pQueryDesc, ID3D11Query **ppQuery);
-	void __stdcall hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer *const *ppConstantBuffers);
+	void __stdcall hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumBuffers, ID3D11Buffer */*const*/ *ppConstantBuffers);
 
 	void __stdcall hkD3D11PSSetShaderResources (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews);
 	void __stdcall hkD3D11PSSetSamplers (ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers);

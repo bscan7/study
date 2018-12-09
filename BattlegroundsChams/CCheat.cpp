@@ -6,6 +6,11 @@
 #include <atltypes.h>
 #include <string>
 #include <timeapi.h>
+#include <list>
+#include <xnamath.h>
+#include <algorithm>
+#include <mutex>
+#include "resource.h"
 //#include "mainxxx.h"
 using namespace std;
 
@@ -14,8 +19,18 @@ ID3D11DeviceContext *CCheat::pContext = NULL;
 IDXGISwapChain* CCheat::pSwapChain = NULL; 
 HWND g_hWnd = NULL;
 RECT g_lpRect;
-bool bCrossDraw = true;
+bool bCrossDraw = false;
 bool bHideFog = false;
+
+extern list <XMFLOAT3> g_lstPositions;
+extern DWORD minX, minY, maxX, maxY;
+extern int g_iSelfIdx;
+
+extern list <XMFLOAT3> g_lstPositions2;
+extern DWORD minX2, minY2, maxX2, maxY2;
+extern int g_iSelfIdx2;
+extern mutex g_lock2;
+extern HMODULE g_hModule;
 
 HANDLE  g_Event_Shoot = CreateEvent(NULL, FALSE, FALSE, NULL);
 HANDLE  g_Event_CrossDraw = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -26,6 +41,55 @@ void AutoShootIfCenter(PVOID param);
 	HDC       hMemDC = NULL; ;
 	HBITMAP DirectBitmap = NULL; ;
 	UINT * ptPixels = NULL;
+extern 	HICON icn;
+extern 	HICON icnB;
+
+	void DrawPos(XMFLOAT3& fPos3)
+	{
+		RECT lpRect;
+		::GetWindowRect(g_hWnd, &lpRect);
+
+		LONG w = (lpRect.right - lpRect.left) * 0.6;
+		LONG h = (lpRect.bottom - lpRect.top) * 0.6;
+
+		LONG pX = lpRect.left + (lpRect.right - lpRect.left) * 0.2 + (((fPos3.x - minX2) / (maxX2 - minX2)) * w);
+		LONG pY = lpRect.top + (lpRect.bottom - lpRect.top) * 0.2 + (((fPos3.y - minY2) / (maxY2 - minY2)) * h);
+
+		::DrawIconEx(hScrDC, pX, pY, icn, 0, 0, 0, NULL, DI_NORMAL | DI_COMPAT);
+		//std::cout << std::dec << "[]"
+		//	<< " V=(" << minX2 << "," << maxX2 << " " << minY2 << "," << maxY2 << ")"
+		//	<< " wpos=" << lpRect.left << "," << lpRect.top << " XY=" << pX << "," << pY
+		//	<< " Len=" << g_lstPositions2.size() << std::endl;
+
+		//std::cout << std::dec << "[]"
+		//	<< " fPos3.xy=(" << fPos3.x << "," << fPos3.y  << ")" << std::endl;
+
+	}
+
+	void DrawPos_Self(XMFLOAT3& fPos3)
+	{
+		RECT lpRect;
+		::GetWindowRect(g_hWnd, &lpRect);
+
+		LONG w = (lpRect.right - lpRect.left) * 0.6;
+		LONG h = (lpRect.bottom - lpRect.top) * 0.6;
+
+		LONG pX = lpRect.left + (lpRect.right - lpRect.left) * 0.2 + (((fPos3.x - minX2) / (maxX2 - minX2)) * w);
+		LONG pY = lpRect.top + (lpRect.bottom - lpRect.top) * 0.2 + (((fPos3.y - minY2) / (maxY2 - minY2)) * h);
+
+		::DrawIconEx(hScrDC, pX, pY, icnB, 0, 0, 0, NULL, DI_NORMAL | DI_COMPAT);
+		//std::cout << std::dec << "[]"
+		//	<< " V=(" << minX2 << "," << maxX2 << " " << minY2 << "," << maxY2 << ")"
+		//	<< " wpos=" << lpRect.left << "," << lpRect.top << " XY=" << pX << "," << pY
+		//	<< " Len=" << g_lstPositions2.size() << std::endl;
+
+		//std::cout << std::dec << "[]"
+		//	<< " fPos3.xy=(" << fPos3.x << "," << fPos3.y  << ")" << std::endl;
+
+	}
+
+HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+HPEN hPen2 = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
 
 void Thread_DrawCrossOnCenter(PVOID param)
 {
@@ -35,10 +99,6 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		//Sleep(100);
 		DWORD res = WaitForSingleObject(g_Event_CrossDraw, INFINITE);
 
-		if (!bCrossDraw)
-		{
-			continue;
-		}
 		::GetWindowRect(g_hWnd, &lpRect);
 		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
 		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -55,10 +115,9 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		}
 		//HDC hdc; ;
 		PAINTSTRUCT ps;
-		HPEN hPen;
 		HPEN hPenOld;
 		//hdc = BeginPaint(hWnd, &ps);
-		hPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+		
 		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
 
 		//EndPaint(hWnd, &ps);
@@ -72,11 +131,10 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, yyTop,  NULL);
 		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2, yyBottom);
 
-		SelectObject(hScrDC, hPenOld);
-		DeleteObject(hPen);
 
-		hPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
+		SelectObject(hScrDC, hPenOld);
+
+		hPenOld = (HPEN)SelectObject(hScrDC, hPen2);
 
 		//EndPaint(hWnd, &ps);
 
@@ -85,8 +143,31 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyTop,  NULL);
 		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyBottom);
 
+		if (g_lstPositions2.size() > 1)
+		{
+			list<XMFLOAT3>::iterator iter;
+			int ii = 0;
+			for (iter = g_lstPositions2.begin(); iter != g_lstPositions2.end(); iter++)
+			{
+				ii++;
+				if (g_iSelfIdx2 == ii)
+				{
+					DrawPos_Self(*iter);
+				}
+				else
+					DrawPos(*iter);
+			}
+			//for_each(g_lstPositions2.begin(), g_lstPositions2.end(), DrawPos);
+		}
+		g_lstPositions2.clear();
+		minX2 = 0;
+		minY2 = 0;
+		maxX2 = 0;
+		maxY2 = 0;
+		g_iSelfIdx2 = -1;
+
 		SelectObject(hScrDC, hPenOld);
-		DeleteObject(hPen);
+		//DeleteObject(hPen);
 	}
 }
 #define SHOOT_AREA  6
@@ -753,6 +834,7 @@ void CCheat::Release()
 
 	bStoped = true;
 	::PulseEvent(g_Event_Shoot);
+	::PulseEvent(g_Event_CrossDraw);
 
 	Sleep(300);
 	//bStoped = true;
@@ -787,7 +869,7 @@ void CCheat::Release()
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstanced), Hooks::hkD3D11DrawIndexedInstanced);
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawInstancedIndirect), Hooks::hkD3D11DrawInstancedIndirect);
 	//Helpers::UnhookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstancedIndirect), Hooks::hkD3D11DrawIndexedInstancedIndirect);
-	Helpers::LogFormat("DLL抽离主进程。。。Done g_Event_UnHook=%x", g_Event_UnHook);
+	Helpers::LogFormat("DLL抽离主进程。。。Done ::PulseEvent(%x)", g_Event_UnHook);
 
 	if (g_Event_UnHook)
 	{
