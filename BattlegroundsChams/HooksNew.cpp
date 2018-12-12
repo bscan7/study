@@ -170,6 +170,25 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 
  void tmppp(ID3D11DeviceContext* pContext)
  {
+	 D3DX11_IMAGE_LOAD_INFO loadSMInfo;
+	 loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+	 ID3D11Texture2D* SMTexture = 0;
+	 D3DX11CreateTextureFromFile(CCheat::pDevice, L"skymap.dds",
+		 &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
+
+	 D3D11_TEXTURE2D_DESC SMTextureDesc;
+	 SMTexture->GetDesc(&SMTextureDesc);
+
+	 D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
+	 SMViewDesc.Format = SMTextureDesc.Format;
+	 SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	 SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
+	 SMViewDesc.TextureCube.MostDetailedMip = 0;
+
+	 CCheat::pDevice->CreateShaderResourceView(SMTexture, &SMViewDesc, &pTextureSRV);
+	 return;
+
 	 D3D11_TEXTURE2D_DESC textureDesc;
 	 ID3D11Texture2D *pTexture;
 
@@ -1680,7 +1699,7 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 //}
 
 	 InitListFromFiles();
-	 //tmppp(CCheat::pContext);
+	 tmppp(CCheat::pContext);
 
 	 //InitD2DScreenTexture();
 	 //_beginthread(Thread_fileWatcher, 0, NULL);
@@ -2643,7 +2662,6 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-
 	if ((IndexCountPerInstance == 3234) ||
 		(IndexCountPerInstance == 2898) ||
 		(IndexCountPerInstance == 1878) ||
@@ -2867,6 +2885,12 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			}
 
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+
+			if ((IndexCountPerInstance == 3234) && pTextureSRV)
+			{
+				Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
+			}
+
 			if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
 			{
 				Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
