@@ -168,109 +168,136 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  bool bShow24 = false;
 ID3D11ShaderResourceView *pTextureSRV = NULL;
 
- void tmppp(ID3D11DeviceContext* pContext)
- {
-	 D3DX11_IMAGE_LOAD_INFO loadSMInfo;
-	 loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
+{
 
-	 ID3D11Texture2D* SMTexture = 0;
-	 D3DX11CreateTextureFromFile(CCheat::pDevice, L"skymap.dds",
-		 &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
+	// 如果纹理资源已经存在，则返回，否则创建
+		if (pTextureSRV != NULL)
+			return pTextureSRV;
 
-	 D3D11_TEXTURE2D_DESC SMTextureDesc;
-	 SMTexture->GetDesc(&SMTextureDesc);
+	HRESULT result;
+	D3DX11_IMAGE_LOAD_INFO loadInfo;
+	ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
+	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	loadInfo.Format = DXGI_FORMAT_BC3_UNORM;
+	loadInfo.MipLevels = D3DX11_DEFAULT; //这时会产生最大的mipmaps层
+	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
 
-	 D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
-	 SMViewDesc.Format = SMTextureDesc.Format;
-	 SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	 SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
-	 SMViewDesc.TextureCube.MostDetailedMip = 0;
+	//ID3D11ShaderResourceView* rv = 0;
 
-	 CCheat::pDevice->CreateShaderResourceView(SMTexture, &SMViewDesc, &pTextureSRV);
-	 return;
+	// 从一个文件创建纹理资源视图.
+	result = D3DX11CreateShaderResourceViewFromFileA(device, filename.c_str(), &loadInfo, NULL, &pTextureSRV, NULL);
+	if (FAILED(result))
+	{
+		return NULL;
+	}
 
-	 D3D11_TEXTURE2D_DESC textureDesc;
-	 ID3D11Texture2D *pTexture;
+	return pTextureSRV;
+}
 
-	 ZeroMemory(&textureDesc, sizeof(textureDesc));
-	 textureDesc.Width = 1280;
-	 textureDesc.Height = 720;
-	 textureDesc.ArraySize = 1;
-	 textureDesc.Format = DXGI_FORMAT_R8_UNORM;
-	 textureDesc.SampleDesc.Count = 1;
-	 textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	 textureDesc.MipLevels = 1;
-	 textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+ //void tmppp(ID3D11DeviceContext* pContext)
+ //{
+	// D3DX11_IMAGE_LOAD_INFO loadSMInfo;
+	// loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-	 Helpers::LogFormat("Create glyph sheet texture 0");
-	 HRESULT hResult = CCheat::pDevice->CreateTexture2D(&textureDesc, NULL, &pTexture);
-	 if (FAILED(hResult)) {
-		 //m_lastError = L"Failed to create glyph sheet texture";
-		 Helpers::LogFormat("Failed to create glyph sheet texture 1");
-	 }
-	 else {
+	// ID3D11Texture2D* SMTexture = 0;
+	// D3DX11CreateTextureFromFile(CCheat::pDevice, L"skymap.dds",
+	//	 &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
 
-		 hResult = CCheat::pDevice->CreateShaderResourceView(pTexture, NULL, &pTextureSRV);
-		 if (FAILED(hResult)) {
-			 //m_lastError = L"Failed to create shader resource view for glyph sheet texture";
-			 Helpers::LogFormat("Failed to create glyph sheet texture 2");
-		 }
-		 else {
-			 // Create coord buffer if enabled
-			 //if (m_hardwareCoordBuffer) {
-			 //	D3D11_BUFFER_DESC bufferDesc;
-			 //	ID3D11Buffer *pBuffer;
+	// D3D11_TEXTURE2D_DESC SMTextureDesc;
+	// SMTexture->GetDesc(&SMTextureDesc);
 
-			 //	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-			 //	bufferDesc.ByteWidth = m_maxGlyphCount * sizeof(FW1_GLYPHCOORDS);
-			 //	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			 //	bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	// D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
+	// SMViewDesc.Format = SMTextureDesc.Format;
+	// SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	// SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
+	// SMViewDesc.TextureCube.MostDetailedMip = 0;
 
-			 //	hResult = m_pDevice->CreateBuffer(&bufferDesc, NULL, &pBuffer);
-			 //	if (FAILED(hResult)) {
-			 //		m_lastError = L"Failed to create glyph coord buffer";
-			 //	}
-			 //	else {
-			 //		D3D11_SHADER_RESOURCE_VIEW_DESC bufferSRVDesc;
-			 //		ID3D11ShaderResourceView *pBufferSRV;
+	// CCheat::pDevice->CreateShaderResourceView(SMTexture, &SMViewDesc, &pTextureSRV);
+	// return;
 
-			 //		ZeroMemory(&bufferSRVDesc, sizeof(bufferSRVDesc));
-			 //		bufferSRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			 //		bufferSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-			 //		bufferSRVDesc.Buffer.ElementOffset = 0;
-			 //		bufferSRVDesc.Buffer.ElementWidth = m_maxGlyphCount * 2;// Two float4 per glyphcoords
+	// D3D11_TEXTURE2D_DESC textureDesc;
+	// ID3D11Texture2D *pTexture;
 
-			 //		hResult = m_pDevice->CreateShaderResourceView(pBuffer, &bufferSRVDesc, &pBufferSRV);
-			 //		if (FAILED(hResult)) {
-			 //			m_lastError = L"Failed to create shader resource view for glyph coord buffer";
-			 //		}
-			 //		else {
-			 //			m_pCoordBuffer = pBuffer;
-			 //			m_pCoordBufferSRV = pBufferSRV;
-			 //		}
+	// ZeroMemory(&textureDesc, sizeof(textureDesc));
+	// textureDesc.Width = 1280;
+	// textureDesc.Height = 720;
+	// textureDesc.ArraySize = 1;
+	// textureDesc.Format = DXGI_FORMAT_R8_UNORM;
+	// textureDesc.SampleDesc.Count = 1;
+	// textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	// textureDesc.MipLevels = 1;
+	// textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-			 //		if (FAILED(hResult))
-			 //			pBuffer->Release();
-			 //	}
-			 //}
+	// Helpers::LogFormat("Create glyph sheet texture 0");
+	// HRESULT hResult = CCheat::pDevice->CreateTexture2D(&textureDesc, NULL, &pTexture);
+	// if (FAILED(hResult)) {
+	//	 //m_lastError = L"Failed to create glyph sheet texture";
+	//	 Helpers::LogFormat("Failed to create glyph sheet texture 1");
+	// }
+	// else {
 
-			 //if (SUCCEEDED(hResult)) {
-			 //	m_pTexture = pTexture;
-			 //	m_pTextureSRV = pTextureSRV;
-			 //}
-			 //else
-			 //	pTextureSRV->Release();
-		 }
+	//	 hResult = CCheat::pDevice->CreateShaderResourceView(pTexture, NULL, &pTextureSRV);
+	//	 if (FAILED(hResult)) {
+	//		 //m_lastError = L"Failed to create shader resource view for glyph sheet texture";
+	//		 Helpers::LogFormat("Failed to create glyph sheet texture 2");
+	//	 }
+	//	 else {
+	//		 // Create coord buffer if enabled
+	//		 //if (m_hardwareCoordBuffer) {
+	//		 //	D3D11_BUFFER_DESC bufferDesc;
+	//		 //	ID3D11Buffer *pBuffer;
 
-		 if (FAILED(hResult))
-		 {
-			 Helpers::LogFormat("Failed to create glyph sheet texture 3");
-			 pTexture->Release();
-		 }
-		 //Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, (ID3D11ShaderResourceView *const *)pTextureSRV);
-	 }
-	 Helpers::LogFormat("Done create glyph sheet texture 000000000000000000");
- }
+	//		 //	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+	//		 //	bufferDesc.ByteWidth = m_maxGlyphCount * sizeof(FW1_GLYPHCOORDS);
+	//		 //	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	//		 //	bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+	//		 //	hResult = m_pDevice->CreateBuffer(&bufferDesc, NULL, &pBuffer);
+	//		 //	if (FAILED(hResult)) {
+	//		 //		m_lastError = L"Failed to create glyph coord buffer";
+	//		 //	}
+	//		 //	else {
+	//		 //		D3D11_SHADER_RESOURCE_VIEW_DESC bufferSRVDesc;
+	//		 //		ID3D11ShaderResourceView *pBufferSRV;
+
+	//		 //		ZeroMemory(&bufferSRVDesc, sizeof(bufferSRVDesc));
+	//		 //		bufferSRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	//		 //		bufferSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+	//		 //		bufferSRVDesc.Buffer.ElementOffset = 0;
+	//		 //		bufferSRVDesc.Buffer.ElementWidth = m_maxGlyphCount * 2;// Two float4 per glyphcoords
+
+	//		 //		hResult = m_pDevice->CreateShaderResourceView(pBuffer, &bufferSRVDesc, &pBufferSRV);
+	//		 //		if (FAILED(hResult)) {
+	//		 //			m_lastError = L"Failed to create shader resource view for glyph coord buffer";
+	//		 //		}
+	//		 //		else {
+	//		 //			m_pCoordBuffer = pBuffer;
+	//		 //			m_pCoordBufferSRV = pBufferSRV;
+	//		 //		}
+
+	//		 //		if (FAILED(hResult))
+	//		 //			pBuffer->Release();
+	//		 //	}
+	//		 //}
+
+	//		 //if (SUCCEEDED(hResult)) {
+	//		 //	m_pTexture = pTexture;
+	//		 //	m_pTextureSRV = pTextureSRV;
+	//		 //}
+	//		 //else
+	//		 //	pTextureSRV->Release();
+	//	 }
+
+	//	 if (FAILED(hResult))
+	//	 {
+	//		 Helpers::LogFormat("Failed to create glyph sheet texture 3");
+	//		 pTexture->Release();
+	//	 }
+	//	 //Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, (ID3D11ShaderResourceView *const *)pTextureSRV);
+	// }
+	// Helpers::LogFormat("Done create glyph sheet texture 000000000000000000");
+ //}
 
  void* FindByTID(DWORD tid)
  {
@@ -305,113 +332,113 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
  ID3D11Buffer *d2dIndexBuffer = NULL;
  ID3D11ShaderResourceView *d2dTexture = NULL;
 
- void InitD2DScreenTexture()
- {
-	 HRESULT hResult;
-	 ////Create the vertex buffer
-	 //Vertex v[] =
-	 //{
-		// // Front Face
-		// Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f,-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
-		// Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f,-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
-		// Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
-		// Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
-	 //};
+ //void InitD2DScreenTexture()
+ //{
+	// HRESULT hResult;
+	// ////Create the vertex buffer
+	// //Vertex v[] =
+	// //{
+	//	// // Front Face
+	//	// Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f,-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+	//	// Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f,-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+	//	// Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+	//	// Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f),
+	// //};
 
-	 //DWORD indices[] = {
-		// // Front Face
-		// 0,  1,  2,
-		// 0,  2,  3,
-	 //};
+	// //DWORD indices[] = {
+	//	// // Front Face
+	//	// 0,  1,  2,
+	//	// 0,  2,  3,
+	// //};
 
-	 //D3D11_BUFFER_DESC indexBufferDesc;
-	 //ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
+	// //D3D11_BUFFER_DESC indexBufferDesc;
+	// //ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
 
-	 //indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	 //indexBufferDesc.ByteWidth = sizeof(DWORD) * 2 * 3;
-	 //indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	 //indexBufferDesc.CPUAccessFlags = 0;
-	 //indexBufferDesc.MiscFlags = 0;
+	// //indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// //indexBufferDesc.ByteWidth = sizeof(DWORD) * 2 * 3;
+	// //indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	// //indexBufferDesc.CPUAccessFlags = 0;
+	// //indexBufferDesc.MiscFlags = 0;
 
-	 //D3D11_SUBRESOURCE_DATA iinitData;
+	// //D3D11_SUBRESOURCE_DATA iinitData;
 
-	 //iinitData.pSysMem = indices;
-	 //hResult = CCheat::pDevice->CreateBuffer(&indexBufferDesc, &iinitData, &d2dIndexBuffer);
-	 //if (FAILED(hResult))
-	 //{
-		// Helpers::LogFormat("FAILED(hResult) 0");
-	 //}
-	 //D3D11_BUFFER_DESC vertexBufferDesc;
-	 //ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	// //iinitData.pSysMem = indices;
+	// //hResult = CCheat::pDevice->CreateBuffer(&indexBufferDesc, &iinitData, &d2dIndexBuffer);
+	// //if (FAILED(hResult))
+	// //{
+	//	// Helpers::LogFormat("FAILED(hResult) 0");
+	// //}
+	// //D3D11_BUFFER_DESC vertexBufferDesc;
+	// //ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
 
-	 //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	 //vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
-	 //vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	 //vertexBufferDesc.CPUAccessFlags = 0;
-	 //vertexBufferDesc.MiscFlags = 0;
+	// //vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// //vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
+	// //vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	// //vertexBufferDesc.CPUAccessFlags = 0;
+	// //vertexBufferDesc.MiscFlags = 0;
 
-	 //D3D11_SUBRESOURCE_DATA vertexBufferData;
+	// //D3D11_SUBRESOURCE_DATA vertexBufferData;
 
-	 //ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
-	 //vertexBufferData.pSysMem = v;
-	 //hResult = CCheat::pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &d2dVertBuffer);
-	 //if (FAILED(hResult))
-	 //{
-		// Helpers::LogFormat("FAILED(hResult) 1");
-	 //}
+	// //ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
+	// //vertexBufferData.pSysMem = v;
+	// //hResult = CCheat::pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &d2dVertBuffer);
+	// //if (FAILED(hResult))
+	// //{
+	//	// Helpers::LogFormat("FAILED(hResult) 1");
+	// //}
 
-	 //D3D11_TEXTURE2D_DESC sharedTexDesc;
+	// //D3D11_TEXTURE2D_DESC sharedTexDesc;
 
-	 //ZeroMemory(&sharedTexDesc, sizeof(sharedTexDesc));
+	// //ZeroMemory(&sharedTexDesc, sizeof(sharedTexDesc));
 
-	 //sharedTexDesc.Width = 1280;
-	 //sharedTexDesc.Height = 720;
-	 //sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	 //sharedTexDesc.MipLevels = 1;
-	 //sharedTexDesc.ArraySize = 1;
-	 //sharedTexDesc.SampleDesc.Count = 1;
-	 //sharedTexDesc.Usage = D3D11_USAGE_DEFAULT;
-	 //sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	 //sharedTexDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+	// //sharedTexDesc.Width = 1280;
+	// //sharedTexDesc.Height = 720;
+	// //sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	// //sharedTexDesc.MipLevels = 1;
+	// //sharedTexDesc.ArraySize = 1;
+	// //sharedTexDesc.SampleDesc.Count = 1;
+	// //sharedTexDesc.Usage = D3D11_USAGE_DEFAULT;
+	// //sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	// //sharedTexDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-	 //hResult = CCheat::pDevice->CreateTexture2D(&sharedTexDesc, NULL, &sharedTex11);
-	 //if (FAILED(hResult))
-	 //{
-		// Helpers::LogFormat("FAILED(CreateTexture2D) .......");
-	 //}
+	// //hResult = CCheat::pDevice->CreateTexture2D(&sharedTexDesc, NULL, &sharedTex11);
+	// //if (FAILED(hResult))
+	// //{
+	//	// Helpers::LogFormat("FAILED(CreateTexture2D) .......");
+	// //}
 
-	 ////Create A shader resource view from the texture D2D will render to,
-	 ////So we can use it to texture a square which overlays our scene
-	 //hResult = CCheat::pDevice->CreateShaderResourceView(sharedTex11, NULL, &d2dTexture);
-	 //if (FAILED(hResult))
-	 //{
-		// Helpers::LogFormat("FAILED(hResult) 222");
-	 //}
-
-
-	 ///Load Skymap's cube texture///
-	 D3DX11_IMAGE_LOAD_INFO loadSMInfo;
-	 loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-	 ID3D11Texture2D* SMTexture = 0;
-	 hResult = D3DX11CreateTextureFromFile(CCheat::pDevice, L"..\\skymap.dds",
-		 &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
-
-	 D3D11_TEXTURE2D_DESC SMTextureDesc;
-	 SMTexture->GetDesc(&SMTextureDesc);
-
-	 D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
-	 SMViewDesc.Format = SMTextureDesc.Format;
-	 SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-	 SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
-	 SMViewDesc.TextureCube.MostDetailedMip = 0;
-
-	 hResult = CCheat::pDevice->CreateShaderResourceView(SMTexture, &SMViewDesc, &d2dTexture);
+	// ////Create A shader resource view from the texture D2D will render to,
+	// ////So we can use it to texture a square which overlays our scene
+	// //hResult = CCheat::pDevice->CreateShaderResourceView(sharedTex11, NULL, &d2dTexture);
+	// //if (FAILED(hResult))
+	// //{
+	//	// Helpers::LogFormat("FAILED(hResult) 222");
+	// //}
 
 
-	 Helpers::LogFormat("SMTexture=[%x] d2dTexture=[[ %x ]] ", SMTexture, d2dTexture);
-	 system("pause");
- }
+	// ///Load Skymap's cube texture///
+	// D3DX11_IMAGE_LOAD_INFO loadSMInfo;
+	// loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+	// ID3D11Texture2D* SMTexture = 0;
+	// hResult = D3DX11CreateTextureFromFile(CCheat::pDevice, L"..\\skymap.dds",
+	//	 &loadSMInfo, 0, (ID3D11Resource**)&SMTexture, 0);
+
+	// D3D11_TEXTURE2D_DESC SMTextureDesc;
+	// SMTexture->GetDesc(&SMTextureDesc);
+
+	// D3D11_SHADER_RESOURCE_VIEW_DESC SMViewDesc;
+	// SMViewDesc.Format = SMTextureDesc.Format;
+	// SMViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	// SMViewDesc.TextureCube.MipLevels = SMTextureDesc.MipLevels;
+	// SMViewDesc.TextureCube.MostDetailedMip = 0;
+
+	// hResult = CCheat::pDevice->CreateShaderResourceView(SMTexture, &SMViewDesc, &d2dTexture);
+
+
+	// Helpers::LogFormat("SMTexture=[%x] d2dTexture=[[ %x ]] ", SMTexture, d2dTexture);
+	// system("pause");
+ //}
  void Save_UnMapData_New(UINT Stride, UINT IndexCountPerInstance)
  {
 	 return;
@@ -1699,8 +1726,8 @@ ID3D11ShaderResourceView *pTextureSRV = NULL;
 	 //}
 
 	 InitListFromFiles();
-	 tmppp(CCheat::pContext);
-
+	 //tmppp(CCheat::pContext);
+	 createTex(CCheat::pDevice, string("water2.dds"));
 	 //InitD2DScreenTexture();
 	 //_beginthread(Thread_fileWatcher, 0, NULL);
 	 _beginthread(Thread_KeysSwitch, 0, NULL);
@@ -2886,7 +2913,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
 
-			if ((IndexCountPerInstance == 3234) && pTextureSRV)
+			if (/*(IndexCountPerInstance == 3234) && */pTextureSRV)
 			{
 				Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
 			}
@@ -3012,37 +3039,37 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 
 }
 
-void tmpCode(ID3D11DeviceContext* d3dDeviceContext, ID3D11Resource *md3dVertexBuffer)
-{
-	UINT mVertexCount=88;
-
-	//填充(顶点)缓存形容结构体和子资源数据结构体,并创建顶点缓存(这里用的是动态缓存)
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	//这里此时每帧进行该缓存资源的更新应该用MAP和UMAP进行资源更新
-	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * mVertexCount;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
-
-
-
-	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	d3dDeviceContext->Map(md3dVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-
-	//获取指向顶点缓存的指针
-	Vertex* verticesPtr;
-	verticesPtr = (Vertex*)mappedResource.pData;
-
-	//把数据复制进顶点缓存
-	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
-
-	//解锁顶点缓存
-	d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
-}
+//void tmpCode(ID3D11DeviceContext* d3dDeviceContext, ID3D11Resource *md3dVertexBuffer)
+//{
+//	UINT mVertexCount=88;
+//
+//	//填充(顶点)缓存形容结构体和子资源数据结构体,并创建顶点缓存(这里用的是动态缓存)
+//	D3D11_BUFFER_DESC vertexBufferDesc;
+//	//这里此时每帧进行该缓存资源的更新应该用MAP和UMAP进行资源更新
+//	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+//	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+//
+//	vertexBufferDesc.ByteWidth = sizeof(Vertex) * mVertexCount;
+//	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+//	vertexBufferDesc.MiscFlags = 0;
+//	vertexBufferDesc.StructureByteStride = 0;
+//
+//
+//
+//	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）
+//	D3D11_MAPPED_SUBRESOURCE mappedResource;
+//	d3dDeviceContext->Map(md3dVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+//
+//	//获取指向顶点缓存的指针
+//	Vertex* verticesPtr;
+//	verticesPtr = (Vertex*)mappedResource.pData;
+//
+//	//把数据复制进顶点缓存
+//	//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+//
+//	//解锁顶点缓存
+//	d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+//}
 
 //void *g_pMappedResourcepData = NULL;
 
@@ -3345,12 +3372,12 @@ void __stdcall Hooks::hkD3D11DrawInstanced(ID3D11DeviceContext* pContext, UINT V
 	//OutputDebugStringA("hkD3D11DrawInstanced++++++++++++++++++++*===");
 	//if (GetAsyncKeyState(VK_F9) & 1)
 	//	Log("DrawInstanced called");
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+	//UINT Stride;
+	//ID3D11Buffer *veBuffer;
+	//UINT veBufferOffset = 0;
+	//pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	ofstream outfile;
+	//ofstream outfile;
 	//outfile.open("..\\UnMap_Map__.txt", ios::app);
 	//if (outfile)
 	//{
@@ -3491,10 +3518,10 @@ void __stdcall Hooks::hkD3D11DrawInstancedIndirect(ID3D11DeviceContext* pContext
 	//if (GetAsyncKeyState(VK_RETURN) & 1)
 	//	bHideTrees = bHideTrees ? false : true;
 
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+	//UINT Stride;
+	//ID3D11Buffer *veBuffer;
+	//UINT veBufferOffset = 0;
+	//pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	//ofstream outfile;
 	//outfile.open("..\\UnMap_Map__.txt", ios::app);
@@ -3518,10 +3545,10 @@ void __stdcall Hooks::hkD3D11DrawIndexedInstancedIndirect(ID3D11DeviceContext* p
 	//OutputDebugStringA("hkD3D11DrawIndexedInstancedIndirect++++++++++++++++++++*===");
 	//if (GetAsyncKeyState(VK_F9) & 1)
 	//	Log("DrawIndexedInstancedIndirect called");
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+	//UINT Stride;
+	//ID3D11Buffer *veBuffer;
+	//UINT veBufferOffset = 0;
+	//pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
 	//ofstream outfile;
 	//outfile.open("..\\UnMap_Map__.txt", ios::app);

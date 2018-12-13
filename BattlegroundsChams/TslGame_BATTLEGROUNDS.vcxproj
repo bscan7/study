@@ -220,9 +220,6 @@
     </ClCompile>
     <ClCompile Include="CCheat.cpp" />
     <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="Hooks.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="FW1FontWrapper\CFW1ColorRGBA.cpp" />
     <ClCompile Include="FW1FontWrapper\CFW1ColorRGBAInterface.cpp" />
     <ClCompile Include="FW1FontWrapper\CFW1DWriteRenderTarget.cpp" />
