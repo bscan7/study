@@ -15,6 +15,7 @@
 #include <d3d11.h>
 #include <d3dx11.h>
 #include <d3dx10.h>
+#include <D3DX9Shader.h>
 #include <xnamath.h>
 #include <D3D10_1.h>
 #include <DXGI.h>
@@ -25,6 +26,7 @@
 #include <vector>
 #include <fstream>
 #include <istream>
+#include <string>
 
 //Global Declarations - Interfaces//
 IDXGISwapChain* SwapChain;
@@ -102,6 +104,7 @@ XMMATRIX bottleWorld[20];
 int* bottleHit = new int[20];
 int numBottles = 20;
 ///////////////**************new**************////////////////////
+XMVECTOR* tttDir = NULL;
 
 //Textures and material variables, used for all mesh's loaded
 std::vector<ID3D11ShaderResourceView*> meshSRV;
@@ -326,7 +329,13 @@ int WINAPI WinMain(HINSTANCE hInstance,	//Main windows function
 	LPSTR lpCmdLine,
 	int nShowCmd)
 {
+	char ppp[256] = { 0 };
+	TCHAR PP[256] = L"bscan7";
+	void* xxx = PP;
+	float AAA = -0.000310992;
 
+	XMFLOAT4 bbb;
+	bbb.x=999;
 	if(!InitializeWindow(hInstance, nShowCmd, Width, Height, true))
 	{
 		MessageBox(0, L"Window Initialization - Failed",
@@ -477,7 +486,7 @@ bool InitializeDirect3d11App(HINSTANCE hInstance)
 		NULL, NULL,	D3D11_SDK_VERSION, &swapChainDesc, &SwapChain, &d3d11Device, NULL, &d3d11DevCon);
 
 	//Initialize Direct2D, Direct3D 10.1, DirectWrite
-	InitD2D_D3D101_DWrite(Adapter);
+	//InitD2D_D3D101_DWrite(Adapter);
 
 	//Release the Adapter interface
 	Adapter->Release();
@@ -640,7 +649,10 @@ void UpdateCamera()
 	moveBackForward = 0.0f;
 
 	camTarget = camPosition + camTarget;	
-
+	if (tttDir)
+	{
+		camTarget = camPosition + *tttDir;
+	}
 	camView = XMMatrixLookAtLH( camPosition, camTarget, camUp );
 }
 
@@ -698,6 +710,12 @@ void DetectInput(double time)
 			XMVECTOR prwsPos, prwsDir;
 			pickRayVector(mousex, mousey, prwsPos, prwsDir);
 
+			if (!tttDir)
+			{
+				tttDir = new XMVECTOR;
+			}
+			*tttDir = prwsDir;
+
 			for(int i = 0; i < numBottles; i++)
 			{
 				if(bottleHit[i] == 0) //No need to check bottles already hit
@@ -713,7 +731,7 @@ void DetectInput(double time)
 
 			if(closestDist < FLT_MAX)
 			{
-				bottleHit[hitIndex] = 1;
+				//bottleHit[hitIndex] = 1;
 				pickedDist = closestDist;
 				score++;
 			}
@@ -726,15 +744,18 @@ void DetectInput(double time)
 		isShoot = false;
 	}
 	///////////////**************new**************////////////////////
-	if((mouseCurrState.lX != mouseLastState.lX) || (mouseCurrState.lY != mouseLastState.lY))
+	if (0)
 	{
-		camYaw += mouseLastState.lX * 0.001f;
+		if((mouseCurrState.lX != mouseLastState.lX) || (mouseCurrState.lY != mouseLastState.lY))
+		{
+			camYaw += mouseLastState.lX * 0.001f;
 
-		camPitch += mouseCurrState.lY * 0.001f;
+			camPitch += mouseCurrState.lY * 0.001f;
 
-		mouseLastState = mouseCurrState;
+			mouseLastState = mouseCurrState;
+		}
 	}
-
+	
 	UpdateCamera();
 
 	return;
@@ -2015,6 +2036,35 @@ void CreateSphere(int LatLines, int LongLines)
 
 }
 
+ID3D11ShaderResourceView *pTextureSRV = NULL;
+
+ID3D11ShaderResourceView* createTex(ID3D11Device* device, std::string filename)
+{
+
+	// 如果纹理资源已经存在，则返回，否则创建
+	if (pTextureSRV != NULL)
+		return pTextureSRV;
+
+	HRESULT result;
+	D3DX11_IMAGE_LOAD_INFO loadInfo;
+	ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
+	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	loadInfo.Format = DXGI_FORMAT_BC3_UNORM;
+	loadInfo.MipLevels = D3DX11_DEFAULT; //这时会产生最大的mipmaps层
+	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
+
+	//ID3D11ShaderResourceView* rv = 0;
+
+	// 从一个文件创建纹理资源视图.
+	result = D3DX11CreateShaderResourceViewFromFileA(device, filename.c_str(), &loadInfo, NULL, &pTextureSRV, NULL);
+	if (FAILED(result))
+	{
+		return NULL;
+	}
+
+	return pTextureSRV;
+}
+
 void InitD2DScreenTexture()
 {
 	//Create the vertex buffer
@@ -2087,6 +2137,11 @@ bool InitScene()
 	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "D2D_PS", "ps_4_0", 0, 0, 0, &D2D_PS_Buffer, 0, 0);
 	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "SKYMAP_VS", "vs_4_0", 0, 0, 0, &SKYMAP_VS_Buffer, 0, 0);
 	hr = D3DX11CompileFromFile(L"Effects.fx", 0, 0, "SKYMAP_PS", "ps_4_0", 0, 0, 0, &SKYMAP_PS_Buffer, 0, 0);
+	ID3DXBuffer* PsHADERbUFFER;
+	ID3DXBuffer* PsHADERERROR;
+	//hr = D3DXAssembleShaderFromFile(L"ASM.fx", 0, NULL, 0, &PsHADERbUFFER, &PsHADERERROR);
+	//hr = D3DX11CompileFromFile(L"ASM.fx", 0, 0, "PS", "ps_4_0", 0, 0, 0, &PS_Buffer, 0, 0);
+	//hr = D3DX11CompileFromFile(L"ASM.fx", 0, 0, NULL, "ps_4_0", 0, 0, 0, &PS_Buffer, 0, 0);
 
 	//Create the Shader Objects
 	hr = d3d11Device->CreateVertexShader(VS_Buffer->GetBufferPointer(), VS_Buffer->GetBufferSize(), NULL, &VS);
@@ -2094,6 +2149,9 @@ bool InitScene()
 	hr = d3d11Device->CreatePixelShader(D2D_PS_Buffer->GetBufferPointer(), D2D_PS_Buffer->GetBufferSize(), NULL, &D2D_PS);
 	hr = d3d11Device->CreateVertexShader(SKYMAP_VS_Buffer->GetBufferPointer(), SKYMAP_VS_Buffer->GetBufferSize(), NULL, &SKYMAP_VS);
 	hr = d3d11Device->CreatePixelShader(SKYMAP_PS_Buffer->GetBufferPointer(), SKYMAP_PS_Buffer->GetBufferSize(), NULL, &SKYMAP_PS);
+	//createTex(d3d11Device, ("water2.dds"));
+	createTex(d3d11Device, ("white_4x4.dds"));
+	//createTex(d3d11Device, ("yellow_4x4.dds"));
 
 	//Set Vertex and Pixel Shaders
 	d3d11DevCon->VSSetShader(VS, 0, 0);
@@ -2158,6 +2216,7 @@ bool InitScene()
 	camPosition = XMVectorSet( 0.0f, 5.0f, -8.0f, 0.0f );
 	camTarget = XMVectorSet( 0.0f, 0.5f, 0.0f, 0.0f );
 	camUp = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
+	//tttDir = camTarget;
 
 	//Set the View matrix
 	camView = XMMatrixLookAtLH( camPosition, camTarget, camUp );
@@ -2455,6 +2514,8 @@ void DrawScene()
 	d3d11DevCon->PSSetShader(PS, 0, 0);
 
 	UINT stride = sizeof( Vertex );
+	Vertex pppp;
+	//pppp.biTangent = (0.9999, 0.8, 0.7);
 	UINT offset = 0;
 
 	/////Draw our model's NON-transparent subsets/////
@@ -2508,7 +2569,14 @@ void DrawScene()
 				cbPerObj.difColor = material[bottleSubsetTexture[i]].difColor;
 				cbPerObj.hasTexture = material[bottleSubsetTexture[i]].hasTexture;
 				cbPerObj.hasNormMap = material[bottleSubsetTexture[i]].hasNormMap;
+
+				cbPerObj.hasTexture = 1;
+				cbPerObj.hasNormMap = 0;
+				float fff = -1.37730265;
+				//fff += 1.0;
 				d3d11DevCon->UpdateSubresource( cbPerObjectBuffer, 0, NULL, &cbPerObj, 0, 0 );
+
+				void* xxx = /*(float*)*/cbPerObjectBuffer;
 				d3d11DevCon->VSSetConstantBuffers( 0, 1, &cbPerObjectBuffer );
 				d3d11DevCon->PSSetConstantBuffers( 1, 1, &cbPerObjectBuffer );
 				if(material[bottleSubsetTexture[i]].hasTexture)
@@ -2520,8 +2588,14 @@ void DrawScene()
 				d3d11DevCon->RSSetState(RSCullNone);
 				int indexStart = bottleSubsetIndexStart[i];
 				int indexDrawAmount =  bottleSubsetIndexStart[i+1] - bottleSubsetIndexStart[i];
-				if(!material[bottleSubsetTexture[i]].transparent)
+				if (!material[bottleSubsetTexture[i]].transparent)
+				{
+					if (pTextureSRV != NULL)
+					{
+						d3d11DevCon->PSSetShaderResources(0, 1, &pTextureSRV);
+					}
 					d3d11DevCon->DrawIndexed( indexDrawAmount, indexStart, 0 );
+				}
 			}
 		}
 	}
@@ -2592,7 +2666,7 @@ void DrawScene()
 
 	//We could draw the transparent subsets of our bottle here if it had any//
 
-	RenderText(L"FPS: ", fps);
+	//RenderText(L"FPS: ", fps);
 
 	//Present the backbuffer to the screen
 	SwapChain->Present(0, 0);
