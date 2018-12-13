@@ -179,7 +179,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	D3DX11_IMAGE_LOAD_INFO loadInfo;
 	ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
 	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	loadInfo.Format = DXGI_FORMAT_BC3_UNORM;
+	loadInfo.Format = /*DXGI_FORMAT_BC3_UNORM;*/ DXGI_FORMAT_R8G8B8A8_UNORM;
 	loadInfo.MipLevels = D3DX11_DEFAULT; //这时会产生最大的mipmaps层
 	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
 
@@ -1271,7 +1271,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 		 //else
 			// pContext->PSSetShader(psd, NULL, NULL);
 
-		 pContext->PSSetShader(psSSS, NULL, NULL);
+		 //pContext->PSSetShader(psSSS, NULL, NULL);
 	 }
 
  }
@@ -1727,7 +1727,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 
 	 InitListFromFiles();
 	 //tmppp(CCheat::pContext);
-	 createTex(CCheat::pDevice, string("water2.dds"));
+	 createTex(CCheat::pDevice, string("A01.dds"));
 	 //InitD2DScreenTexture();
 	 //_beginthread(Thread_fileWatcher, 0, NULL);
 	 _beginthread(Thread_KeysSwitch, 0, NULL);
@@ -2528,7 +2528,7 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 
 	return Hooks::oVSSetConstantBuffers(pContext, StartSlot, NumBuffers, ppConstantBuffers);
 }
-
+ID3D11ShaderResourceView *tmpTextureSRV = NULL;
 void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews)
 {
 	g_StartSlot = StartSlot;
@@ -2602,7 +2602,22 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 //		//pContext->PSSetShader(psRed, NULL, NULL);
 //	}
 //	else
+		//Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, ppShaderResourceViews);
+	if (StartSlot == 0 || (!bCheat))
+	{
+		tmpTextureSRV = *ppShaderResourceViews;
 		Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, ppShaderResourceViews);
+	}
+	else
+	{
+		//createTex(CCheat::pDevice, string("A01.dds"));
+		//Helpers::LogFormat("pTextureSRV (=%d) ", pTextureSRV);
+
+		if (tmpTextureSRV)
+		{
+			Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, &tmpTextureSRV);
+		}
+	}
 
 	return;
 }
@@ -2802,7 +2817,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		else {
 			//没找到
 			lstAllStides.push_back(IndexCountStride);
-			Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
 
@@ -2912,10 +2927,12 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			}
 
 			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+			createTex(CCheat::pDevice, string("A01.dds"));
+			//Helpers::LogFormat("pTextureSRV (=%d) ", pTextureSRV);
 
 			if (/*(IndexCountPerInstance == 3234) && */pTextureSRV)
 			{
-				Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
+				//Hooks::oPSSetShaderResources(pContext, 1, 1, &pTextureSRV);
 			}
 
 			if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
@@ -2929,7 +2946,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 			if (ppDepthStencilState__Old)
 			{
-				pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+				//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
 				ppDepthStencilState__Old = NULL;
 			}
 		}
