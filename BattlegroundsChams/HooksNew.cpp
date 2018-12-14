@@ -146,7 +146,7 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  int iPosHide = 0;
 
  bool bInited = false;
- bool bFlashIt = false;
+ bool bInvertEveryFrame = false;
  //==========================================================================================================================
  bool bHideTrees = false;
  bool bHideGrass = false;
@@ -1221,7 +1221,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	 //pContext->PSSetShader(psYellow, NULL, NULL);
 	 //ppDepthStencilState->GetDesc(&depthStencilDesc);
 
-	 if (bFlashIt)
+	 if (bInvertEveryFrame)
 	 {
 		 {
 		 // Create the depth stencil state.
@@ -1233,7 +1233,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 			 //depthStencilDesc.DepthEnable = FALSE;
 			 //depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 			 depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-			 depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+			 //depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 			 //depthStencilDesc.StencilEnable = FALSE;
 			 ID3D11Device *ppDevice;
 			 pContext->GetDevice(&ppDevice);
@@ -1411,7 +1411,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 			 }
 
 			 ID3D11PixelShader* psSSS = psRed;
-			 if (bFlashIt)
+			 if (bInvertEveryFrame)
 			 {
 				 //AutoShootIfCenter();
 				 //SetEvent(g_Event_Shoot);
@@ -2225,7 +2225,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	}
 
 	//Helpers::LogAddress("\r\n hkD3D11Present++++++++++++++++++++*===");
-	bFlashIt = !bFlashIt;
+	bInvertEveryFrame = !bInvertEveryFrame;
 
 	//RECT lpRect;
 	//int iW = g_lpRect.right - g_lpRect.left;
