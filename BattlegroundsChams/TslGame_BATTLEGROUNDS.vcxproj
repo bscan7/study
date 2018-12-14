@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)$(Configuration)</OutDir>
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
     <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;E:\Microsoft DirectX SDK (June 2010)\Include;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;d:\tools\Visual Leak Detector\lib\Win32;N:\Detours Pro v3.0.316\lib.X86;O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\;$(LibraryPath)</LibraryPath>

@@ -33,6 +33,8 @@ using namespace std;
 
 ID3D11DepthStencilState *ppDepthStencilState__New = NULL;
 ID3D11DepthStencilState *ppDepthStencilState__Old = NULL;
+ID3D11PixelShader* pPixelShader__Old = NULL;
+
 UINT pStencilRef = 0;
 extern HWND g_hWnd;
 extern RECT g_lpRect;
@@ -147,6 +149,9 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
 
  bool bInited = false;
  bool bInvertEveryFrame = false;
+
+ //bool bTest2Draw = false;
+ bool bTest2Draw = true;
  //==========================================================================================================================
  bool bHideTrees = false;
  bool bHideGrass = false;
@@ -589,7 +594,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
  ID3D11PixelShader* psd = NULL;
  ID3D11PixelShader* psBlue = NULL;
  ID3D11PixelShader* psRed0 = NULL;
- ID3D11PixelShader* psTmp = NULL;
+ ID3D11PixelShader* psObscured = NULL;
  ID3D11ShaderResourceView* ShaderResourceView;
 
  void Thread_fileWatcher(PVOID param)
@@ -1221,7 +1226,9 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	 //pContext->PSSetShader(psYellow, NULL, NULL);
 	 //ppDepthStencilState->GetDesc(&depthStencilDesc);
 
-	 if (bInvertEveryFrame)
+	 //效果不好，还影响性能，注释了先。还有一处
+	 //if (1)
+	 if (bTest2Draw || bInvertEveryFrame)
 	 {
 		 {
 		 // Create the depth stencil state.
@@ -1237,10 +1244,13 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 			 //depthStencilDesc.StencilEnable = FALSE;
 			 ID3D11Device *ppDevice;
 			 pContext->GetDevice(&ppDevice);
+
+			 pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
 			 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 			 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+			 psSSS = psObscured;
+			 pContext->PSSetShader(psSSS, NULL, NULL);
 		 }
-			 psSSS = psTmp;
 	 //if (ppDepthStencilStateNew == NULL)
 	 }
 	 if ((bRed))
@@ -1434,7 +1444,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 					 pContext->GetDevice(&ppDevice);
 					 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 					 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-					 psSSS = psTmp;
+					 psSSS = psObscured;
 				 }
 				 //// Set the depth stencil state.
 				 //pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
@@ -2273,8 +2283,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		hr = GenerateShader(CCheat::pDevice, &psGreen, 0.0f, 0.5f, 0.0f);
 	if (!psBlue)
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
-	if (!psTmp)
-		hr = GenerateShader(CCheat::pDevice, &psTmp, 0.4f, 0.4f, 0.25f);
+	if (!psObscured)
+		hr = GenerateShader(CCheat::pDevice, &psObscured, 0.4f, 0.4f, 0.25f);
 	if (!psd)
 		hr = GenerateShader(CCheat::pDevice, &psd, 0.94f, 0.78f, 0.01f);
 
@@ -2684,25 +2694,42 @@ void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT S
 	return Hooks::oPSSetSamplers(pContext, StartSlot, NumSamplers, ppSamplers);
 }
 
+
+void GoDrawCall(UINT InstanceCount, UINT StartInstanceLocation, ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT StartIndexLocation, INT BaseVertexLocation)
+{
+	if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
+	{
+		Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	}
+	else
+	{
+		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	}
+}
+
 void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
-	DWORD bgtime = timeGetTime();
+	//cout << " ===================================DrawIdxed_Or_Instanced:" << "\n";
+	//DWORD bgtime = timeGetTime();
 	if (!bCheat)
 	{
-		if ((InstanceCount==9999) && (StartInstanceLocation == 9999))
-		{
-			Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-		} 
-		else
-		{
-			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		}
+		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 		return;
 	}
+
+	//int idx = 0;
+	//clock_t start0 = clock();
+	//clock_t start1 = clock();
+
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	//clock_t finish1 = clock();
+	//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//start1 = clock();
+ //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
 
 	if ((IndexCountPerInstance == 3234) ||
 		(IndexCountPerInstance == 2898) ||
@@ -2745,6 +2772,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 				g_iSelfIdx = g_lstPositions.size();
 		}
 	}
+	//finish1 = clock();
+	//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//start1 = clock();
+ //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
 
 	fXYZ[0] = 0.0;
 	fXYZ[1] = 0.0;
@@ -2800,6 +2832,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 
 	Save_UnMapData_New(Stride, IndexCountPerInstance);
+	//finish1 = clock();
+	//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//start1 = clock();
+ //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
 	//ofstream outfile;
 	//outfile.open("..\\UnMap_Map__.txt", ios::app);
 	//if (outfile)
@@ -2820,6 +2857,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
+	//finish1 = clock();
+	//cout << idx++ << " ++++++take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//start1 = clock();
+ //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
 
 	if (bVideo4Rec_SCROL)
 	{
@@ -2833,14 +2875,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			}
 		}
 
-		if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
-		{
-			Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-		}
-		else
-		{
-			Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-		}
+		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 		return;
 	}
 
@@ -2880,6 +2915,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	}
 	else
 	{
+		//finish1 = clock();
+		//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+		//start1 = clock();
+	 //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
 		if (bHideGrass &&
 			IsIn_HideList(Stride, IndexCountPerInstance)
 			)
@@ -2892,6 +2932,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
 			//)
 		{
+
+			//finish1 = clock();
+			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+			//start1 = clock();
+		 //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
 
 			if ((1 == g_StartSlot) || (2 == g_StartSlot))
 			{
@@ -2925,25 +2970,60 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 					}
 				}
 			}
+			//finish1 = clock();
+			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+			//start1 = clock();
+		 //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
 
-			//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 5 usedTime = ", timeGetTime() - bgtime);
+
 			createTex(CCheat::pDevice, string("A01.dds"));
 			//Helpers::LogFormat("pTextureSRV (=%d) ", pTextureSRV);
+
+			//finish1 = clock();
+			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+			//start1 = clock();
+		 //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
 
 			if (/*(IndexCountPerInstance == 3234) && */pTextureSRV)
 			{
 				//Hooks::oPSSetShaderResources(pContext, 1, 1, &pTextureSRV);
 			}
 
-			if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
-			{
-				Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-			}
-			else
-			{
-				Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
-			}
+			GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+			//finish1 = clock();
+			//cout << idx++ << " GoDrawCall take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+			//start1 = clock();
+		 //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
 
+
+			//效果不好，还影响性能，注释了先。还有一处
+			if (bTest2Draw)
+			{
+				if (pPixelShader__Old != NULL)
+				{
+					D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+					pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+					ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+					//depthStencilDesc.DepthEnable = TRUE;
+					//depthStencilDesc.DepthEnable = FALSE;
+					//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+					depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+					//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+					//depthStencilDesc.StencilEnable = FALSE;
+					ID3D11Device *ppDevice;
+					pContext->GetDevice(&ppDevice);
+
+					ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__Old);
+
+					pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+					pContext->PSSetShader(pPixelShader__Old, NULL, NULL);
+
+					GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+					pPixelShader__Old = NULL;
+				}
+			}
+	
 			if (ppDepthStencilState__Old)
 			{
 				//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
@@ -2951,6 +3031,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			}
 		}
 	}
+	//finish1 = clock();
+	//cout << "return..." << (double)(finish1 - start0) / 1.00f << "\n";
+	//start1 = clock();
+ //Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d End", idx, timeGetTime() - bgtime);
+
 	return;
 }
 
