@@ -3002,7 +3002,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 				if (pPixelShader__Old != NULL)
 				{
 					D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-					pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+					//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 					ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
 
 					//depthStencilDesc.DepthEnable = TRUE;
