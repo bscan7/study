@@ -8,3 +8,4 @@ static ID3D11DepthStencilState* DSGreat = NULL;
 static ID3D11DepthStencilState* DSGreatEqual = NULL;
 static ID3D11RasterizerState* RSCullNone = NULL;
 static ID3D11RasterizerState* RSCullWireFrame = NULL;
+static ID3D11RasterizerState* RSCullSolid = NULL;
