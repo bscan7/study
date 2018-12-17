@@ -83,6 +83,7 @@ ID3D11DepthStencilState* DSGreat;
 ID3D11DepthStencilState* DSGreatEqual;
 ID3D11RasterizerState* RSCullNone;
 ID3D11RasterizerState* RSCullWireFrame;
+ID3D11RasterizerState* RSCullSolid;
 
 ID3D11BlendState* Transparency;
 //Mesh variables. Each loaded mesh will need its own set of these
@@ -2330,6 +2331,10 @@ bool InitScene()
 	cmdesc.CullMode = D3D11_CULL_NONE;
 	cmdesc.FillMode = D3D11_FILL_WIREFRAME;
 	hr = d3d11Device->CreateRasterizerState(&cmdesc, &RSCullWireFrame);
+
+	cmdesc.CullMode = D3D11_CULL_NONE;
+	cmdesc.FillMode = D3D11_FILL_SOLID;
+	hr = d3d11Device->CreateRasterizerState(&cmdesc, &RSCullSolid);
 
 	D3D11_DEPTH_STENCIL_DESC dssDesc;
 	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
