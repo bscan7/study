@@ -1750,6 +1750,10 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	 cmdesc.FillMode = D3D11_FILL_WIREFRAME;
 	 CCheat::pDevice->CreateRasterizerState(&cmdesc, &RSCullWireFrame);
 
+	 cmdesc.CullMode = D3D11_CULL_NONE;
+	 cmdesc.FillMode = D3D11_FILL_SOLID;
+	 CCheat::pDevice->CreateRasterizerState(&cmdesc, &RSCullSolid);
+
 	 D3D11_DEPTH_STENCIL_DESC dssDesc;
 	 ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	 dssDesc.DepthEnable = true;
@@ -3045,7 +3049,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 						//	ID3D11Device *ppDevice;
 						//	pContext->GetDevice(&ppDevice);
 
-						//	pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
+						pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
 						//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 						//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
 
@@ -3053,17 +3057,23 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 						//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 						//}
 						//BBB//////////////////////////////////////////////
-						if (psd && b2DShader)
-						{
-							pContext->PSSetShader(psd, NULL, NULL); //设为明亮色
-						}
-						//d3d11DevCon->RSSetState(RSCullWireFrame);
+							pContext->RSSetState(CWcullMode);
+						//pContext->RSSetState(RSCullSolid);
+							pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
 						pContext->OMSetDepthStencilState(DSLessEqual, 0);
-						pContext->RSSetState(CCWcullMode);
 						GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
 						{
-							pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+								//pContext->RSSetState(RSCullWireFrame);
+							if (b2DShader &&psd)
+							{
+								{
+									pContext->PSSetShader(psd, NULL, NULL); //设为明亮色
+								}
+							}
+							else
+								pContext->PSSetShader(pPixelShader__Old, NULL, NULL);//设色
+
 							pContext->OMSetDepthStencilState(DSGreat, 0);
 
 							//pContext->RSSetState(RSCullWireFrame);
