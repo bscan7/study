@@ -836,13 +836,13 @@ void CCheat::Release()
 	::PulseEvent(g_Event_Shoot);
 	::PulseEvent(g_Event_CrossDraw);
 
-	CCWcullMode->Release();
-	CWcullMode->Release();
-	DSLessEqual->Release();
-	DSGreat->Release();
-	DSGreatEqual->Release();
-	DSLess->Release();
-	RSCullNone->Release();
+	//CCWcullMode->Release();
+	//CWcullMode->Release();
+	//DSLessEqual->Release();
+	//DSGreat->Release();
+	//DSGreatEqual->Release();
+	//DSLess->Release();
+	//RSCullNone->Release();
 
 
 	Sleep(300);
