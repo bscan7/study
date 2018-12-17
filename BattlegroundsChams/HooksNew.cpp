@@ -24,6 +24,7 @@ using namespace std;
 #include <mutex>
 //#include <iosfwd>
 #include <sstream>  
+#include "gloabls.h"
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
@@ -1729,6 +1730,51 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	 rsDesc.CullMode = D3D11_CULL_NONE;
 	 CCheat::pDevice->CreateRasterizerState(&rsDesc, &rsState);
 
+	 D3D11_RASTERIZER_DESC cmdesc;
+
+	 ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+	 cmdesc.CullMode = D3D11_CULL_BACK;
+	 cmdesc.FillMode = D3D11_FILL_SOLID;
+	 cmdesc.FrontCounterClockwise = true; //逆时针绕线方向 
+	 CCheat::pDevice->CreateRasterizerState(&cmdesc, &CCWcullMode);
+
+	 cmdesc.FrontCounterClockwise = false;
+	 CCheat::pDevice->CreateRasterizerState(&cmdesc, &CWcullMode);
+
+	 cmdesc.CullMode = D3D11_CULL_NONE;
+	 //cmdesc.FillMode = D3D11_FILL_WIREFRAME;
+	 CCheat::pDevice->CreateRasterizerState(&cmdesc, &RSCullNone);
+	 //
+	 //cmdesc.CullMode = D3D11_CULL_BACK;
+	 cmdesc.CullMode = D3D11_CULL_NONE;
+	 cmdesc.FillMode = D3D11_FILL_WIREFRAME;
+	 CCheat::pDevice->CreateRasterizerState(&cmdesc, &RSCullWireFrame);
+
+	 D3D11_DEPTH_STENCIL_DESC dssDesc;
+	 ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	 dssDesc.DepthEnable = true;
+	 dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 dssDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	 CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSLessEqual);
+
+	 ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	 dssDesc.DepthEnable = true;
+	 dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 dssDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	 CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSLess);
+
+	 ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	 dssDesc.DepthEnable = true;
+	 dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 dssDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	 CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSGreatEqual);
+
+	 ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	 dssDesc.DepthEnable = true;
+	 dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 dssDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+	 CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSGreat);
+
 	 //create font
 	 //HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
 	 //hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
@@ -2975,37 +3021,57 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 						D3D11_COMPARISON_FUNC DepthFunc000;
 						//CheatItNew(pContext, psd);
 
-						////////////////////////////////////////////////
-						if (b2DShader)
+						//AAA//////////////////////////////////////////////
+						//if (b2DShader)
+						//{
+						//	pContext->PSSetShader(psd, NULL, NULL); //设为色
+						//}
+						//GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+						//{
+						//	// Create the depth stencil state.
+						//	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+						//	pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+						//	ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+						//	//depthStencilDesc.DepthEnable = TRUE;
+						//	//depthStencilDesc.DepthEnable = FALSE;
+						//	//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+						//	//DepthFunc000 = depthStencilDesc.DepthFunc;
+						//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+						//	//depthStencilDesc.DepthFunc = D3D11_COMPARISON_NEVER;
+						//	//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+						//	//depthStencilDesc.StencilEnable = FALSE;
+						//	ID3D11Device *ppDevice;
+						//	pContext->GetDevice(&ppDevice);
+
+						//	pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
+						//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+						//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+
+						//	pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+						//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+						//}
+						//BBB//////////////////////////////////////////////
+						if (psd && b2DShader)
 						{
-							pContext->PSSetShader(psd, NULL, NULL); //设为色
+							pContext->PSSetShader(psd, NULL, NULL); //设为明亮色
 						}
-				GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+						//d3d11DevCon->RSSetState(RSCullWireFrame);
+						pContext->OMSetDepthStencilState(DSLessEqual, 0);
+						pContext->RSSetState(CCWcullMode);
+						GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
 						{
-							// Create the depth stencil state.
-							D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-							pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
-							ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+							pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+							pContext->OMSetDepthStencilState(DSGreat, 0);
 
-							//depthStencilDesc.DepthEnable = TRUE;
-							//depthStencilDesc.DepthEnable = FALSE;
-							//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-							//DepthFunc000 = depthStencilDesc.DepthFunc;
-							depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-							//depthStencilDesc.DepthFunc = D3D11_COMPARISON_NEVER;
-							//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-							//depthStencilDesc.StencilEnable = FALSE;
-							ID3D11Device *ppDevice;
-							pContext->GetDevice(&ppDevice);
-
-							pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
-							ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
-							pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-
-								pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+							//pContext->RSSetState(RSCullWireFrame);
 							GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+							//d3d11DevCon->OMSetDepthStencilState(NULL, 0);
 						}
+
+						//CCC//////////////////////////////////////////////
 //if (0)
 //{
 //

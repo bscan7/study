@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <mutex>
 #include "resource.h"
-//#include "mainxxx.h"
+#include "gloabls.h"
 using namespace std;
 
 ID3D11Device *CCheat::pDevice = NULL;
@@ -835,6 +835,15 @@ void CCheat::Release()
 	bStoped = true;
 	::PulseEvent(g_Event_Shoot);
 	::PulseEvent(g_Event_CrossDraw);
+
+	CCWcullMode->Release();
+	CWcullMode->Release();
+	DSLessEqual->Release();
+	DSGreat->Release();
+	DSGreatEqual->Release();
+	DSLess->Release();
+	RSCullNone->Release();
+
 
 	Sleep(300);
 	//bStoped = true;

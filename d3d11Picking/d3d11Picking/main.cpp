@@ -27,6 +27,7 @@
 #include <fstream>
 #include <istream>
 #include <string>
+#include <d3dcompiler.h>
 
 //Global Declarations - Interfaces//
 IDXGISwapChain* SwapChain;
@@ -44,8 +45,6 @@ ID3D10Blob* PS_Buffer;
 ID3D11InputLayout* vertLayout;
 ID3D11Buffer* cbPerObjectBuffer;
 ID3D11BlendState* d2dTransparency;
-ID3D11RasterizerState* CCWcullMode;
-ID3D11RasterizerState* CWcullMode;
 ID3D11SamplerState* CubesTexSamplerState;
 ID3D11Buffer* cbPerFrameBuffer;
 
@@ -75,8 +74,15 @@ ID3D10Blob* SKYMAP_PS_Buffer;
 
 ID3D11ShaderResourceView* smrv;
 
+ID3D11RasterizerState* CCWcullMode;
+ID3D11RasterizerState* CWcullMode;
+
 ID3D11DepthStencilState* DSLessEqual;
+ID3D11DepthStencilState* DSLess;
+ID3D11DepthStencilState* DSGreat;
+ID3D11DepthStencilState* DSGreatEqual;
 ID3D11RasterizerState* RSCullNone;
+ID3D11RasterizerState* RSCullWireFrame;
 
 ID3D11BlendState* Transparency;
 //Mesh variables. Each loaded mesh will need its own set of these
@@ -696,47 +702,55 @@ void DetectInput(double time)
 		if(isShoot == false)
 		{	
 			POINT mousePos;
+			RECT Rct;
 
-			GetCursorPos(&mousePos);			
+			GetCursorPos(&mousePos);	
+			::GetWindowRect(hwnd, &Rct);
+			if (PtInRect(&Rct, mousePos))
+			{
+			//}
+
+			//if ((mousePos.x > 0) && (mousePos.y > 0))
+			//{
 			ScreenToClient(hwnd, &mousePos);
+				int mousex = mousePos.x;
+				int mousey = mousePos.y;
 
-			int mousex = mousePos.x;
-			int mousey = mousePos.y;		
+				float tempDist;
+				float closestDist = FLT_MAX;
+				int hitIndex;
 
-			float tempDist;
-			float closestDist = FLT_MAX;
-			int hitIndex;
+				XMVECTOR prwsPos, prwsDir;
+				pickRayVector(mousex, mousey, prwsPos, prwsDir);
 
-			XMVECTOR prwsPos, prwsDir;
-			pickRayVector(mousex, mousey, prwsPos, prwsDir);
-
-			if (!tttDir)
-			{
-				tttDir = new XMVECTOR;
-			}
-			*tttDir = prwsDir;
-
-			for(int i = 0; i < numBottles; i++)
-			{
-				if(bottleHit[i] == 0) //No need to check bottles already hit
+				if (!tttDir)
 				{
-					tempDist = pick(prwsPos, prwsDir, bottleVertPosArray, bottleVertIndexArray, bottleWorld[i]);
-					if(tempDist < closestDist)
+					tttDir = new XMVECTOR;
+				}
+				*tttDir = prwsDir;
+
+				for (int i = 0; i < numBottles; i++)
+				{
+					if (bottleHit[i] == 0) //No need to check bottles already hit
 					{
-						closestDist = tempDist;
-						hitIndex = i;
+						tempDist = pick(prwsPos, prwsDir, bottleVertPosArray, bottleVertIndexArray, bottleWorld[i]);
+						if (tempDist < closestDist)
+						{
+							closestDist = tempDist;
+							hitIndex = i;
+						}
 					}
 				}
-			}
 
-			if(closestDist < FLT_MAX)
-			{
-				//bottleHit[hitIndex] = 1;
-				pickedDist = closestDist;
-				score++;
-			}
+				if (closestDist < FLT_MAX)
+				{
+					//bottleHit[hitIndex] = 1;
+					pickedDist = closestDist;
+					score++;
+				}
 
-			isShoot = true;
+				isShoot = true;
+			}
 		}
 	}
 	if(!mouseCurrState.rgbButtons[0])
@@ -784,16 +798,16 @@ void CleanUp()
 	CCWcullMode->Release();
 	CWcullMode->Release();
 
-	d3d101Device->Release();
-	keyedMutex11->Release();
-	keyedMutex10->Release();
-	D2DRenderTarget->Release();	
-	Brush->Release();
+	//d3d101Device->Release();
+	//keyedMutex11->Release();
+	//keyedMutex10->Release();
+	//D2DRenderTarget->Release();	
+	//Brush->Release();
 	BackBuffer11->Release();
-	sharedTex11->Release();
-	DWriteFactory->Release();
-	TextFormat->Release();
-	d2dTexture->Release();
+	//sharedTex11->Release();
+	//DWriteFactory->Release();
+	//TextFormat->Release();
+	//d2dTexture->Release();
 
 	cbPerFrameBuffer->Release();
 
@@ -812,6 +826,9 @@ void CleanUp()
 	smrv->Release();
 
 	DSLessEqual->Release();
+	DSGreat->Release();
+	DSGreatEqual->Release();
+	DSLess->Release();
 	RSCullNone->Release();
 
 	meshVertBuff->Release();
@@ -2213,7 +2230,8 @@ bool InitScene()
 	hr = d3d11Device->CreateBuffer(&cbbd, NULL, &cbPerFrameBuffer);
 
 	//Camera information
-	camPosition = XMVectorSet( 0.0f, 5.0f, -8.0f, 0.0f );
+	camPosition = XMVectorSet(-27.3483257, 1.20000005, 26.3412743, 41.9929581);
+
 	camTarget = XMVectorSet( 0.0f, 0.5f, 0.0f, 0.0f );
 	camUp = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
 	//tttDir = camTarget;
@@ -2296,18 +2314,22 @@ bool InitScene()
 	D3D11_RASTERIZER_DESC cmdesc;
 
 	ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-	cmdesc.FillMode = D3D11_FILL_SOLID;
 	cmdesc.CullMode = D3D11_CULL_BACK;
-	cmdesc.FrontCounterClockwise = true;
+	cmdesc.FillMode = D3D11_FILL_SOLID;
+	cmdesc.FrontCounterClockwise = true; //逆时针绕线方向 
 	hr = d3d11Device->CreateRasterizerState(&cmdesc, &CCWcullMode);
 
 	cmdesc.FrontCounterClockwise = false;
-
 	hr = d3d11Device->CreateRasterizerState(&cmdesc, &CWcullMode);
 
 	cmdesc.CullMode = D3D11_CULL_NONE;
 	//cmdesc.FillMode = D3D11_FILL_WIREFRAME;
 	hr = d3d11Device->CreateRasterizerState(&cmdesc, &RSCullNone);
+//
+	//cmdesc.CullMode = D3D11_CULL_BACK;
+	cmdesc.CullMode = D3D11_CULL_NONE;
+	cmdesc.FillMode = D3D11_FILL_WIREFRAME;
+	hr = d3d11Device->CreateRasterizerState(&cmdesc, &RSCullWireFrame);
 
 	D3D11_DEPTH_STENCIL_DESC dssDesc;
 	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
@@ -2316,6 +2338,27 @@ bool InitScene()
 	dssDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
 	d3d11Device->CreateDepthStencilState(&dssDesc, &DSLessEqual);
+
+	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	dssDesc.DepthEnable = true;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dssDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	d3d11Device->CreateDepthStencilState(&dssDesc, &DSLess);
+
+	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	dssDesc.DepthEnable = true;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dssDesc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+
+	d3d11Device->CreateDepthStencilState(&dssDesc, &DSGreatEqual);
+
+	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	dssDesc.DepthEnable = true;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dssDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+
+	d3d11Device->CreateDepthStencilState(&dssDesc, &DSGreat);
 
 	///////////////**************new**************////////////////////
 	float bottleXPos = -30.0f;
@@ -2340,7 +2383,7 @@ bool InitScene()
 
 		Rotation = XMMatrixRotationY(3.14f);
 		Scale = XMMatrixScaling( 1.0f, 1.0f, 1.0f );
-		Translation = XMMatrixTranslation( bottleXPos + bxadd*10.0f, 4.0f, bottleZPos + bzadd*10.0f );
+		Translation = XMMatrixTranslation( bottleXPos + bxadd*1.0f, 1.0f, bottleZPos + bzadd*1.0f );
 
 		bottleWorld[i] = Rotation * Scale * Translation;
 	}
@@ -2492,6 +2535,110 @@ void RenderText(std::wstring text, int inInt)
 	d3d11DevCon->DrawIndexed( 6, 0, 0 );	
 }
 
+HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, float r, float g, float b)
+{
+	char szCast[] = "struct VS_OUT\r\n"
+		"{\r\n"
+		" float4 Position : SV_Position;\r\n"
+		" float4 Color : COLOR;\r\n"
+		"};\r\n"
+
+		"float4 ColorPixelShader( VS_OUT input ) : SV_Target\r\n"
+		"{\r\n"
+		" float4 fake;\r\n"
+		" fake.a = 1.0f;\r\n"
+		" fake.r = %.2f;\r\n"
+		" fake.g = %.2f;\r\n"
+		" fake.b = %.2f;\r\n"
+
+		//" fake.a = input.Color.a;"
+		//" fake.r = input.Color.r;"
+		//" fake.g = input.Color.g;"
+		//" fake.b = input.Color.b;"
+		" return fake;\r\n"
+		//"return input.Color;"
+		"};\r\n";
+	ID3D10Blob* pBlob = NULL;
+	char szPixelShader[2000];
+
+	sprintf_s(szPixelShader, szCast, r, g, b);
+
+	ID3DBlob* d3dErrorMsgBlob = NULL;
+
+	HRESULT	hr = D3DCompile(szPixelShader,
+		sizeof(szPixelShader),
+		"shader",
+		NULL, NULL,
+		"ColorPixelShader",
+		"ps_5_0",
+		NULL, NULL,
+		&pBlob, &d3dErrorMsgBlob);
+
+	if (FAILED(hr))
+	{
+		//Helpers::LogFormat("\r\n%s", szPixelShader);
+		//Helpers::LogFormat("D3DCompile hr = %x d3dErrorMsgBlob = %s", hr, *d3dErrorMsgBlob);
+		//MyTraceA("D3DCompile hr = %x d3dErrorMsgBlob = %s", hr, *d3dErrorMsgBlob);
+		// 如果ps编译失败，输出错误信息.
+		//if (d3dErrorMsgBlob)
+		//{
+		//	Helpers::Log("D3DCompile error 。。。");
+		//}
+		//// 如果没有任何错误消息，可能是shader文件丢失.
+		//else
+		//{
+		//	Helpers::Log("Missing Shader File?????????????????????????????");
+		//}
+
+		//MyTraceA("D3DCompile error 111");
+
+		//_beginthread(Thread_ExitHook, 0, NULL);
+		//Sleep(100);
+		return hr;
+	}
+	/*
+	ID3D10Blob* errorMessage;
+	//ID3D10Blob* vertexShaderBuffer;
+	//ID3D10Blob* pixelShaderBuffer;
+	// 编译ps.
+	HRESULT hr = D3DX11CompileFromFileA("Color.ps",
+	NULL, NULL,
+	"ColorPixelShader",
+	"ps_5_0",
+	D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL,
+	&pBlob, &errorMessage, NULL);
+	if (FAILED(hr))
+	{
+	MessageBoxA(NULL, "Color errorMessage", "errorMessage", MB_OK);
+	WinExec("cmd /K CD ", SW_SHOW);
+	// 如果ps编译失败，输出错误信息.
+	if (errorMessage)
+	{
+	}
+	// 如果没有任何错误消息，可能是shader文件丢失.
+	else
+	{
+	MessageBoxA(NULL, "Color.ps", "Missing Shader File", MB_OK);
+	}
+
+	return false;
+	}
+	*/
+
+	hr = pD3DDevice->CreatePixelShader((DWORD*)pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, pShader);
+
+	if (FAILED(hr))
+	{
+		//Helpers::Log("D3DCompile error CreatePixelShader error 222。。。");
+		//MyTraceA("D3DCompile CreatePixelShader error 222");
+		return hr;
+	}
+
+	//Helpers::Log("Done GenerateShader。。。");
+	return S_OK;
+}
+ID3D11PixelShader* psd = NULL;
+ID3D11PixelShader* psObscured = NULL;
 void DrawScene()
 {
 	//Clear our render target and depth/stencil view
@@ -2551,7 +2698,8 @@ void DrawScene()
 
 	///////////////**************new**************////////////////////
 	//draw bottle's nontransparent subsets
-	for(int j = 0; j < numBottles; j++)
+	for(int j = 0; j < 4; j++)
+	//for(int j = 0; j < numBottles; j++)
 	{
 		if(bottleHit[j] == 0)
 		{
@@ -2586,15 +2734,97 @@ void DrawScene()
 				d3d11DevCon->PSSetSamplers( 0, 1, &CubesTexSamplerState );
 
 				d3d11DevCon->RSSetState(RSCullNone);
+				//d3d11DevCon->RSSetState(RSCullWireFrame);
 				int indexStart = bottleSubsetIndexStart[i];
 				int indexDrawAmount =  bottleSubsetIndexStart[i+1] - bottleSubsetIndexStart[i];
 				if (!material[bottleSubsetTexture[i]].transparent)
 				{
-					if (pTextureSRV != NULL)
+					ID3D11Device *ppDevice;
+					d3d11DevCon->GetDevice(&ppDevice);
+
+					if (!psd)
 					{
-						d3d11DevCon->PSSetShaderResources(0, 1, &pTextureSRV);
+						hr = GenerateShader(ppDevice, &psd, 0.94f, 0.78f, 0.01f);
 					}
+					if (!psObscured)
+					{
+						hr = GenerateShader(ppDevice, &psObscured, 0.1f, 0.8f, 0.25f);
+						//hr = GenerateShader(ppDevice, &psObscured, 0.4f, 0.4f, 0.25f);
+					}
+
+					//if (pTextureSRV != NULL)
+					//{
+					//	d3d11DevCon->PSSetShaderResources(0, 1, &pTextureSRV);
+					//}
+					if (psd)
+					{
+						d3d11DevCon->PSSetShader(psd, 0, 0);
+					}
+					//d3d11DevCon->RSSetState(RSCullWireFrame);
+					d3d11DevCon->OMSetDepthStencilState(DSLessEqual, 0);
+					d3d11DevCon->RSSetState(CCWcullMode);
 					d3d11DevCon->DrawIndexed( indexDrawAmount, indexStart, 0 );
+
+					{
+						// Create the depth stencil state.
+						UINT ppStencilRef = 0;
+						ID3D11DepthStencilState *ppDepthStencilState__Old = NULL;
+						ID3D11DepthStencilState *ppDepthStencilState__New = NULL;
+						ID3D11PixelShader* pPixelShader__Old = NULL;
+						D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+						d3d11DevCon->OMGetDepthStencilState(&ppDepthStencilState__Old, &ppStencilRef);
+						DWORD dwErr = GetLastError();
+						//if (ppDepthStencilState__Old)
+						//{
+						//	ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+						//	//depthStencilDesc.DepthEnable = TRUE;
+						//	//depthStencilDesc.DepthEnable = FALSE;
+						//	//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+						//	//DepthFunc000 = depthStencilDesc.DepthFunc;
+						//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+						//	//depthStencilDesc.DepthFunc = D3D11_COMPARISON_NEVER;
+						//	//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+						//	//depthStencilDesc.StencilEnable = FALSE;
+						//	ID3D11Device *ppDevice;
+						//	d3d11DevCon->GetDevice(&ppDevice);
+
+						//	d3d11DevCon->PSGetShader(&pPixelShader__Old, NULL, NULL);
+						//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+						//	d3d11DevCon->OMSetDepthStencilState(ppDepthStencilState__New, ppStencilRef);
+
+						//	d3d11DevCon->PSSetShader(psObscured, NULL, NULL); //设为灰色
+						//	d3d11DevCon->DrawIndexed(indexDrawAmount, indexStart, 0);
+						//}
+						//else
+						{
+							d3d11DevCon->PSSetShader(psObscured, NULL, NULL); //设为灰色
+																			  
+							if (j%4 == 0)
+							{
+								d3d11DevCon->OMSetDepthStencilState(DSLess, 0);
+							}
+							if (j % 4 == 1)
+							{
+								d3d11DevCon->OMSetDepthStencilState(DSLessEqual, 0);
+							}
+							if (j % 4 == 2)
+							{
+								d3d11DevCon->OMSetDepthStencilState(DSGreat, 0);
+							}
+							//
+							if (j % 4 == 3)
+							{
+								d3d11DevCon->OMSetDepthStencilState(DSGreatEqual, 0);
+							}
+							
+
+							//d3d11DevCon->RSSetState(RSCullWireFrame);
+							//d3d11DevCon->OMSetDepthStencilState(DSGreat, 0);
+							d3d11DevCon->DrawIndexed(indexDrawAmount, indexStart, 0);
+								//d3d11DevCon->OMSetDepthStencilState(NULL, 0);
+						}
+					}
 				}
 			}
 		}

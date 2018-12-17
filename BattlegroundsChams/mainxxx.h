@@ -185,6 +185,8 @@ char *state;
 ID3D11RasterizerState * rwState;
 ID3D11RasterizerState * rsState;
 
+
+
 enum eDepthState
 {
 	ENABLED,

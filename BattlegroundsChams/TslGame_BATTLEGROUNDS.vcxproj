@@ -196,6 +196,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCheat.h" />
+    <ClInclude Include="gloabls.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Hooks.h" />
     <ClInclude Include="mainxxx.h" />
