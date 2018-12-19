@@ -2360,7 +2360,7 @@ bool InitScene()
 
 	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	dssDesc.DepthEnable = true;
-	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dssDesc.DepthFunc = D3D11_COMPARISON_GREATER;
 
 	d3d11Device->CreateDepthStencilState(&dssDesc, &DSGreat);
@@ -2380,7 +2380,7 @@ bool InitScene()
 
 		bxadd++;
 
-		if(bxadd == 10)
+		if(bxadd == 3)
 		{
 			bzadd -= 1.0f;
 			bxadd = 0;
@@ -2644,6 +2644,8 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 }
 ID3D11PixelShader* psd = NULL;
 ID3D11PixelShader* psObscured = NULL;
+ID3D11PixelShader* psd2 = NULL;
+ID3D11PixelShader* psObscured2 = NULL;
 void DrawScene()
 {
 	//Clear our render target and depth/stencil view
@@ -2703,7 +2705,7 @@ void DrawScene()
 
 	///////////////**************new**************////////////////////
 	//draw bottle's nontransparent subsets
-	for(int j = 0; j < 4; j++)
+	for(int j = 0; j < 12; j++)
 	//for(int j = 0; j < numBottles; j++)
 	{
 		if(bottleHit[j] == 0)
@@ -2750,10 +2752,12 @@ void DrawScene()
 					if (!psd)
 					{
 						hr = GenerateShader(ppDevice, &psd, 0.94f, 0.78f, 0.01f);
+						hr = GenerateShader(ppDevice, &psObscured, 0.1f, 0.8f, 0.25f);
+						hr = GenerateShader(ppDevice, &psd2, 0.74f, 0.58f, 0.01f);
+						hr = GenerateShader(ppDevice, &psObscured2, 0.3f, 0.6f, 0.25f);
 					}
 					if (!psObscured)
 					{
-						hr = GenerateShader(ppDevice, &psObscured, 0.1f, 0.8f, 0.25f);
 						//hr = GenerateShader(ppDevice, &psObscured, 0.4f, 0.4f, 0.25f);
 					}
 
@@ -2763,10 +2767,16 @@ void DrawScene()
 					//}
 					if (psd)
 					{
-						d3d11DevCon->PSSetShader(psd, 0, 0);
+						if (j%2 == 0)
+						{
+							d3d11DevCon->PSSetShader(psd, 0, 0);
+						}
+						else
+							d3d11DevCon->PSSetShader(psd2, 0, 0);
+
 					}
 					//d3d11DevCon->RSSetState(RSCullWireFrame);
-					d3d11DevCon->OMSetDepthStencilState(DSLessEqual, 0);
+					d3d11DevCon->OMSetDepthStencilState(DSLess, 0);
 					d3d11DevCon->RSSetState(CCWcullMode);
 					d3d11DevCon->DrawIndexed( indexDrawAmount, indexStart, 0 );
 
@@ -2803,25 +2813,32 @@ void DrawScene()
 						//}
 						//else
 						{
-							d3d11DevCon->PSSetShader(psObscured, NULL, NULL); //设为灰色
-																			  
-							if (j%4 == 0)
+							if (j % 2 == 0)
 							{
-								d3d11DevCon->OMSetDepthStencilState(DSLess, 0);
+								d3d11DevCon->PSSetShader(psObscured, 0, 0);
 							}
-							if (j % 4 == 1)
-							{
-								d3d11DevCon->OMSetDepthStencilState(DSLessEqual, 0);
-							}
-							if (j % 4 == 2)
-							{
+							else
+								d3d11DevCon->PSSetShader(psObscured2, 0, 0);
+
+							//d3d11DevCon->PSSetShader(psObscured, NULL, NULL); //设为灰色
+							//												  
+							//if (j%4 == 0)
+							//{
+							//	d3d11DevCon->OMSetDepthStencilState(DSLess, 0);
+							//}
+							//if (j % 4 == 1)
+							//{
+							//	d3d11DevCon->OMSetDepthStencilState(DSLessEqual, 0);
+							//}
+							//if (j % 4 == 2)
+							//{
 								d3d11DevCon->OMSetDepthStencilState(DSGreat, 0);
-							}
-							//
-							if (j % 4 == 3)
-							{
-								d3d11DevCon->OMSetDepthStencilState(DSGreatEqual, 0);
-							}
+							//}
+							////
+							//if (j % 4 == 3)
+							//{
+							//	d3d11DevCon->OMSetDepthStencilState(DSGreatEqual, 0);
+							//}
 							
 
 							//d3d11DevCon->RSSetState(RSCullWireFrame);

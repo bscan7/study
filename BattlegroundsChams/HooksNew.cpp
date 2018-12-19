@@ -1763,7 +1763,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 
 	 ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	 dssDesc.DepthEnable = true;
-	 dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	 dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	 dssDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	 CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSLess);
 
@@ -3060,7 +3060,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 							pContext->RSSetState(CWcullMode);
 						//pContext->RSSetState(RSCullSolid);
 							pContext->PSSetShader(psObscured, NULL, NULL); //ÉèÎª»ÒÉ«
-						pContext->OMSetDepthStencilState(DSLessEqual, 0);
+						pContext->OMSetDepthStencilState(DSLess, 0);
 						GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
 						{
