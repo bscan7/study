@@ -2,6 +2,7 @@
 static ID3D11RasterizerState* CCWcullMode = NULL;
 static ID3D11RasterizerState* CWcullMode = NULL;
 
+static ID3D11DepthStencilState* DSAlways = NULL;
 static ID3D11DepthStencilState* DSLessEqual = NULL;
 static ID3D11DepthStencilState* DSLess = NULL;
 static ID3D11DepthStencilState* DSGreat = NULL;
