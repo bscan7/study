@@ -25,16 +25,19 @@ using namespace std;
 //#include <iosfwd>
 #include <sstream>  
 #include "gloabls.h"
+#include "FW1FontWrapper\FW1FontWrapper.h"
+#include <algorithm>
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
 
-//IFW1Factory *pFW1Factory = NULL;
-//IFW1FontWrapper *pFontWrapper = NULL;
+IFW1Factory *pFW1Factory = NULL;
+IFW1FontWrapper *pFontWrapper = NULL;
 
 ID3D11DepthStencilState *ppDepthStencilState__New = NULL;
 ID3D11DepthStencilState *ppDepthStencilState__Old = NULL;
 ID3D11PixelShader* pPixelShader__Old = NULL;
+ID3D11DeviceContext* pMainContext = NULL;
 
 UINT pStencilRef = 0;
 extern HWND g_hWnd;
@@ -63,6 +66,7 @@ float fXYZ[3];
 list <XMFLOAT3> g_lstPositions;
 DWORD minX, minY, maxX, maxY = 0;
 int g_iSelfIdx = -1;
+DWORD dFrontColor = 0;
 
  list <XMFLOAT3> g_lstPositions2;
  DWORD minX2, minY2, maxX2, maxY2 = 0;
@@ -137,10 +141,10 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
 
  std::vector<UINT64> lstAllStride00;
 
- std::vector<UINT64> lstAllStides;
+ std::vector<UINT64> lstAllStrides;
  std::vector<UINT64> lstAvatar2412;
  std::vector<UINT64> lstEqupm2412;
- std::vector<UINT64> lstNot2412;
+ std::vector<UINT64> lstExcludeAll;
  std::vector<UINT64> lstHideList;
  std::vector<UINT64> lstCarOrBoat;
  //std::vector<int> lstRed24;
@@ -165,8 +169,8 @@ tD3D11UpdateSubresource Hooks::oUpdateSubresource = NULL;
  int itm = 0;
 
  UINT64 iiiii = 0;
- int iStride = 0;
- int iIndexCount = 0;
+ int g_iCurStride = 0;
+ int g_iCurIndexCount = 0;
  int bRed = true;
  int iRed = 0;
  DWORD gggg = 0;
@@ -446,6 +450,66 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	// Helpers::LogFormat("SMTexture=[%x] d2dTexture=[[ %x ]] ", SMTexture, d2dTexture);
 	// system("pause");
  //}
+
+// //--------------------------------------------------------------------------------------
+// // Helper function to capture a frame and dump it to disk 
+// //--------------------------------------------------------------------------------------
+//void CaptureFrame()
+//{
+//	// Retrieve RT resource
+//	ID3D11Resource *pRTResource;
+//	DXUTGetD3D11RenderTargetView()->GetResource(&pRTResource);
+//
+//	// Retrieve a Texture2D interface from resource
+//	ID3D11Texture2D* RTTexture;
+//	pRTResource->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&RTTexture);
+//
+//	// Check if RT is multisampled or not
+//	D3D11_TEXTURE2D_DESC    TexDesc;
+//	RTTexture->GetDesc(&TexDesc);
+//	if (TexDesc.SampleDesc.Count>1)
+//	{
+//		// RT is multisampled, need resolving before dumping to disk
+//
+//		// Create single-sample RT of the same type and dimensions
+//		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+//		TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+//		TexDesc.MipLevels = 1;
+//		TexDesc.Usage = D3D11_USAGE_DEFAULT;
+//		TexDesc.CPUAccessFlags = 0;
+//		TexDesc.BindFlags = 0;
+//		TexDesc.SampleDesc = SingleSample;
+//
+//		ID3D11Texture2D *pSingleSampleTexture;
+//		DXUTGetD3D11Device()->CreateTexture2D(&TexDesc, NULL, &pSingleSampleTexture);
+//		DXUT_SetDebugName(pSingleSampleTexture, "Single Sample");
+//
+//		DXUTGetD3D11DeviceContext()->ResolveSubresource(pSingleSampleTexture, 0, RTTexture, 0, TexDesc.Format);
+//
+//		// Copy RT into STAGING texture
+//		DXUTGetD3D11DeviceContext()->CopyResource(g_pCaptureTexture, pSingleSampleTexture);
+//
+//		D3DX11SaveTextureToFile(DXUTGetD3D11DeviceContext(), g_pCaptureTexture, D3DX11_IFF_BMP, g_CmdLineParams.strCaptureFilename);
+//
+//		SAFE_RELEASE(pSingleSampleTexture);
+//
+//	}
+//	else
+//	{
+//		// Single sample case
+//
+//		// Copy RT into STAGING texture
+//		DXUTGetD3D11DeviceContext()->CopyResource(g_pCaptureTexture, pRTResource);
+//
+//		D3DX11SaveTextureToFile(DXUTGetD3D11DeviceContext(), g_pCaptureTexture, D3DX11_IFF_BMP, g_CmdLineParams.strCaptureFilename);
+//	}
+//
+//	SAFE_RELEASE(RTTexture);
+//
+//	SAFE_RELEASE(pRTResource);
+//}
+//
+
  void Save_UnMapData_New(UINT Stride, UINT IndexCountPerInstance)
  {
 	 return;
@@ -493,7 +557,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
  void InitListFromFiles()
  {
 	 std::cout << "lstAllStides.clear()..." << endl;
-	 lstAllStides.clear();
+	 lstAllStrides.clear();
 	 //从文件读取列表
 	 {
 		 //WinExec("cmd /K CD ", SW_SHOW);
@@ -518,12 +582,12 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 		 fin.close();
 		 std::cout << "逐行读取文件完成！ lstEqupm2412 << ..\\equpmList.txt" << endl;
 
-		 lstNot2412.clear();
+		 lstExcludeAll.clear();
 		 fin.open(g_NotRedListFName.c_str());  //打开文件
 									   //string ReadLine;
 		 while (getline(fin, ReadLine))  //逐行读取，直到结束
 		 {
-			 lstNot2412.push_back(atoi(ReadLine.c_str()));
+			 lstExcludeAll.push_back(atoi(ReadLine.c_str()));
 		 }
 		 fin.close();
 		 std::cout << "逐行读取文件完成！ lstNot2412 << " << g_NotRedListFName.c_str() << endl;
@@ -593,10 +657,10 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
  ID3D11PixelShader* psCrimson = NULL;
  ID3D11PixelShader* psYellow = NULL;
  ID3D11PixelShader* psGreen0 = NULL;
- ID3D11PixelShader* psd = NULL;
+ ID3D11PixelShader* psFront = NULL;
  ID3D11PixelShader* psBlue = NULL;
  ID3D11PixelShader* psRed0 = NULL;
- ID3D11PixelShader* psObscured = NULL;
+ ID3D11PixelShader* psBack = NULL;
  ID3D11ShaderResourceView* ShaderResourceView;
 
  void Thread_fileWatcher(PVOID param)
@@ -1054,17 +1118,17 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
  bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
  {
 	 UINT64 IndexCountStride = IndexCount * 100 + Stride;
-	 if (find(lstNot2412.begin(), lstNot2412.end(), IndexCountStride) != lstNot2412.end()) {
+	 if (find(lstExcludeAll.begin(), lstExcludeAll.end(), IndexCountStride) != lstExcludeAll.end()) {
 		 //找到
 		 return false;
 	 }
 	 else {
 		 //没找到
-		 if (!bVideo4Rec_SCROL && (/*(Stride == 24) &&*/ (IndexCount <= 200)))
-		 {
-			 return false;
-		 }
-		 else
+		 //if (!bVideo4Rec_SCROL && (/*(Stride == 24) &&*/ (IndexCount <= 200)))
+		 //{
+			// return false;
+		 //}
+		 //else
 		 {
 			 return true;
 		 }
@@ -1256,7 +1320,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 			 pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
 			 ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 			 pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-			 psSSS = psObscured;
+			 psSSS = psBack;
 			 pContext->PSSetShader(psSSS, NULL, NULL);
 		 }
 	 //if (ppDepthStencilStateNew == NULL)
@@ -1780,17 +1844,17 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	 CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSGreat);
 
 	 //create font
-	 //HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
-	 //hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
-	 //pFW1Factory->Release();
+	 HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
+	 hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
+	 pFW1Factory->Release();
 
 	 // use the back buffer address to create the render target
 	 //if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&RenderTargetTexture))))
-	 //if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
-	 //{
-		// CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
-		// RenderTargetTexture->Release();
-	 //}
+	 if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
+	 {
+		 CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
+		 RenderTargetTexture->Release();
+	 }
 
 	 InitListFromFiles();
 	 //tmppp(CCheat::pContext);
@@ -2208,6 +2272,167 @@ bool IsCenterRed()
 UINT iFrames = 0;
 UINT iName = 0;
 stringstream g_ssCallsInFrame;
+static ID3D11Texture2D* g_pCaptureTexture = NULL;
+//--------------------------------------------------------------------------------------
+// Helper function to capture a frame and dump it to disk 
+//--------------------------------------------------------------------------------------
+void CaptureFrame()
+{
+	std::wstring www = L"strCaptureFilename_";
+	www += std::to_wstring(iFrames);
+	www += L".bmp";
+
+	HRESULT hr = 0;
+	ID3D11Device *d3d11Device;
+	pMainContext->GetDevice(&d3d11Device);
+
+	ID3D11RenderTargetView *ppRenderTargetViews11;
+	pMainContext->OMGetRenderTargets(1, &ppRenderTargetViews11, 0);
+
+	// Retrieve RT resource
+	ID3D11Resource *pRTResource;
+	ppRenderTargetViews11->GetResource(&pRTResource);
+
+	// Retrieve a Texture2D interface from resource
+	ID3D11Texture2D* RTTexture;
+	pRTResource->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&RTTexture);
+
+	//if (g_pCaptureTexture == NULL)
+	//{
+	//	// We need a screen-sized STAGING resource for frame capturing
+	//	D3D11_TEXTURE2D_DESC TexDesc;
+	//	DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+	//	TexDesc.Width = 1280;
+	//	TexDesc.Height = 720;
+	//	//TexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	//	TexDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	//	TexDesc.SampleDesc = SingleSample;
+	//	TexDesc.MipLevels = 1;
+	//	TexDesc.Usage = D3D11_USAGE_STAGING;
+	//	TexDesc.MiscFlags = 0;
+	//	TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	//	TexDesc.BindFlags = 0;
+	//	TexDesc.ArraySize = 1;
+	//	(d3d11Device->CreateTexture2D(&TexDesc, NULL, &g_pCaptureTexture));
+	//	//			DXUT_SetDebugName(g_pCaptureTexture, "Capture");
+	//}
+	// Check if RT is multisampled or not
+	D3D11_TEXTURE2D_DESC    TexDesc;
+	RTTexture->GetDesc(&TexDesc);
+
+	////////////////////////////////////////////////////
+	if (g_pCaptureTexture == NULL)
+	{
+		// We need a screen-sized STAGING resource for frame capturing
+		D3D11_TEXTURE2D_DESC TexDesc2;
+		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+		TexDesc2.Width = TexDesc.Width;
+		TexDesc2.Height = TexDesc.Height;
+		//TexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		TexDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+		TexDesc2.SampleDesc = SingleSample;
+		TexDesc2.MipLevels = 1;
+		TexDesc2.Usage = D3D11_USAGE_STAGING;
+		TexDesc2.MiscFlags = 0;
+		TexDesc2.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+		TexDesc2.BindFlags = 0;
+		TexDesc2.ArraySize = 1;
+		(d3d11Device->CreateTexture2D(&TexDesc2, NULL, &g_pCaptureTexture));
+		//			DXUT_SetDebugName(g_pCaptureTexture, "Capture");
+	}
+
+	if (TexDesc.SampleDesc.Count > 1)
+	{
+		// RT is multisampled, need resolving before dumping to disk
+
+		// Create single-sample RT of the same type and dimensions
+		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+		TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+		TexDesc.MipLevels = 1;
+		TexDesc.Usage = D3D11_USAGE_DEFAULT;
+		TexDesc.CPUAccessFlags = 0;
+		TexDesc.BindFlags = 0;
+		TexDesc.SampleDesc = SingleSample;
+
+		ID3D11Texture2D *pSingleSampleTexture;
+		d3d11Device->CreateTexture2D(&TexDesc, NULL, &pSingleSampleTexture);
+		//DXUT_SetDebugName(pSingleSampleTexture, "Single Sample");
+
+		pMainContext->ResolveSubresource(pSingleSampleTexture, 0, RTTexture, 0, TexDesc.Format);
+
+
+		////////////////////////////////////////////////////
+		// Copy RT into STAGING texture
+		pMainContext->CopyResource(g_pCaptureTexture, pSingleSampleTexture);
+
+		//hr = D3DX11SaveTextureToFile(pMainContext, g_pCaptureTexture, D3DX11_IFF_BMP, www.c_str());
+
+		SAFE_RELEASE(pSingleSampleTexture);
+
+	}
+	else
+	{
+		// Single sample case
+
+		// Copy RT into STAGING texture
+		pMainContext->CopyResource(g_pCaptureTexture, pRTResource);
+
+		////////////////////////////////
+		// Copy image into GDI drawing texture
+		//lImmediateContext->CopyResource(g_pCaptureTexture, lAcquiredDesktopImage);
+		//lAcquiredDesktopImage.Release();
+		//lDeskDupl->ReleaseFrame();
+
+		// Copy GPU Resource to CPU
+		D3D11_TEXTURE2D_DESC desc;
+		g_pCaptureTexture->GetDesc(&desc);
+		D3D11_MAPPED_SUBRESOURCE resource;
+		UINT subresource = D3D11CalcSubresource(0, 0, 0);
+		pMainContext->Map(g_pCaptureTexture, subresource, D3D11_MAP_READ, 0, &resource);
+
+		UINT lBmpRowPitch = TexDesc.Width * 4;
+		//std::unique_ptr<BYTE> pBuf(new BYTE[lBmpRowPitch*desc.Height]);
+		UCHAR* pBuf = new UCHAR[lBmpRowPitch*desc.Height];
+
+		BYTE* srcData = reinterpret_cast<BYTE*>(resource.pData);
+		BYTE* dstData = pBuf + lBmpRowPitch*(desc.Height - 1);
+		UINT minRowPitch = std::min<UINT>(lBmpRowPitch, resource.RowPitch);
+
+		for (size_t h = 0; h < TexDesc.Height; ++h)
+		{
+			memcpy_s(dstData, lBmpRowPitch, srcData, minRowPitch);
+			srcData += resource.RowPitch;
+			dstData -= lBmpRowPitch;
+		}
+
+		pMainContext->Unmap(g_pCaptureTexture, subresource);
+		long g_captureSize = minRowPitch*desc.Height;
+		UCHAR* g_iMageBuffer = new UCHAR[g_captureSize];
+		//g_iMageBuffer = (UCHAR*)malloc(g_captureSize);
+
+		//Copying to UCHAR buffer 
+		memcpy(g_iMageBuffer, (void*)pBuf, g_captureSize);
+		//BGRA 格式, 且图像是倒的
+
+		//ofstream fout("strCaptureFilename.raw.bmp", ios::out | ios::binary);
+		//fout.write((char*)g_iMageBuffer, g_captureSize);
+		//fout.close();
+
+
+		////////////////////////////////
+
+		//hr = D3DX11SaveTextureToFile(pMainContext, g_pCaptureTexture, D3DX11_IFF_BMP, www.c_str());
+		delete[] (UCHAR*) pBuf;
+		delete[] (UCHAR*) g_iMageBuffer;
+	}
+	DWORD dwErr = GetLastError();
+	SAFE_RELEASE(RTTexture);
+
+	SAFE_RELEASE(pRTResource);
+	SAFE_RELEASE(g_pCaptureTexture);
+}
 
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
@@ -2334,10 +2559,19 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		hr = GenerateShader(CCheat::pDevice, &psGreen, 0.0f, 0.5f, 0.0f);
 	if (!psBlue)
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
-	if (!psObscured)
-		hr = GenerateShader(CCheat::pDevice, &psObscured, 0.4f, 0.4f, 0.25f);
-	if (!psd)
-		hr = GenerateShader(CCheat::pDevice, &psd, 0.94f, 0.78f, 0.01f);
+	if (!psBack)
+		hr = GenerateShader(CCheat::pDevice, &psBack, 0.4f, 0.4f, 0.25f);
+
+	RGB3 ccc;
+	ccc.r = 0.94f; 
+	ccc.g = 0.78f;
+	ccc.b = 0.01f;
+
+	//dFrontColor = round(ccc.r*255)*0x10000 +
+	//	round(ccc.g * 255) * 0x100 +
+	//	round(ccc.b * 255) ;
+	if (!psFront)
+		hr = GenerateShader(CCheat::pDevice, &psFront, ccc.r, ccc.g, ccc.b);
 
 	if (S_OK == hr)
 	{
@@ -2345,21 +2579,29 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
 	//call before you draw
-	//CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
+	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 	//draw
+	if (pFontWrapper)
+	{
+		//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
+		//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
+
+		//std::string sData = std::to_string(iStride);
+		//sData += "_";
+		//sData += std::to_string(iIndexCount);
+		//
+		//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
+		//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
+	}
+
+	//wstring www = L"Stride=";
+	//www += std::to_wstring(g_iCurStride);
+	//www += L" IndexCount=";
+	//www += std::to_wstring(g_iCurIndexCount);
 	//if (pFontWrapper)
 	//{
-	//	//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
-	//	//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
-
-	//	//std::string sData = std::to_string(iStride);
-	//	//sData += "_";
-	//	//sData += std::to_string(iIndexCount);
-	//	//
-	//	//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
-	//	//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
+	//	pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
 	//}
-
 
 	//draw esp
 	//if (AimEspInfo.size() != NULL)
@@ -2452,7 +2694,19 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		}
 	}
 	*/
+	//ID3D11Texture2D *BackBuffer110;
+	//hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&BackBuffer110);
 
+	//std::wstring wwwW = L"strCaptureFilename_";
+	//wwwW += std::to_wstring(iFrames);
+	//wwwW += L".PNG";
+
+	//if (pMainContext)
+	//{
+	//	hr = D3DX11SaveTextureToFile(pMainContext, BackBuffer110, D3DX11_IFF_PNG, wwwW.c_str());
+	//}
+
+CaptureFrame();
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
 	{
@@ -2478,27 +2732,33 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (bVideo4Rec_SCROL)
 	{
-		if (!IsCenterRed())
-		{
-			if (lstAllStides.size() > 0)
+		Sleep(50);//等渲染的延迟
+		if (!IsCenterRed()) 
+		{//当前帧，中心不是红色
+			if (lstAllStrides.size() > 0)
 			{
-				if (iPos >= lstAllStides.size())
+				nnnn:
+				if (iPos >= lstAllStrides.size())
 				{
 					iPos = 0;
 				}
 
-				iiiii = lstAllStides.at(iPos);
-				iStride = iiiii % 100;
-				iIndexCount = iiiii / 100;;
-
+				iiiii = lstAllStrides.at(iPos);
+				g_iCurStride = iiiii % 100;
+				g_iCurIndexCount = iiiii / 100;;
 				//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
 				iPos++;
+				if (!IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
+				{
+					goto nnnn;
+				}
 			}
 		}
-		else if (IsNotIn_ExcludeList(iStride, iIndexCount)) //IsCenterRed()
-		{
+		else if (IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount)) //IsCenterRed()
+		{//当前帧，中心是红色，且不在排除列表内
 			bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
-			Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", iStride, iIndexCount, iPos, lstAllStides.size(), iiiii);
+			keybd_event(VK_SNAPSHOT, 0, 0, 0);
+			Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size(), iiiii);
 
 			ofstream outfile;
 			outfile.open(g_NotRedListFName.c_str(), ios::app);
@@ -2515,7 +2775,14 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 				InitListFromFiles();
 			}
 		}
-		Helpers::LogFormat("hkD3D11Present 一帧+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", iStride, iIndexCount, iPos, lstAllStides.size());
+		else
+		{
+			bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
+			InitListFromFiles();
+			Helpers::LogFormat("hkD3D11Present !!!!!!错误 iStride=%d iIndexCount=%d ", g_iCurStride, g_iCurIndexCount);
+		}
+
+		Helpers::LogFormat("hkD3D11Present 一帧查红色结束+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size());
 	}
 
 	if (bHideOne)
@@ -2524,7 +2791,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		ofstream outfile;
 
 		outfile.open("..\\AllStride.txt", ios::app);
-		for (int i=0;i<lstAllStides.size();i++)
+		for (int i=0;i<lstAllStrides.size();i++)
 		{
 			//if ((lstAllStides.at(i) % 100) == 12)
 			{
@@ -2534,25 +2801,25 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 				}
 				else
 				{
-					outfile << lstAllStides.at(i) << std::endl;
+					outfile << lstAllStrides.at(i) << std::endl;
 				}
 			}
 		}
 		if (outfile)		outfile.close();
 
 
-		if (lstAllStides.size() > 0)
+		if (lstAllStrides.size() > 0)
 		{
-			if (iPosHide >= lstAllStides.size())
+			if (iPosHide >= lstAllStrides.size())
 			{
 				iPosHide = 0;
 			}
 
-			iiiii = lstAllStides.at(iPosHide);
-			iStride = iiiii % 100;
-			iIndexCount = iiiii / 100;;
+			iiiii = lstAllStrides.at(iPosHide);
+			g_iCurStride = iiiii % 100;
+			g_iCurIndexCount = iiiii / 100;;
 
-			Helpers::LogFormat("hkD3D11Present bHideOne i=%d/%d (%d-%d) %ld", iPosHide, lstAllStides.size(), iStride, iIndexCount, lstAllStides.at(iPosHide));
+			Helpers::LogFormat("hkD3D11Present bHideOne i=%d/%d (%d-%d) %ld", iPosHide, lstAllStrides.size(), g_iCurStride, g_iCurIndexCount, lstAllStrides.at(iPosHide));
 			iPosHide++;
 		}
 	}
@@ -2767,6 +3034,8 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 {
 	//cout << " ===================================DrawIdxed_Or_Instanced:" << "\n";
 	//DWORD bgtime = timeGetTime();
+
+	pMainContext = pContext;
 	if (!bCheat)
 	{
 		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
@@ -2904,12 +3173,12 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
 	{
 		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
-		if (find(lstAllStides.begin(), lstAllStides.end(), IndexCountStride) != lstAllStides.end()) {
+		if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
 			//找到
 		}
 		else {
 			//没找到
-			lstAllStides.push_back(IndexCountStride);
+			lstAllStrides.push_back(IndexCountStride);
 			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
 		}
 	}
@@ -2921,12 +3190,12 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	if (bVideo4Rec_SCROL)
 	{
-		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount) &&
-			IsNotIn_ExcludeList(iStride, iIndexCount))
+		if ((Stride == g_iCurStride) && (IndexCountPerInstance == g_iCurIndexCount) &&
+			IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
-				Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
+				Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", g_iCurStride, g_iCurIndexCount);
 				pContext->PSSetShader(psRed, NULL, NULL);
 			}
 		}
@@ -2937,11 +3206,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	if (bHideOne)
 	{
-		if ((Stride == iStride) && (IndexCountPerInstance == iIndexCount))
+		if ((Stride == g_iCurStride) && (IndexCountPerInstance == g_iCurIndexCount))
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
-				Helpers::LogFormat("bHideOne==> iStride=[%d] iIndexCount=[[ %d ]]", iStride, iIndexCount);
+				Helpers::LogFormat("bHideOne==> iStride=[%d] iIndexCount=[[ %d ]]", g_iCurStride, g_iCurIndexCount);
 				//pContext->PSSetShader(psRed, NULL, NULL);
 			}
 		}
@@ -3059,16 +3328,16 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 						//BBB//////////////////////////////////////////////
 							pContext->RSSetState(CWcullMode);
 						//pContext->RSSetState(RSCullSolid);
-							pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+							pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
 						pContext->OMSetDepthStencilState(DSLess, 0);
 						GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
 						{
 								//pContext->RSSetState(RSCullWireFrame);
-							if (b2DShader &&psd)
+							if (b2DShader &&psFront)
 							{
 								{
-									pContext->PSSetShader(psd, NULL, NULL); //设为明亮色
+									pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
 								}
 							}
 							else

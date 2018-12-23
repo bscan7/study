@@ -204,6 +204,11 @@ void SetDepthStencilState(eDepthState aState)
 }
 
 //==========================================================================================================================
+struct RGB3
+{
+	float r, g, b/* = 1.0f*/;
+};
+
 
 //w2s stuff
 struct Vec2

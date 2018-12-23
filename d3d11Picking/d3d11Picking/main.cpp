@@ -28,6 +28,13 @@
 #include <istream>
 #include <string>
 #include <d3dcompiler.h>
+#include <memory>
+#include <algorithm>
+
+#include <iostream>  
+
+using namespace std;
+
 
 //Global Declarations - Interfaces//
 IDXGISwapChain* SwapChain;
@@ -336,6 +343,11 @@ int WINAPI WinMain(HINSTANCE hInstance,	//Main windows function
 	LPSTR lpCmdLine,
 	int nShowCmd)
 {
+	std::wstring www = L"Stride=";
+	www += std::to_wstring(nShowCmd);
+	www += L" IndexCount=";
+	www += std::to_wstring(nShowCmd);
+
 	char ppp[256] = { 0 };
 	TCHAR PP[256] = L"bscan7";
 	void* xxx = PP;
@@ -456,7 +468,8 @@ bool InitializeDirect3d11App(HINSTANCE hInstance)
 	bufferDesc.Height = Height;
 	bufferDesc.RefreshRate.Numerator = 60;
 	bufferDesc.RefreshRate.Denominator = 1;
-	bufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	//bufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	bufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	bufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
@@ -2642,6 +2655,140 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 	//Helpers::Log("Done GenerateShader¡£¡£¡£");
 	return S_OK;
 }
+
+#define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = nullptr; } }
+// Capture texture
+static ID3D11Texture2D*    g_pCaptureTexture = NULL;
+static int ii = 0;
+//--------------------------------------------------------------------------------------
+// Helper function to capture a frame and dump it to disk 
+//--------------------------------------------------------------------------------------
+void CaptureFrame()
+{
+	std::wstring www = L"strCaptureFilename_";
+	www += std::to_wstring(ii++);
+	www += L".bmp";
+
+	HRESULT hr = 0;
+	// Retrieve RT resource
+	ID3D11Resource *pRTResource;
+	renderTargetView->GetResource(&pRTResource);
+
+	// Retrieve a Texture2D interface from resource
+	ID3D11Texture2D* RTTexture;
+	pRTResource->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&RTTexture);
+
+	if (g_pCaptureTexture == NULL)
+	{
+		// We need a screen-sized STAGING resource for frame capturing
+		D3D11_TEXTURE2D_DESC TexDesc;
+		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+		TexDesc.Width = Width;
+		TexDesc.Height = Height;
+		//TexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		TexDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+		TexDesc.SampleDesc = SingleSample;
+		TexDesc.MipLevels = 1;
+		TexDesc.Usage = D3D11_USAGE_STAGING;
+		TexDesc.MiscFlags = 0;
+		TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+		TexDesc.BindFlags = 0;
+		TexDesc.ArraySize = 1;
+		(d3d11Device->CreateTexture2D(&TexDesc, NULL, &g_pCaptureTexture));
+//			DXUT_SetDebugName(g_pCaptureTexture, "Capture");
+	}
+	// Check if RT is multisampled or not
+	D3D11_TEXTURE2D_DESC    TexDesc;
+	RTTexture->GetDesc(&TexDesc);
+	if (TexDesc.SampleDesc.Count > 1)
+	{
+		// RT is multisampled, need resolving before dumping to disk
+
+		// Create single-sample RT of the same type and dimensions
+		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+		TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+		TexDesc.MipLevels = 1;
+		TexDesc.Usage = D3D11_USAGE_DEFAULT;
+		TexDesc.CPUAccessFlags = 0;
+		TexDesc.BindFlags = 0;
+		TexDesc.SampleDesc = SingleSample;
+
+		ID3D11Texture2D *pSingleSampleTexture;
+		d3d11Device->CreateTexture2D(&TexDesc, NULL, &pSingleSampleTexture);
+		//DXUT_SetDebugName(pSingleSampleTexture, "Single Sample");
+
+		d3d11DevCon->ResolveSubresource(pSingleSampleTexture, 0, RTTexture, 0, TexDesc.Format);
+
+		// Copy RT into STAGING texture
+		d3d11DevCon->CopyResource(g_pCaptureTexture, pSingleSampleTexture);
+
+		hr = D3DX11SaveTextureToFile(d3d11DevCon, g_pCaptureTexture, D3DX11_IFF_JPG, www.c_str());
+
+		SAFE_RELEASE(pSingleSampleTexture);
+
+	}
+	else
+	{
+		// Single sample case
+
+		// Copy RT into STAGING texture
+		d3d11DevCon->CopyResource(g_pCaptureTexture, pRTResource);
+////////////////////////////////
+		// Copy image into GDI drawing texture
+		//lImmediateContext->CopyResource(g_pCaptureTexture, lAcquiredDesktopImage);
+		//lAcquiredDesktopImage.Release();
+		//lDeskDupl->ReleaseFrame();
+
+		// Copy GPU Resource to CPU
+		D3D11_TEXTURE2D_DESC desc;
+		g_pCaptureTexture->GetDesc(&desc);
+		D3D11_MAPPED_SUBRESOURCE resource;
+		UINT subresource = D3D11CalcSubresource(0, 0, 0);
+		d3d11DevCon->Map(g_pCaptureTexture, subresource, D3D11_MAP_READ, 0, &resource);
+
+		UINT lBmpRowPitch = TexDesc.Width * 4;
+		std::unique_ptr<BYTE> pBuf(new BYTE[lBmpRowPitch*desc.Height]);
+
+		BYTE* srcData = reinterpret_cast<BYTE*>(resource.pData);
+		BYTE* dstData = pBuf.get() + lBmpRowPitch*(desc.Height - 1);
+		UINT minRowPitch = std::min<UINT>(lBmpRowPitch, resource.RowPitch);
+
+		for (size_t h = 0; h < TexDesc.Height; ++h)
+		{
+			memcpy_s(dstData, lBmpRowPitch, srcData, minRowPitch);
+			srcData += resource.RowPitch;
+			dstData -= lBmpRowPitch;
+		}
+
+		d3d11DevCon->Unmap(g_pCaptureTexture, subresource);
+		long g_captureSize = minRowPitch*desc.Height;
+		UCHAR* g_iMageBuffer = new UCHAR[g_captureSize];
+		//g_iMageBuffer = (UCHAR*)malloc(g_captureSize);
+
+		//Copying to UCHAR buffer 
+		memcpy(g_iMageBuffer, (void*)pBuf.get(), g_captureSize);
+		ofstream fout("strCaptureFilename.raw.bmp", ios::out | ios::binary);
+
+		//for (DWORD i = ((g_captureSize) - 1); i >= 0; i--)
+		//{
+		//	fout.put(g_iMageBuffer[i]);
+		//}
+			fout.write((char*)g_iMageBuffer, g_captureSize);
+		fout.close();
+
+
+////////////////////////////////
+
+		hr = D3DX11SaveTextureToFile(d3d11DevCon, g_pCaptureTexture, D3DX11_IFF_BMP, www.c_str());
+	}
+	DWORD dwErr = GetLastError();
+	SAFE_RELEASE(RTTexture);
+
+	SAFE_RELEASE(pRTResource);
+}
+
+
 ID3D11PixelShader* psd = NULL;
 ID3D11PixelShader* psObscured = NULL;
 ID3D11PixelShader* psd2 = NULL;
@@ -2920,8 +3067,57 @@ void DrawScene()
 
 	//RenderText(L"FPS: ", fps);
 
+	CaptureFrame();
+
+	//ID3D11Texture2D *BackBuffer110;
+	//hr = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&BackBuffer110);
+
+	//std::wstring www = L"strCaptureFilename_";
+	//www += std::to_wstring(ii++);
+	//www += L".PNG";
+
+	//hr = D3DX11SaveTextureToFile(d3d11DevCon, BackBuffer110, D3DX11_IFF_PNG, www.c_str());
+	//hr = D3DX11SaveTextureToFileA(d3d11DevCon, BackBuffer110, D3DX11_IFF_BMP, "ss.bmp");
+	//hr = D3DX11SaveTextureToFileA(d3d11DevCon, BackBuffer110, D3DX11_IFF_JPG, "ss.jpg");
+	//hr = D3DX11SaveTextureToFile(d3d11DevCon, BackBuffer110, D3DX11_IFF_JPG, www.c_str());
+
+	//ID3D11Resource* pSurface = nullptr;
+	//renderTargetView->GetResource(&pSurface);
+
+	//D3D11_RENDER_TARGET_VIEW_DESC pDesc;
+	//renderTargetView->GetDesc(&pDesc);
+	//if (pSurface)
+	//{
+	//	D3D11_TEXTURE2D_DESC desc;
+	//	ZeroMemory(&desc, sizeof(desc));
+	//	desc.ArraySize = 1;
+	//	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//	//desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	//	desc.Width = Width;
+	//	desc.Height = Height;
+	//	desc.MipLevels = 1;
+	//	desc.SampleDesc.Count = 1;
+	//	desc.SampleDesc.Quality = 0;
+	//	desc.BindFlags = 0;
+	//	desc.CPUAccessFlags = 0;
+	//	desc.Usage = D3D11_USAGE_DEFAULT;
+
+	//	ID3D11Texture2D* pTexture = nullptr;
+	//	hr = d3d11Device->CreateTexture2D(&desc, nullptr, &pTexture);
+	//	if (pTexture)
+	//	{
+	//		d3d11DevCon->CopyResource(pTexture, pSurface);
+	//		hr = D3DX11SaveTextureToFileA(d3d11DevCon, pTexture, D3DX11_IFF_PNG, "ss.png");
+	//		hr = D3DX11SaveTextureToFileA(d3d11DevCon, pTexture, D3DX11_IFF_BMP, "ss.bmp");
+	//		hr = D3DX11SaveTextureToFileA(d3d11DevCon, pTexture, D3DX11_IFF_JPG, "ss.jpg");
+	//		pTexture->Release();
+	//	}
+	//	pSurface->Release();
+	//}
+
 	//Present the backbuffer to the screen
 	SwapChain->Present(0, 0);
+
 }
 
 int messageloop(){
