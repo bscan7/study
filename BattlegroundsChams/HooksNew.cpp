@@ -1998,7 +1998,7 @@ S_OK*/
 //	CCheat::pContext->OMSetDepthStencilState(myDepthStencilStates[aState], 1);
 //}
 
-#define SHOOT_AREA  7
+#define SHOOT_AREA_RADII  7
 
 BOOL SaveDcToBMP(BYTE *pBmpBuffer, 
 	HBITMAP hbitmapSave, 
@@ -2113,7 +2113,7 @@ Exit:
 static BOOL bDoneOnShoot = false;
 UINT iBmpNamePreFix = 0;
 
-bool IsCenterRed()
+bool IsCenterRed_Old()//DC截屏，效率差
 //lpRect 代表选定区域
 {
 	bool bOK = false;
@@ -2128,10 +2128,10 @@ bool IsCenterRed()
 	int iCenterX = iW / 2 + g_lpRect.left;
 	int iCenterY = iH /2 + g_lpRect.top;
 
-	lpRect.top = iCenterY - SHOOT_AREA;
-	lpRect.bottom = iCenterY + SHOOT_AREA;
-	lpRect.left = iCenterX - SHOOT_AREA;
-	lpRect.right = iCenterX + SHOOT_AREA;
+	lpRect.top = iCenterY - SHOOT_AREA_RADII;
+	lpRect.bottom = iCenterY + SHOOT_AREA_RADII;
+	lpRect.left = iCenterX - SHOOT_AREA_RADII;
+	lpRect.right = iCenterX + SHOOT_AREA_RADII;
 
 	HDC       hScrDC, hMemDC;
 	// 屏幕和内存设备描述表
@@ -2276,11 +2276,28 @@ static ID3D11Texture2D* g_pCaptureTexture = NULL;
 //--------------------------------------------------------------------------------------
 // Helper function to capture a frame and dump it to disk 
 //--------------------------------------------------------------------------------------
-void CaptureFrame()
+BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 {
-	std::wstring www = L"strCaptureFilename_";
-	www += std::to_wstring(iFrames);
-	www += L".bmp";
+	//::GetWindowRect(g_hWnd, &g_lpRect);
+	//RECT lpRect;
+	//int iW = g_lpRect.right - g_lpRect.left;
+	//int iH = g_lpRect.bottom - g_lpRect.top;
+	//int iCenterX = iW / 2 + g_lpRect.left;
+	//int iCenterY = iH / 2 + g_lpRect.top;
+
+	//lpRect.top = iCenterY - SHOOT_AREA_RADII;
+	//lpRect.bottom = iCenterY + SHOOT_AREA_RADII;
+	//lpRect.left = iCenterX - SHOOT_AREA_RADII;
+	//lpRect.right = iCenterX + SHOOT_AREA_RADII;
+
+	BYTE* outBuffer = NULL;
+	std::wstring wsBMP_Filename = L"strCaptureFilename_";
+	wsBMP_Filename += std::to_wstring(iFrames);
+	wsBMP_Filename += L".bmp";
+
+	std::string wsRAW_Filename = "strCaptureFilename_";
+	wsRAW_Filename += std::to_string(iFrames);
+	wsRAW_Filename += ".raw.bmp";
 
 	HRESULT hr = 0;
 	ID3D11Device *d3d11Device;
@@ -2297,26 +2314,6 @@ void CaptureFrame()
 	ID3D11Texture2D* RTTexture;
 	pRTResource->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&RTTexture);
 
-	//if (g_pCaptureTexture == NULL)
-	//{
-	//	// We need a screen-sized STAGING resource for frame capturing
-	//	D3D11_TEXTURE2D_DESC TexDesc;
-	//	DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
-	//	TexDesc.Width = 1280;
-	//	TexDesc.Height = 720;
-	//	//TexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	//	TexDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-	//	TexDesc.SampleDesc = SingleSample;
-	//	TexDesc.MipLevels = 1;
-	//	TexDesc.Usage = D3D11_USAGE_STAGING;
-	//	TexDesc.MiscFlags = 0;
-	//	TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-	//	TexDesc.BindFlags = 0;
-	//	TexDesc.ArraySize = 1;
-	//	(d3d11Device->CreateTexture2D(&TexDesc, NULL, &g_pCaptureTexture));
-	//	//			DXUT_SetDebugName(g_pCaptureTexture, "Capture");
-	//}
 	// Check if RT is multisampled or not
 	D3D11_TEXTURE2D_DESC    TexDesc;
 	RTTexture->GetDesc(&TexDesc);
@@ -2343,12 +2340,10 @@ void CaptureFrame()
 		//			DXUT_SetDebugName(g_pCaptureTexture, "Capture");
 	}
 
-	if (TexDesc.SampleDesc.Count > 1)
+	if (TexDesc.SampleDesc.Count > 1)// RT is multisampled, need resolving before dumping to disk
 	{
-		// RT is multisampled, need resolving before dumping to disk
-
 		// Create single-sample RT of the same type and dimensions
-		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };
+		DXGI_SAMPLE_DESC SingleSample = { 1, 0 };//？？？？？？
 		TexDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 		TexDesc.MipLevels = 1;
 		TexDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -2362,30 +2357,27 @@ void CaptureFrame()
 
 		pMainContext->ResolveSubresource(pSingleSampleTexture, 0, RTTexture, 0, TexDesc.Format);
 
-
 		////////////////////////////////////////////////////
 		// Copy RT into STAGING texture
 		pMainContext->CopyResource(g_pCaptureTexture, pSingleSampleTexture);
-
-		//hr = D3DX11SaveTextureToFile(pMainContext, g_pCaptureTexture, D3DX11_IFF_BMP, www.c_str());
-
 		SAFE_RELEASE(pSingleSampleTexture);
-
+		//hr = D3DX11SaveTextureToFile(pMainContext, g_pCaptureTexture, D3DX11_IFF_BMP, www.c_str());
 	}
-	else
+	else// Single sample case
 	{
-		// Single sample case
-
 		// Copy RT into STAGING texture
 		pMainContext->CopyResource(g_pCaptureTexture, pRTResource);
+	}
 
+
+	{
 		////////////////////////////////
-		// Copy image into GDI drawing texture
-		//lImmediateContext->CopyResource(g_pCaptureTexture, lAcquiredDesktopImage);
-		//lAcquiredDesktopImage.Release();
-		//lDeskDupl->ReleaseFrame();
+	// Copy image into GDI drawing texture
+	//lImmediateContext->CopyResource(g_pCaptureTexture, lAcquiredDesktopImage);
+	//lAcquiredDesktopImage.Release();
+	//lDeskDupl->ReleaseFrame();
 
-		// Copy GPU Resource to CPU
+	// Copy GPU Resource to CPU
 		D3D11_TEXTURE2D_DESC desc;
 		g_pCaptureTexture->GetDesc(&desc);
 		D3D11_MAPPED_SUBRESOURCE resource;
@@ -2394,14 +2386,14 @@ void CaptureFrame()
 
 		UINT lBmpRowPitch = TexDesc.Width * 4;
 		//std::unique_ptr<BYTE> pBuf(new BYTE[lBmpRowPitch*desc.Height]);
-		UCHAR* pBuf = new UCHAR[lBmpRowPitch*desc.Height];
+		BYTE* pBuf = new BYTE[lBmpRowPitch*desc.Height];
 
 		BYTE* srcData = reinterpret_cast<BYTE*>(resource.pData);
 		BYTE* dstData = pBuf + lBmpRowPitch*(desc.Height - 1);
 		UINT minRowPitch = std::min<UINT>(lBmpRowPitch, resource.RowPitch);
 
 		for (size_t h = 0; h < TexDesc.Height; ++h)
-		{
+		{//GPU 16字节对齐的原因，实际图像需要按行复制，且只复制前面需要的数据长度
 			memcpy_s(dstData, lBmpRowPitch, srcData, minRowPitch);
 			srcData += resource.RowPitch;
 			dstData -= lBmpRowPitch;
@@ -2409,29 +2401,235 @@ void CaptureFrame()
 
 		pMainContext->Unmap(g_pCaptureTexture, subresource);
 		long g_captureSize = minRowPitch*desc.Height;
-		UCHAR* g_iMageBuffer = new UCHAR[g_captureSize];
-		//g_iMageBuffer = (UCHAR*)malloc(g_captureSize);
 
-		//Copying to UCHAR buffer 
-		memcpy(g_iMageBuffer, (void*)pBuf, g_captureSize);
+		DWORD dOutBufLen = iRadii * 2 * iRadii * 2 * 4;
+		int nW = iRadii * 2;
+		int hLeft = TexDesc.Width / 2 - iRadii;
+
+		int hTop = TexDesc.Height/2 - iRadii;
+		int hBottom = TexDesc.Height / 2 + iRadii;
+
+		if (dOutBufLen == 0)
+		{
+			dOutBufLen = g_captureSize;
+			hTop = 0;
+			hBottom = TexDesc.Height;
+			hLeft = 0;
+			nW = TexDesc.Width;
+		}
+		outBuffer = new BYTE[dOutBufLen];
+		memset(outBuffer, 0, dOutBufLen);
+		//Copying to BYTE buffer 
+		//memcpy(outBuffer, (void*)pBuf, g_captureSize);
+		Helpers::LogFormat("----------------- = < %d >,< %d >, ", hTop, hBottom);
+		for (size_t h = hTop; h < hBottom; ++h)
+		{
+			BYTE* aa = outBuffer + ((h - hTop)*nW * 4);
+			BYTE* bb = (BYTE*)(pBuf + (h*minRowPitch) + (hLeft * 4));
+			Helpers::LogFormat("---------memcpy (0x%08x ,0x%08x, %d), %d, %d, %d, %d, %d, %d, %d, %d", aa, bb, nW * 4,
+				*(BYTE*)(bb),
+				*(BYTE*)(bb + 1),
+				*(BYTE*)(bb + 2),
+				*(BYTE*)(bb + 3),
+				*(BYTE*)(bb + 4),
+				*(BYTE*)(bb + 5),
+				*(BYTE*)(bb + 6),
+				*(BYTE*)(bb + 7)
+			);
+			memcpy(aa, bb, nW*4);
+			Helpers::LogFormat("---------memcpy2(0x%08x ,0x%08x, %d), %d, %d, %d, %d, %d, %d, %d, %d", aa, bb, nW * 4,
+				*(BYTE*)(aa),
+				*(BYTE*)(aa + 1), 
+				*(BYTE*)(aa + 2),
+				*(BYTE*)(aa + 3),
+				*(BYTE*)(aa + 4),
+				*(BYTE*)(aa + 5),
+				*(BYTE*)(aa + 6),
+				*(BYTE*)(aa + 7)
+			);
+		}
+		ofstream fout( ( wsRAW_Filename + "00.bmp").c_str(), ios::out | ios::binary);
+		fout.write((char*)outBuffer, (dOutBufLen));
+		fout.close();
+
 		//BGRA 格式, 且图像是倒的
 
-		//ofstream fout("strCaptureFilename.raw.bmp", ios::out | ios::binary);
-		//fout.write((char*)g_iMageBuffer, g_captureSize);
-		//fout.close();
+		if (bToFile)
+		{
+			ofstream fout(wsRAW_Filename.c_str(), ios::out | ios::binary);
+			fout.write((char*)pBuf, g_captureSize);
+			fout.close();
 
+			hr = D3DX11SaveTextureToFile(pMainContext, g_pCaptureTexture, D3DX11_IFF_BMP, wsBMP_Filename.c_str());
+		}
 
 		////////////////////////////////
 
-		//hr = D3DX11SaveTextureToFile(pMainContext, g_pCaptureTexture, D3DX11_IFF_BMP, www.c_str());
-		delete[] (UCHAR*) pBuf;
-		delete[] (UCHAR*) g_iMageBuffer;
+		delete[] (BYTE*) pBuf;
+		//delete[] (BYTE*) outBuffer;
 	}
 	DWORD dwErr = GetLastError();
 	SAFE_RELEASE(RTTexture);
 
 	SAFE_RELEASE(pRTResource);
 	SAFE_RELEASE(g_pCaptureTexture);
+	return outBuffer;
+}
+
+bool IsCenterRed()
+{//lpRect 代表选定区域
+	bool bOK = false;
+	UINT * ptPixels = nullptr;
+
+	//捕获屏幕选定区域
+	ptPixels = (UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
+
+	//对内存进行颜色比对
+	//// 选定区域坐标
+	int       nWidth = SHOOT_AREA_RADII*2;
+	int       nHeight = SHOOT_AREA_RADII * 2;
+	Helpers::LogFormat(" ptPixels = 0x%08x  nWidth %d, nHeight %d", ptPixels, nWidth, nHeight);
+
+	//return;
+	//Helpers::Log("==============AutoShootIfCenter");
+	//Helpers::Log("IsCenterRed==============...0");
+
+	//HDC       hScrDC, hMemDC;
+	//// 屏幕和内存设备描述表
+	//HBITMAP    hBitmap, hOldBitmap;
+	//// 位图句柄
+	//int       nX, nY, nX2, nY2;
+
+	////Helpers::Log("IsCenterRed==============...1");
+	//// 确保选定区域不为空矩形
+	//if (IsRectEmpty(&lpRect))
+	//	return false;
+	////为屏幕创建设备描述表
+	//hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
+
+	////Helpers::Log("IsCenterRed==============...2");
+
+	////为屏幕设备描述表创建兼容的内存设备描述表
+	//hMemDC = CreateCompatibleDC(hScrDC);
+	//// 获得选定区域坐标
+	//nX = lpRect.left;
+	//nY = lpRect.top;
+	//nX2 = lpRect.right;
+	//nY2 = lpRect.bottom;
+
+
+	////确保选定区域是可见的
+	//if (nX < 0)
+	//	nX = 0;
+	//if (nY < 0)
+	//	nY = 0;
+	////if (nX2 > m_xScreen)
+	////	nX2 = m_xScreen;
+	////if (nY2 > m_yScreen)
+	////	nY2 = m_yScreen;
+	//nWidth = nX2 - nX;
+	//nHeight = nY2 - nY;
+	//// 创建一个与屏幕设备描述表兼容的位图
+	////hBitmap = CreateCompatibleBitmap
+	////(hScrDC, nWidth, nHeight);
+
+	//// 初始化BITMAPINFO信息，以便使用CreateDIBSection
+	//BITMAPINFO RGB32BitsBITMAPINFO;
+	//ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
+	//RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	//RGB32BitsBITMAPINFO.bmiHeader.biWidth = nWidth;
+	//RGB32BitsBITMAPINFO.bmiHeader.biHeight = nHeight;
+	//RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
+	//RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
+
+	//HBITMAP DirectBitmap = CreateDIBSection(hMemDC,
+	//	(BITMAPINFO *)&RGB32BitsBITMAPINFO,
+	//	DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
+
+	////Helpers::Log("IsCenterRed==============...3");
+
+	//// 把新位图选到内存设备描述表中
+	//hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
+	//// 把屏幕设备描述表拷贝到内存设备描述表中
+	////if (bSave)
+	////{
+	////	CDC dcCompatible;
+	////	dcCompatible.CreateCompatibleDC(CDC::FromHandle(hMemDC));
+	////	dcCompatible.SelectObject(m_pBitmap);
+
+	////	BitBlt(hMemDC, 0, 0, nWidth, nHeight,
+	////		dcCompatible, nX, nY, SRCCOPY);
+	////}
+	////else
+	//{
+	//	BitBlt(hMemDC, 0, 0, nWidth, nHeight,
+	//		hScrDC, nX, nY, SRCCOPY);
+	//}
+
+	////Helpers::Log("IsCenterRed==============...4");
+	//// 转换 COLORREF 为 RGB  
+	////cOldColor = COLORREF2RGB(cOldColor);
+	////cNewColor = COLORREF2RGB(cNewColor);
+	//// 替换颜色 
+	//string sFName = "..\\tmp\\" + to_string(iBmpNamePreFix++) + "_" + to_string(timeGetTime()) + "_Center_";
+	//if (ptPixels)
+	//	SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName + ".bmp");
+
+	///*Helpers::LogFormat("ptPixels[0] = %08x ", ptPixels[0]);*/
+	//ofstream outfile;
+	//outfile.open((sFName + ".raw").c_str(), ios::app);
+
+	for (int i = ((nWidth * nHeight) - 1); i >= 0; i--)
+	{
+		if (!ptPixels)
+		{
+			//Helpers::Log("IsCenterRed==============...5555555555555555555");
+			break;
+		}
+		//Helpers::LogFormat(" 0x%08x", ptPixels[i]);
+		//if (outfile)
+		//{
+		//	outfile << std::hex << std::setw(8) << std::setfill('0') << ptPixels[i] << " ";
+		//	if (i % nWidth == 0)
+		//	{
+		//		outfile << std::endl;
+		//	}
+		//}
+		//ptPixels[i]; //0xff 29 27 21 红绿蓝
+		//if (ptPixels[i] == 0xff800000)
+
+		//Helpers::LogFormat("%08x ", ptPixels[i]);
+		if ( /*(ptPixels[i] == 0xff000080)
+			 ||*/(ptPixels[i] % 0x1000000 == 0x800000)
+			|| (ptPixels[i] % 0x1000000 == 0x790000)
+			|| (ptPixels[i] % 0x1000000 == 0x810000)
+			)
+		{
+			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
+			Helpers::LogFormat("==============+-+-+-+- 射击射击射击 0x%08x", ptPixels[i]);
+			bOK = true;
+
+			break;
+		}
+		//	ptPixels[i] = cNewColor;
+	}
+	//if (outfile)
+	//{
+	//	outfile.close();
+	//}
+
+	//hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+	////得到屏幕位图的句柄
+	////清除 
+	//DeleteDC(hScrDC);
+	//DeleteDC(hMemDC);
+
+	if (ptPixels)
+	{
+		delete[](BYTE*)ptPixels;
+	}
+	return bOK;
 }
 
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
@@ -2571,7 +2769,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//	round(ccc.g * 255) * 0x100 +
 	//	round(ccc.b * 255) ;
 	if (!psFront)
-		hr = GenerateShader(CCheat::pDevice, &psFront, ccc.r, ccc.g, ccc.b);
+		//hr = GenerateShader(CCheat::pDevice, &psFront, ccc.r, ccc.g, ccc.b);
+		hr = GenerateShader(CCheat::pDevice, &psFront, 0.5f, 0.0f, 0.0f);
 
 	if (S_OK == hr)
 	{
@@ -2706,8 +2905,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//	hr = D3DX11SaveTextureToFile(pMainContext, BackBuffer110, D3DX11_IFF_PNG, wwwW.c_str());
 	//}
 
-CaptureFrame();
+	//CaptureFrame();
+	if (IsCenterRed())
+		Helpers::LogFormat("hkD3D11Present +++++++++++++++红+++++色了+++++ ");
+
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+
 	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
 	{
 		minX2 = minX;

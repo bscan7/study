@@ -170,7 +170,7 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		//DeleteObject(hPen);
 	}
 }
-#define SHOOT_AREA  6
+#define SHOOT_AREA_RADII  6
 #define SEARCH_AREA  100
 int pp = 0;
 
@@ -210,10 +210,10 @@ void AutoShootIfCenter(PVOID param)
 		int iCenterX = iW / 2 + lpRect.left;
 		int iCenterY = iH / 2 + lpRect.top;
 
-		lpShootRect.top = iCenterY - SHOOT_AREA;
-		lpShootRect.bottom = iCenterY + SHOOT_AREA;
-		lpShootRect.left = iCenterX - SHOOT_AREA;
-		lpShootRect.right = iCenterX + SHOOT_AREA;
+		lpShootRect.top = iCenterY - SHOOT_AREA_RADII;
+		lpShootRect.bottom = iCenterY + SHOOT_AREA_RADII;
+		lpShootRect.left = iCenterX - SHOOT_AREA_RADII;
+		lpShootRect.right = iCenterX + SHOOT_AREA_RADII;
 		// 确保选定区域不为空矩形
 		if (IsRectEmpty(&lpShootRect))
 			return /*NULL*/;
@@ -241,8 +241,8 @@ void AutoShootIfCenter(PVOID param)
 		BITMAPINFO RGB32BitsBITMAPINFO;
 		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
 		RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		RGB32BitsBITMAPINFO.bmiHeader.biWidth = SHOOT_AREA * 2;
-		RGB32BitsBITMAPINFO.bmiHeader.biHeight = SHOOT_AREA * 2;
+		RGB32BitsBITMAPINFO.bmiHeader.biWidth = SHOOT_AREA_RADII * 2;
+		RGB32BitsBITMAPINFO.bmiHeader.biHeight = SHOOT_AREA_RADII * 2;
 		RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
 		RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
 
@@ -256,12 +256,12 @@ void AutoShootIfCenter(PVOID param)
 		// 把新位图选到内存设备描述表中
 		hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
 
-		BitBlt(hMemDC, 0, 0, SHOOT_AREA * 2, SHOOT_AREA * 2,
+		BitBlt(hMemDC, 0, 0, SHOOT_AREA_RADII * 2, SHOOT_AREA_RADII * 2,
 			hScrDC, lpShootRect.left, lpShootRect.top, SRCCOPY);
 
 		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
 		// 替换颜色  
-		for (int i = ((SHOOT_AREA * 2 * SHOOT_AREA * 2) - 1); i >= 0; i--)
+		for (int i = ((SHOOT_AREA_RADII * 2 * SHOOT_AREA_RADII * 2) - 1); i >= 0; i--)
 		{
 			if (!ptPixels)
 			{
@@ -392,9 +392,9 @@ void AutoCenterAndShoot(PVOID param)
 			SaveDcToBMP((BYTE *)ptPixels, DirectBitmap, RGB32BitsBITMAPINFO, sFName + ".bmp");
 
 		//判断中心点区域
-		int iTmp = SEARCH_AREA - SHOOT_AREA;
+		int iTmp = SEARCH_AREA - SHOOT_AREA_RADII;
 		;
-		int iTmp2 = SEARCH_AREA + SHOOT_AREA;
+		int iTmp2 = SEARCH_AREA + SHOOT_AREA_RADII;
 		iTmp2*SEARCH_AREA * 2 - iTmp;
 
 		for (int i = iTmp*SEARCH_AREA * 2 + iTmp; i <= (iTmp2*SEARCH_AREA * 2 - iTmp); i++)
