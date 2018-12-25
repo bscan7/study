@@ -72,6 +72,7 @@ list <XMFLOAT3> g_lstPositions2;
 DWORD minX2, minY2, maxX2, maxY2 = 0;
 int g_iSelfIdx2 = -1;
 
+bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount);
 
 template<class T>
 struct DisableCompare :public std::binary_function<T, T, bool>
@@ -952,15 +953,39 @@ void Thread_KeysSwitch(PVOID param)
 		{
 			iRed = iRed++ % 3;
 		}
+		if (GetAsyncKeyState(VK_UP) & 1)
+		{
+			bVideo4Rec_PAUSE = true;
+			//红色回退
+			if (lstAllStrides.size() > 0)
+			{
+			nnnn:
+				iPos--;
+				if (iPos < 0)
+				{
+					iPos = lstAllStrides.size() - 1;
+				}
+
+				iiiii = lstAllStrides.at(iPos);
+				g_iCurStride = iiiii % 100;
+				g_iCurIndexCount = iiiii / 100;;
+				//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
+				if (!IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
+				{
+					goto nnnn;
+				}
+			}
+
+		}
 		if (GetAsyncKeyState(VK_DOWN) & 1)
 		{
 			//bLog2Txt_DOWN = true;
 			bVideo4Rec_PAUSE = !bVideo4Rec_PAUSE;
 		}
-		if (GetAsyncKeyState(VK_LEFT) & 1)
+		if (GetAsyncKeyState(VK_RETURN) & 1)
 		{
 			Append2ExcludeLst();
-			bVideo4Rec_SCROL = false; 
+			bVideo4Rec_SCROL = false;
 			bVideo4Rec_PAUSE = false;
 		}
 
@@ -2803,7 +2828,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//	round(ccc.b * 255) ;
 	if (!psFront)
 		hr = GenerateShader(CCheat::pDevice, &psFront, ccc.r, ccc.g, ccc.b);
-		//hr = GenerateShader(CCheat::pDevice, &psFront, 0.5f, 0.0f, 0.0f);
+	//hr = GenerateShader(CCheat::pDevice, &psFront, 0.5f, 0.0f, 0.0f);
 
 	if (S_OK == hr)
 	{
@@ -2813,132 +2838,132 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 																			 //draw
-	//if (pFontWrapper)
-	//{
-		//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
-		//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
+																			 //if (pFontWrapper)
+																			 //{
+																			 //pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
+																			 //pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
 
-		//std::string sData = std::to_string(iStride);
-		//sData += "_";
-		//sData += std::to_string(iIndexCount);
-		//
-		//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
-		//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
-	//}
+																			 //std::string sData = std::to_string(iStride);
+																			 //sData += "_";
+																			 //sData += std::to_string(iIndexCount);
+																			 //
+																			 //pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
+																			 //Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
+																			 //}
 
-	//draw esp
-	//if (AimEspInfo.size() != NULL)
-	//{
-	//	for (unsigned int i = 0; i < AimEspInfo.size(); i++)
-	//	{
-	//		//text esp
-	//		if (AimEspInfo[i].vOutX > 1 && AimEspInfo[i].vOutY > 1 && AimEspInfo[i].vOutX < viewport.Width && AimEspInfo[i].vOutY < viewport.Height)
-	//		{
-	//			pFontWrapper->DrawString(CCheat::pContext, L"Enemy", 14, (int)AimEspInfo[i].vOutX, (int)AimEspInfo[i].vOutY, 0xFFFFFFFF, FW1_RESTORESTATE| FW1_NOGEOMETRYSHADER | FW1_CENTER | FW1_ALIASED);
-	//		}
-	//	}
-	//}
+																			 //draw esp
+																			 //if (AimEspInfo.size() != NULL)
+																			 //{
+																			 //	for (unsigned int i = 0; i < AimEspInfo.size(); i++)
+																			 //	{
+																			 //		//text esp
+																			 //		if (AimEspInfo[i].vOutX > 1 && AimEspInfo[i].vOutY > 1 && AimEspInfo[i].vOutX < viewport.Width && AimEspInfo[i].vOutY < viewport.Height)
+																			 //		{
+																			 //			pFontWrapper->DrawString(CCheat::pContext, L"Enemy", 14, (int)AimEspInfo[i].vOutX, (int)AimEspInfo[i].vOutY, 0xFFFFFFFF, FW1_RESTORESTATE| FW1_NOGEOMETRYSHADER | FW1_CENTER | FW1_ALIASED);
+																			 //		}
+																			 //	}
+																			 //}
 
-	//aimbot
-	//if (aimbot == 1 && AimEspInfo.size() != NULL && GetAsyncKeyState(Daimkey) & 0x8000)//warning: GetAsyncKeyState here will cause aimbot not to work for a few people
-	/*	if (aimbot == 1 && AimEspInfo.size() != NULL)
-	{
-	UINT BestTarget = -1;
-	DOUBLE fClosestPos = 99999;
+																			 //aimbot
+																			 //if (aimbot == 1 && AimEspInfo.size() != NULL && GetAsyncKeyState(Daimkey) & 0x8000)//warning: GetAsyncKeyState here will cause aimbot not to work for a few people
+																			 /*	if (aimbot == 1 && AimEspInfo.size() != NULL)
+																			 {
+																			 UINT BestTarget = -1;
+																			 DOUBLE fClosestPos = 99999;
 
-	for (unsigned int i = 0; i < AimEspInfo.size(); i++)
-	{
-	//aimfov
-	float radiusx = (aimfov*10.0f) * (ScreenCenterX / 100.0f);
-	float radiusy = (aimfov*10.0f) * (ScreenCenterY / 100.0f);
+																			 for (unsigned int i = 0; i < AimEspInfo.size(); i++)
+																			 {
+																			 //aimfov
+																			 float radiusx = (aimfov*10.0f) * (ScreenCenterX / 100.0f);
+																			 float radiusy = (aimfov*10.0f) * (ScreenCenterY / 100.0f);
 
-	if (aimfov == 0)
-	{
-	radiusx = 5.0f * (ScreenCenterX / 100.0f);
-	radiusy = 5.0f * (ScreenCenterY / 100.0f);
-	}
+																			 if (aimfov == 0)
+																			 {
+																			 radiusx = 5.0f * (ScreenCenterX / 100.0f);
+																			 radiusy = 5.0f * (ScreenCenterY / 100.0f);
+																			 }
 
-	//get crosshairdistance
-	AimEspInfo[i].CrosshairDst = GetmDst(AimEspInfo[i].vOutX, AimEspInfo[i].vOutY, ScreenCenterX, ScreenCenterY);
+																			 //get crosshairdistance
+																			 AimEspInfo[i].CrosshairDst = GetmDst(AimEspInfo[i].vOutX, AimEspInfo[i].vOutY, ScreenCenterX, ScreenCenterY);
 
-	//aim at team 1 or 2 (not needed)
-	//if (aimbot == AimEspInfo[i].iTeam)
+																			 //aim at team 1 or 2 (not needed)
+																			 //if (aimbot == AimEspInfo[i].iTeam)
 
-	//if in fov
-	if (AimEspInfo[i].vOutX >= ScreenCenterX - radiusx && AimEspInfo[i].vOutX <= ScreenCenterX + radiusx && AimEspInfo[i].vOutY >= ScreenCenterY - radiusy && AimEspInfo[i].vOutY <= ScreenCenterY + radiusy)
+																			 //if in fov
+																			 if (AimEspInfo[i].vOutX >= ScreenCenterX - radiusx && AimEspInfo[i].vOutX <= ScreenCenterX + radiusx && AimEspInfo[i].vOutY >= ScreenCenterY - radiusy && AimEspInfo[i].vOutY <= ScreenCenterY + radiusy)
 
-	//get closest/nearest target to crosshair
-	if (AimEspInfo[i].CrosshairDst < fClosestPos)
-	{
-	fClosestPos = AimEspInfo[i].CrosshairDst;
-	BestTarget = i;
-	}
-	}
+																			 //get closest/nearest target to crosshair
+																			 if (AimEspInfo[i].CrosshairDst < fClosestPos)
+																			 {
+																			 fClosestPos = AimEspInfo[i].CrosshairDst;
+																			 BestTarget = i;
+																			 }
+																			 }
 
-	//OutputDebugStringA("hkD3D11Present+++++++-BestTarget???");
-	//if nearest target to crosshair
-	if (BestTarget != -1)
-	{
-	double DistX = AimEspInfo[BestTarget].vOutX - ScreenCenterX;
-	double DistY = AimEspInfo[BestTarget].vOutY - ScreenCenterY;
+																			 //OutputDebugStringA("hkD3D11Present+++++++-BestTarget???");
+																			 //if nearest target to crosshair
+																			 if (BestTarget != -1)
+																			 {
+																			 double DistX = AimEspInfo[BestTarget].vOutX - ScreenCenterX;
+																			 double DistY = AimEspInfo[BestTarget].vOutY - ScreenCenterY;
 
-	DistX /= (1 + aimsens);
-	DistY /= (1 + aimsens);
+																			 DistX /= (1 + aimsens);
+																			 DistY /= (1 + aimsens);
 
-	//aim
-	mouse_event(MOUSEEVENTF_MOVE, (float)DistX, (float)DistY, 0, NULL);
-	OutputDebugStringA("hkD3D11Present+++++++-BestTargetmouse_event MOUSEEVENTF_MOVE");
+																			 //aim
+																			 mouse_event(MOUSEEVENTF_MOVE, (float)DistX, (float)DistY, 0, NULL);
+																			 OutputDebugStringA("hkD3D11Present+++++++-BestTargetmouse_event MOUSEEVENTF_MOVE");
 
-	//autoshoot on
-	if ((!GetAsyncKeyState(VK_LBUTTON) && (autoshoot == 1))) //
-	//if ((!GetAsyncKeyState(VK_LBUTTON) && (autoshoot == 1) && (GetAsyncKeyState(Daimkey) & 0x8000))) //
-	{
-	if (autoshoot == 1 && !IsPressed)
-	{
-	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-	OutputDebugStringA("hkD3D11Present+++++++-BestTargetmouse_event2 MOUSEEVENTF_LEFTDOWN");
-	//LLeftClickDown();
-	IsPressed = true;
-	}
-	}
-	}
-	}
-	AimEspInfo.clear();
+																			 //autoshoot on
+																			 if ((!GetAsyncKeyState(VK_LBUTTON) && (autoshoot == 1))) //
+																			 //if ((!GetAsyncKeyState(VK_LBUTTON) && (autoshoot == 1) && (GetAsyncKeyState(Daimkey) & 0x8000))) //
+																			 {
+																			 if (autoshoot == 1 && !IsPressed)
+																			 {
+																			 mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+																			 OutputDebugStringA("hkD3D11Present+++++++-BestTargetmouse_event2 MOUSEEVENTF_LEFTDOWN");
+																			 //LLeftClickDown();
+																			 IsPressed = true;
+																			 }
+																			 }
+																			 }
+																			 }
+																			 AimEspInfo.clear();
 
-	//autoshoot off
-	if (autoshoot == 1 && IsPressed)
-	{
-	if (timeGetTime() - astime >= asdelay)
-	{
-	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-	OutputDebugStringA("hkD3D11Present+++++++-BestTargetmouse_event2 MOUSEEVENTF_LEFTUP");
-	IsPressed = false;
-	astime = timeGetTime();
-	}
-	}
-	*/
-	//ID3D11Texture2D *BackBuffer110;
-	//hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&BackBuffer110);
+																			 //autoshoot off
+																			 if (autoshoot == 1 && IsPressed)
+																			 {
+																			 if (timeGetTime() - astime >= asdelay)
+																			 {
+																			 mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+																			 OutputDebugStringA("hkD3D11Present+++++++-BestTargetmouse_event2 MOUSEEVENTF_LEFTUP");
+																			 IsPressed = false;
+																			 astime = timeGetTime();
+																			 }
+																			 }
+																			 */
+																			 //ID3D11Texture2D *BackBuffer110;
+																			 //hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&BackBuffer110);
 
-	//std::wstring wwwW = L"strCaptureFilename_";
-	//wwwW += std::to_wstring(iFrames);
-	//wwwW += L".PNG";
+																			 //std::wstring wwwW = L"strCaptureFilename_";
+																			 //wwwW += std::to_wstring(iFrames);
+																			 //wwwW += L".PNG";
 
-	//if (pMainContext)
-	//{
-	//	hr = D3DX11SaveTextureToFile(pMainContext, BackBuffer110, D3DX11_IFF_PNG, wwwW.c_str());
-	//}
+																			 //if (pMainContext)
+																			 //{
+																			 //	hr = D3DX11SaveTextureToFile(pMainContext, BackBuffer110, D3DX11_IFF_PNG, wwwW.c_str());
+																			 //}
 
-	//CaptureFrame();
-	//if (IsCenterRed())
-	//	Helpers::LogFormat("hkD3D11Present +++++++++++++++红+++++色了+++++ ");
+																			 //CaptureFrame();
+																			 //if (IsCenterRed())
+																			 //	Helpers::LogFormat("hkD3D11Present +++++++++++++++红+++++色了+++++ ");
 
 	if (bCrossDraw)
 	{
 		PulseEvent(g_Event_CrossDraw);
 	}
 
-	if (bVideo4Rec_SCROL)
+	//if (bVideo4Rec_SCROL)
 	{
 		wstring www = L"Stride=";
 		www += std::to_wstring(g_iCurStride);
@@ -2947,7 +2972,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		if (pFontWrapper)
 		{
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
-			pFontWrapper->DrawString(CCheat::pContext, L"如果中心已红，或者红区是要排除的对象，按'<-'保存，否则'下键'继续找", 40, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+			pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'ENTER'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
 		}
 	}
 
