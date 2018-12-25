@@ -822,6 +822,25 @@ void SaveMapToFile()
 	g_lock.unlock();
 }
 
+
+void Append2ExcludeLst()
+{
+	ofstream outfile;
+	outfile.open(g_NotRedListFName.c_str(), ios::app);
+	if (!outfile)
+	{
+		std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
+	}
+	else if (iiiii > 0)
+	{
+		outfile << std::dec << iiiii << std::endl;
+		outfile.close();
+		std::cout << std::dec << iiiii << " 写入文件完成！" << g_NotRedListFName.c_str() << endl;
+
+		InitListFromFiles();
+	}
+}
+
 void Thread_KeysSwitch(PVOID param)
 {
 	Helpers::LogFormat("--------Thread_KeysSwitch---------Started ");
@@ -935,7 +954,14 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(VK_DOWN) & 1)
 		{
-			bLog2Txt_DOWN = true;
+			//bLog2Txt_DOWN = true;
+			bVideo4Rec_PAUSE = !bVideo4Rec_PAUSE;
+		}
+		if (GetAsyncKeyState(VK_LEFT) & 1)
+		{
+			Append2ExcludeLst();
+			bVideo4Rec_SCROL = false; 
+			bVideo4Rec_PAUSE = false;
 		}
 
 
@@ -2776,8 +2802,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//	round(ccc.g * 255) * 0x100 +
 	//	round(ccc.b * 255) ;
 	if (!psFront)
-		//hr = GenerateShader(CCheat::pDevice, &psFront, ccc.r, ccc.g, ccc.b);
-		hr = GenerateShader(CCheat::pDevice, &psFront, 0.5f, 0.0f, 0.0f);
+		hr = GenerateShader(CCheat::pDevice, &psFront, ccc.r, ccc.g, ccc.b);
+		//hr = GenerateShader(CCheat::pDevice, &psFront, 0.5f, 0.0f, 0.0f);
 
 	if (S_OK == hr)
 	{
@@ -2787,8 +2813,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 																			 //draw
-	if (pFontWrapper)
-	{
+	//if (pFontWrapper)
+	//{
 		//pFontWrapper->DrawString(CCheat::pContext, L"Who are youuuuuuuuuuuuuuu?", 14, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
 		//pFontWrapper->DrawString(CCheat::pContext, L"Welcome Back Bscan*****============================", 14.0f, 16.0f, 30.0f, 0xffffffff, FW1_RESTORESTATE);
 
@@ -2798,15 +2824,6 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		//
 		//pFontWrapper->DrawString(CCheat::pContext, StringToWString(sData).c_str(), 18.0f, ScreenCenterX, ScreenCenterY, 0xff00ff00, FW1_RESTORESTATE);
 		//Helpers::Log("D3D11Present pFontWrapper->DrawString \"Who are youuuuuuuuuuuuuuu ? \"");
-	}
-
-	//wstring www = L"Stride=";
-	//www += std::to_wstring(g_iCurStride);
-	//www += L" IndexCount=";
-	//www += std::to_wstring(g_iCurIndexCount);
-	//if (pFontWrapper)
-	//{
-	//	pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 16.0f, 0xffff1612, FW1_RESTORESTATE);
 	//}
 
 	//draw esp
@@ -2921,26 +2938,20 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		PulseEvent(g_Event_CrossDraw);
 	}
 
-	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
-
-	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
+	if (bVideo4Rec_SCROL)
 	{
-		minX2 = minX;
-		minY2 = minY;
-		maxX2 = maxX;
-		maxY2 = maxY;
-		g_lstPositions2 = g_lstPositions;
-		g_iSelfIdx2 = g_iSelfIdx;
+		wstring www = L"Stride=";
+		www += std::to_wstring(g_iCurStride);
+		www += L" IndexCount=";
+		www += std::to_wstring(g_iCurIndexCount);
+		if (pFontWrapper)
+		{
+			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
+			pFontWrapper->DrawString(CCheat::pContext, L"如果中心已红，或者红区是要排除的对象，按'<-'保存，否则'下键'继续找", 40, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+		}
 	}
-	g_lstPositions.clear();
-	minX = 0;
-	minY = 0;
-	maxX = 0;
-	maxY = 0;
-	g_iSelfIdx = -1;
 
-
-	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0))
+	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{
 		//Sleep(50);//等渲染的延迟
 		if (!IsCenterRed() || (iiiii == 0))
@@ -2966,34 +2977,61 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		}
 		else if (IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount)) //IsCenterRed()
 		{//当前帧，中心是红色，且不在排除列表内
-			bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
-			//keybd_event(VK_SNAPSHOT, 0, 0, 0);
+			bVideo4Rec_PAUSE = true;
+
 			Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size(), iiiii);
+			//Sleep(5000);
+			//if (IsCenterRed())
+			//{
+			//	Helpers::LogFormat("Sleep(5000);hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size(), iiiii);
+			//	Append2ExcludeLst();
+			//	bVideo4Rec_SCROL = false;
+			//	bVideo4Rec_PAUSE = false;
+			//}
+			//keybd_event(VK_SNAPSHOT, 0, 0, 0);
 
-			ofstream outfile;
-			outfile.open(g_NotRedListFName.c_str(), ios::app);
-			if (!outfile)
-			{
-				std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
-			}
-			else if (iiiii > 0)
-			{
-				outfile << std::dec << iiiii << std::endl;
-				outfile.close();
-				std::cout << std::dec << iiiii << " 写入文件完成！" << g_NotRedListFName.c_str() << endl;
+			//ofstream outfile;
+			//outfile.open(g_NotRedListFName.c_str(), ios::app);
+			//if (!outfile)
+			//{
+			//	std::cout << "打开文件失败！" << g_NotRedListFName.c_str() << endl;
+			//}
+			//else if (iiiii > 0)
+			//{
+			//	outfile << std::dec << iiiii << std::endl;
+			//	outfile.close();
+			//	std::cout << std::dec << iiiii << " 写入文件完成！" << g_NotRedListFName.c_str() << endl;
 
-				InitListFromFiles();
-			}
+			//	InitListFromFiles();
+			//}
 		}
 		else
 		{
-			bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
-			InitListFromFiles();
+			bVideo4Rec_PAUSE = true;
+			//InitListFromFiles();
 			Helpers::LogFormat("hkD3D11Present !!!!!!错误 iStride=%d iIndexCount=%d ", g_iCurStride, g_iCurIndexCount);
 		}
 
 		Helpers::LogFormat("hkD3D11Present 一帧查红色结束+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size());
 	}
+
+	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+
+	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
+	{
+		minX2 = minX;
+		minY2 = minY;
+		maxX2 = maxX;
+		maxY2 = maxY;
+		g_lstPositions2 = g_lstPositions;
+		g_iSelfIdx2 = g_iSelfIdx;
+	}
+	g_lstPositions.clear();
+	minX = 0;
+	minY = 0;
+	maxX = 0;
+	maxY = 0;
+	g_iSelfIdx = -1;
 
 	if (bHideOne)
 	{
