@@ -160,7 +160,7 @@ bool bInvertEveryFrame = false;
 //bool bTest2Draw = false;
 bool bTest2Draw = true;
 //==========================================================================================================================
-bool bHideTrees = false;
+bool bHideENV = false;
 bool bHideGrass = false;
 DWORD ppppp = 0;
 int ipp = 0;
@@ -966,6 +966,11 @@ void Thread_KeysSwitch(PVOID param)
 				{
 					iPos = lstAllStrides.size() - 1;
 				}
+				else if (iPos >=lstAllStrides.size())
+				{
+					iPos = lstAllStrides.size() - 1;
+				}
+
 
 				iiiii = lstAllStrides.at(iPos);
 				g_iCurStride = iiiii % 100;
@@ -1011,14 +1016,14 @@ void Thread_KeysSwitch(PVOID param)
 
 		if (ipp == 1)
 		{
-			bHideTrees = true;
+			bHideENV = true;
 			bHideGrass = false;
 		}
 		else if (ipp == 2)
 		{
 			if (ppppp != timeGetTime() / INTVL)
 			{
-				bHideTrees = !bHideTrees;
+				bHideENV = !bHideENV;
 				ppppp = timeGetTime() / INTVL;
 			}
 		}
@@ -1026,12 +1031,12 @@ void Thread_KeysSwitch(PVOID param)
 		{
 			bHideGrass = !bHideGrass;
 			bHideGrass = true;
-			bHideTrees = false;
+			bHideENV = false;
 		}
 		else
 		{
 			bHideGrass = false;
-			bHideTrees = false;
+			bHideENV = false;
 		}
 
 
@@ -1217,18 +1222,22 @@ bool Is_CarOrBoat(UINT Stride, UINT IndexCount)
 	}
 }
 
-bool IsIn_HideList(UINT Stride, UINT IndexCount)
+bool IsIn_HideList(UINT Stride, UINT IndexCount, UINT BaseVertexLocation)
 {
 	//全息：	<0x06399FD0> ID3D11DeviceContext::DrawIndexed(6, 0, -1495)	154012179757					
 
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
 	if (find(lstHideList.begin(), lstHideList.end(), IndexCountStride) != lstHideList.end()) {
 		//找到
-		return true;
+		if (BaseVertexLocation != -1495) //不是全息中心点
+		{
+			return true;
+		}
 	}
 	else {
 		return false;
 	}
+	return false;
 }
 
 bool IsEquipment(UINT Stride, UINT IndexCount)
@@ -2986,7 +2995,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{
-		Sleep(300);//等渲染的延迟
+		//Sleep(300);//等渲染的延迟
 		if (!IsCenterRed() || (iiiii == 0))
 		{//当前帧，中心不是红色
 			if (lstAllStrides.size() > 0)
@@ -3528,7 +3537,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		return;
 	}
 
-	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideTrees
+	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideENV
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
 		(IndexCountPerInstance >= iMax))*/
@@ -3536,6 +3545,14 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	{
 		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
 	}
+	//else if (bHideENV && (Stride >12))
+	//{
+	//	//if (IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+	//	{
+	//		pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
+	//		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	//	}
+	//}
 	else
 	{
 		//finish1 = clock();
@@ -3544,7 +3561,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
 
 		if (bHideGrass &&
-			IsIn_HideList(Stride, IndexCountPerInstance)
+			IsIn_HideList(Stride, IndexCountPerInstance, BaseVertexLocation)
 			)
 		{
 			return;
