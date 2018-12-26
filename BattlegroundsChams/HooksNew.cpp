@@ -2972,13 +2972,16 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		if (pFontWrapper)
 		{
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
-			pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'ENTER'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+			if (bVideo4Rec_PAUSE)
+			{
+				pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'ENTER'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+			}
 		}
 	}
 
 	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{
-		//Sleep(50);//等渲染的延迟
+		Sleep(200);//等渲染的延迟
 		if (!IsCenterRed() || (iiiii == 0))
 		{//当前帧，中心不是红色
 			if (lstAllStrides.size() > 0)
@@ -3002,7 +3005,19 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		}
 		else if (IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount)) //IsCenterRed()
 		{//当前帧，中心是红色，且不在排除列表内
+
 			bVideo4Rec_PAUSE = true;
+			//{
+			//	wstring www = L"Stride=";
+			//	www += std::to_wstring(g_iCurStride);
+			//	www += L" IndexCount=";
+			//	www += std::to_wstring(g_iCurIndexCount);
+			//	if (pFontWrapper)
+			//	{
+			//		//pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
+			//		pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'ENTER'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+			//	}
+			//}
 
 			Helpers::LogFormat("hkD3D11Present 红色了+++++ iStride=%d iIndexCount=%d i=%d l=%d ==%ld", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size(), iiiii);
 			//Sleep(5000);
@@ -3040,7 +3055,12 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		Helpers::LogFormat("hkD3D11Present 一帧查红色结束+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size());
 	}
 
+	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+	//iFrames++;
+	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
+
+	iFrames += 100;
 
 	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
 	{
