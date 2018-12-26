@@ -2981,7 +2981,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{
-		Sleep(200);//等渲染的延迟
+		Sleep(300);//等渲染的延迟
 		if (!IsCenterRed() || (iiiii == 0))
 		{//当前帧，中心不是红色
 			if (lstAllStrides.size() > 0)
@@ -3464,17 +3464,17 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//}
 
 	//Helpers::LogFormat("hkD3D11DrawIndexedInstanced (i=%d) ", lstAll2412.size());
-	{
-		UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
-		if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
-			//找到
-		}
-		else {
-			//没找到
-			lstAllStrides.push_back(IndexCountStride);
-			//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
-		}
-	}
+	//{
+	//	UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
+	//	if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
+	//		//找到
+	//	}
+	//	else {
+	//		//没找到
+	//		lstAllStrides.push_back(IndexCountStride);
+	//		//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+	//	}
+	//}
 	//finish1 = clock();
 	//cout << idx++ << " ++++++take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
 	//start1 = clock();
@@ -3641,6 +3641,18 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 							//pContext->RSSetState(RSCullWireFrame);
 							GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 							//d3d11DevCon->OMSetDepthStencilState(NULL, 0);
+						}
+
+						{
+							UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
+							if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
+								//找到
+							}
+							else {
+								//没找到
+								lstAllStrides.push_back(IndexCountStride);
+								//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+							}
 						}
 
 						//CCC//////////////////////////////////////////////
