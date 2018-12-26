@@ -955,6 +955,7 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(VK_UP) & 1)
 		{
+			bVideo4Rec_SCROL = true;
 			bVideo4Rec_PAUSE = true;
 			//ºìÉ«»ØÍË
 			if (lstAllStrides.size() > 0)
@@ -2969,6 +2970,10 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		www += std::to_wstring(g_iCurStride);
 		www += L" IndexCount=";
 		www += std::to_wstring(g_iCurIndexCount);
+		www += L" Pos=";
+		www += std::to_wstring(iPos);
+		www += L"/";
+		www += std::to_wstring(lstAllStrides.size());
 		if (pFontWrapper)
 		{
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
