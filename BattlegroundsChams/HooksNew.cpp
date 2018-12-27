@@ -999,10 +999,10 @@ void Thread_KeysSwitch(PVOID param)
 				g_iCurStride = iiiii % 100;
 				g_iCurIndexCount = iiiii / 100;;
 				//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
-				if (!IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
-				{
-					goto nnnn;
-				}
+				//if (!IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
+				//{
+				//	goto nnnn;
+				//}
 			}
 
 		}
@@ -3552,8 +3552,9 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	if (bVideo4Rec_SCROL)
 	{
-		if ((Stride == g_iCurStride) && (IndexCountPerInstance == g_iCurIndexCount) &&
-			IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
+		if ((Stride == g_iCurStride) && (IndexCountPerInstance == g_iCurIndexCount) 
+			//&&	IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount)
+			)
 		{
 			//if ((Stride == 24) || (Stride == 12))
 			{
@@ -3594,7 +3595,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	//New...
 	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-	if ((Stride == 24) && (psFront))
+	if ((Stride == 24) && (psFront) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 	{
 		pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
 		//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
@@ -3613,8 +3614,15 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//pContext->RSSetState(RSCullWireFrame);
 			if (b2DShader &&psFront)
 			{
+				
+				if (Is_CarOrBoat(Stride, IndexCountPerInstance))
+				{
+					pContext->PSSetShader(psGreen, NULL, NULL); //设为明亮色
+				} 
+				else
 				{
 					pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
+					//Helpers::LogFormat("PSSetShader(明亮色, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", Stride, IndexCountPerInstance);
 				}
 			}
 			else
@@ -3624,6 +3632,19 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 			//pContext->RSSetState(RSCullWireFrame);
 			GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+			{
+				UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
+				if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
+					//找到
+				}
+				else {
+					//没找到
+					lstAllStrides.push_back(IndexCountStride);
+					//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+				}
+			}
+
 			return;
 	}
 	else if ((Stride == gStride)  && bHideENV)
