@@ -74,6 +74,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
+    <IncludePath>D:\Dev\Detours Pro v3.0.316\include\;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
