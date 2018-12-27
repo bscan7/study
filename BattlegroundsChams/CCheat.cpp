@@ -690,7 +690,8 @@ void CCheat::Initialise()
 			else
 			{
 				g_hWnd = _EnumChildWindows(g_hWnd, "AEngineRenderWindow");
-				g_NotRedListFName = "..\\notListTX.txt";
+				g_NotRedListFName = "..\\V2_Exclude01.txt";
+				//g_NotRedListFName = "..\\notListTX.txt";
 			}
 		}
 

@@ -52,7 +52,7 @@ bool b2DShader = true;
 bool bLog2Txt_F7 = false;
 bool bLog2Txt_DOWN = false;
 ofstream outfile;
-string  g_NotRedListFName = "..\\notListNEW.txt";
+string  g_NotRedListFName = "";
 
 ID3D11Buffer* pHooksStageBuffer = NULL;
 D3D11_MAPPED_SUBRESOURCE *pHooksMappedResource = NULL;
@@ -71,6 +71,11 @@ DWORD dFrontColor = 0;
 list <XMFLOAT3> g_lstPositions2;
 DWORD minX2, minY2, maxX2, maxY2 = 0;
 int g_iSelfIdx2 = -1;
+
+UINT iFrames = 0;
+UINT iName = 0;
+stringstream g_ssCallsInFrame;
+static ID3D11Texture2D* g_pCaptureTexture = NULL;
 
 bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount);
 
@@ -141,6 +146,8 @@ std::vector<int> bbb;
 int iiidx = 0;
 
 std::vector<UINT64> lstAllStride00;
+
+std::vector<UINT64> lstLogStrides;
 
 std::vector<UINT64> lstAllStrides;
 std::vector<UINT64> lstAvatar2412;
@@ -823,6 +830,22 @@ void SaveMapToFile()
 	g_lock.unlock();
 }
 
+
+void Append2Txt(string sTxtLine)
+{
+	ofstream outfile;
+	outfile.open(("..\\" + to_string(iFrames)+"_Frame.log").c_str(), ios::app);
+	if (!outfile)
+	{
+		std::cout << "打开文件失败！" << (to_string(iFrames) + ".txt").c_str() << endl;
+	}
+	else if (sTxtLine.length() > 0)
+	{
+		outfile << std::dec << sTxtLine.c_str() << std::endl;
+		outfile.close();
+		std::cout << std::dec << sTxtLine.c_str() << " 写入文件完成！" << (to_string(iFrames) + ".txt").c_str() << endl;
+	}
+}
 
 void Append2ExcludeLst()
 {
@@ -2333,10 +2356,6 @@ bool IsCenterRed_Old()//DC截屏，效率差
 	return bOK;
 }
 
-UINT iFrames = 0;
-UINT iName = 0;
-stringstream g_ssCallsInFrame;
-static ID3D11Texture2D* g_pCaptureTexture = NULL;
 //--------------------------------------------------------------------------------------
 // Helper function to capture a frame and dump it to disk 
 //--------------------------------------------------------------------------------------
@@ -2700,9 +2719,44 @@ bool IsCenterRed()
 	return bOK;
 }
 
+UINT64 lastCount = 0;
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	iFrames++;
+
+	if (lstLogStrides.size() > 0)
+	{
+		UINT64 uCount = 0;
+		for (int i = 0; i < lstLogStrides.size(); i++)
+		{
+			uCount += lstLogStrides.at(i) ;
+		}
+		if (uCount != lastCount)
+		{
+			sort(lstLogStrides.begin(), lstLogStrides.end());
+			ofstream outfile;
+			outfile.open(("..\\" + to_string(iFrames) + "_Frame.log").c_str(), ios::app);
+			for (int i = 0; i < lstLogStrides.size(); i++)
+			{
+				//if ((lstAllStides.at(i) % 100) == 12)
+				{
+					if (!outfile)
+					{
+						std::cout << "打开文件失败！" << endl;
+					}
+					else
+					{
+						outfile << lstLogStrides.at(i) << std::endl;
+					}
+				}
+			}
+			if (outfile)		outfile.close();
+			lastCount = uCount;
+		}
+
+		lstLogStrides.clear();
+	}
+
 	if (bShoot)
 	{
 		std::cout << "hkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
@@ -3074,7 +3128,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	//iFrames++;
 	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
 
-	iFrames += 100;
+	//iFrames += 100;
 
 	if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
 	{
@@ -3358,6 +3412,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
 
+
 	//clock_t finish1 = clock();
 	//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
 	//start1 = clock();
@@ -3537,6 +3592,52 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		return;
 	}
 
+	//New...
+	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+	if ((Stride == 24) && (psFront))
+	{
+		pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
+		//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+		//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+
+		//	pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+		//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+		//}
+		//BBB//////////////////////////////////////////////
+		pContext->RSSetState(CWcullMode);
+		//pContext->RSSetState(RSCullSolid);
+		pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
+		pContext->OMSetDepthStencilState(DSLess, 0);
+		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+			//pContext->RSSetState(RSCullWireFrame);
+			if (b2DShader &&psFront)
+			{
+				{
+					pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
+				}
+			}
+			else
+				pContext->PSSetShader(pPixelShader__Old, NULL, NULL);//设色
+
+			pContext->OMSetDepthStencilState(DSGreat, 0);
+
+			//pContext->RSSetState(RSCullWireFrame);
+			GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+			return;
+	}
+	else if ((Stride == gStride)  && bHideENV)
+		return;
+	else if (bHideGrass && IsIn_HideList(Stride, IndexCountPerInstance, BaseVertexLocation))
+	{
+		return;
+	}
+	else
+		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+	return;
+
+
 	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideENV
 		/*&&(
 		(IndexCountPerInstance <= iMin) ||
@@ -3555,6 +3656,14 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//}
 	else
 	{
+		if (bHideENV)
+		{
+			UINT64 sss = IndexCountPerInstance * 100 + Stride;
+			if (find(lstLogStrides.begin(), lstLogStrides.end(), sss) == lstLogStrides.end()) {
+				//没找到
+				lstLogStrides.push_back(sss);
+			}
+		}
 		//finish1 = clock();
 		//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
 		//start1 = clock();
