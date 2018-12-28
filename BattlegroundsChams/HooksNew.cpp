@@ -878,6 +878,7 @@ void Thread_KeysSwitch(PVOID param)
 
 		if (GetAsyncKeyState(VK_SCROLL) & 1)
 		{
+			bVideo4Rec_PAUSE = false;
 			bVideo4Rec_SCROL = !bVideo4Rec_SCROL;
 		}
 		if (GetAsyncKeyState(VK_ADD) & 1)
@@ -3049,7 +3050,18 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{
-		//Sleep(300);//等渲染的延迟
+		Helpers::LogFormat("hkD3D11Present 一帧查红色同步+++++++++++++");
+		D3D11_QUERY_DESC pQueryDesc;
+		pQueryDesc.Query = D3D11_QUERY_EVENT;
+		pQueryDesc.MiscFlags = 0;
+		ID3D11Query *pEventQuery;
+		CCheat::pDevice->CreateQuery(&pQueryDesc, &pEventQuery);
+
+		CCheat::pContext->End(pEventQuery); // 在 pushbuffer 中插入一个篱笆
+		while (CCheat::pContext->GetData(pEventQuery, NULL, 0, 0) == S_FALSE) {} // 自旋等待事件结束
+
+		Sleep(100);//等渲染的延迟
+		Helpers::LogFormat("hkD3D11Present 一帧查红色开始+++++++++++++");
 		if (!IsCenterRed() || (iiiii == 0))
 		{//当前帧，中心不是红色
 			if (lstAllStrides.size() > 0)
@@ -3120,11 +3132,14 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			Helpers::LogFormat("hkD3D11Present !!!!!!错误 iStride=%d iIndexCount=%d ", g_iCurStride, g_iCurIndexCount);
 		}
 
+		pEventQuery->Release();
+
 		Helpers::LogFormat("hkD3D11Present 一帧查红色结束+++++++++++++ iStride=%d iIndexCount=%d (%d/%d)", g_iCurStride, g_iCurIndexCount, iPos, lstAllStrides.size());
 	}
 
 	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+
 	//iFrames++;
 	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
 
