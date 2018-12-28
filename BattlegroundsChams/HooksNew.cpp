@@ -3674,241 +3674,241 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	return;
 
 
-	if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideENV
-		/*&&(
-		(IndexCountPerInstance <= iMin) ||
-		(IndexCountPerInstance >= iMax))*/
-		))
-	{
-		//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
-	}
-	//else if (bHideENV && (Stride >12))
+	//if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideENV
+	//	/*&&(
+	//	(IndexCountPerInstance <= iMin) ||
+	//	(IndexCountPerInstance >= iMax))*/
+	//	))
 	//{
-	//	//if (IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+	//	//Helpers::Log2Txt("hkD3D11DrawIndexedInstanced++++++++++++++++++++*=== 55 usedTime = ", timeGetTime() - bgtime);
+	//}
+	////else if (bHideENV && (Stride >12))
+	////{
+	////	//if (IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+	////	{
+	////		pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
+	////		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	////	}
+	////}
+	//else
+	//{
+	//	if (bHideENV)
 	//	{
-	//		pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
-	//		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	//		UINT64 sss = IndexCountPerInstance * 100 + Stride;
+	//		if (find(lstLogStrides.begin(), lstLogStrides.end(), sss) == lstLogStrides.end()) {
+	//			//没找到
+	//			lstLogStrides.push_back(sss);
+	//		}
+	//	}
+	//	//finish1 = clock();
+	//	//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//	//start1 = clock();
+	//	//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
+	//	if (bHideGrass &&
+	//		IsIn_HideList(Stride, IndexCountPerInstance, BaseVertexLocation)
+	//		)
+	//	{
+	//		return;
+	//	}
+	//	else
+	//		//if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
+	//		//&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
+	//		//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
+	//		//)
+	//	{
+
+	//		//finish1 = clock();
+	//		//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//		//start1 = clock();
+	//		//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
+	//		if ((1 == g_StartSlot) || (2 == g_StartSlot))
+	//		{
+	//			g_StartSlot = 0;
+	//			if (((12 == Stride) || (24 == Stride)) &&
+	//				IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+	//			{
+	//				//if (Is_CarOrBoat(Stride, IndexCountPerInstance))
+	//				//{
+	//				//	CheatItNew(pContext, psGreen);
+	//				//}
+	//				//else
+	//				{
+	//					if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+	//					{
+	//						//获取指向顶点缓存的指针  
+	//						//Vertex* verticesPtr;
+	//						//verticesPtr = (Vertex*)pResource;
+
+	//						////把数据复制进顶点缓存  
+	//						//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
+
+	//						////解锁顶点缓存  
+	//						//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
+	//						Helpers::LogBuf2Txt("DrawIdxIns_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+	//					}
+	//					pHooksMappedResource = NULL;
+	//					pHooksStageBuffer = NULL;
+
+	//					D3D11_COMPARISON_FUNC DepthFunc000;
+	//					//CheatItNew(pContext, psd);
+
+	//					//AAA//////////////////////////////////////////////
+	//					//if (b2DShader)
+	//					//{
+	//					//	pContext->PSSetShader(psd, NULL, NULL); //设为色
+	//					//}
+	//					//GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+	//					//{
+	//					//	// Create the depth stencil state.
+	//					//	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+	//					//	pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+	//					//	ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+
+	//					//	//depthStencilDesc.DepthEnable = TRUE;
+	//					//	//depthStencilDesc.DepthEnable = FALSE;
+	//					//	//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	//					//	//DepthFunc000 = depthStencilDesc.DepthFunc;
+	//					//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	//					//	//depthStencilDesc.DepthFunc = D3D11_COMPARISON_NEVER;
+	//					//	//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	//					//	//depthStencilDesc.StencilEnable = FALSE;
+	//					//	ID3D11Device *ppDevice;
+	//					//	pContext->GetDevice(&ppDevice);
+
+	//					pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
+	//					//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
+	//					//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
+
+	//					//	pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
+	//					//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	//					//}
+	//					//BBB//////////////////////////////////////////////
+	//					pContext->RSSetState(CWcullMode);
+	//					//pContext->RSSetState(RSCullSolid);
+	//					pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
+	//					pContext->OMSetDepthStencilState(DSLess, 0);
+	//					GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+	//					{
+	//						//pContext->RSSetState(RSCullWireFrame);
+	//						if (b2DShader &&psFront)
+	//						{
+	//							{
+	//								pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
+	//							}
+	//						}
+	//						else
+	//							pContext->PSSetShader(pPixelShader__Old, NULL, NULL);//设色
+
+	//						pContext->OMSetDepthStencilState(DSGreat, 0);
+
+	//						//pContext->RSSetState(RSCullWireFrame);
+	//						GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	//						//d3d11DevCon->OMSetDepthStencilState(NULL, 0);
+	//					}
+
+	//					{
+	//						UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
+	//						if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
+	//							//找到
+	//						}
+	//						else {
+	//							//没找到
+	//							lstAllStrides.push_back(IndexCountStride);
+	//							//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
+	//						}
+	//					}
+
+	//					//CCC//////////////////////////////////////////////
+	//					//if (0)
+	//					//{
+	//					//
+	//					//						//效果不好，还影响性能，注释了先。还有一处
+	//					//						if (bTest2Draw)
+	//					//						//if (0)
+	//					//						{
+	//					//							if (pPixelShader__Old != NULL)
+	//					//							{
+	//					//								D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+	//					//								//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+	//					//								ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
+	//					//
+	//					//								//depthStencilDesc.DepthEnable = TRUE;
+	//					//								//depthStencilDesc.DepthEnable = FALSE;
+	//					//								//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	//					//								depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
+	//					//								//depthStencilDesc.DepthFunc = DepthFunc000;
+	//					//								//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	//					//								//depthStencilDesc.StencilEnable = FALSE;
+	//					//								ID3D11Device *ppDevice;
+	//					//								pContext->GetDevice(&ppDevice);
+	//					//
+	//					//								ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__Old);
+	//					//								pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+	//					//
+	//					//								if (b2DShader)
+	//					//								{
+	//					//									pContext->PSSetShader(psd, NULL, NULL); //设为色
+	//					//								}
+	//					//								else
+	//					//									pContext->PSSetShader(pPixelShader__Old, NULL, NULL);//设色
+	//					//							GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	//					//								pPixelShader__Old = NULL;
+	//					//							}
+	//					//						}
+	//					//}
+
+	//					if (ppDepthStencilState__Old)
+	//					{
+	//						//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
+	//						ppDepthStencilState__Old = NULL;
+	//					}
+
+
+	//				}
+	//			}
+	//			else
+	//				GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+	//		}
+	//		else
+	//			GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
+
+	//		//finish1 = clock();
+	//		//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//		//start1 = clock();
+	//		//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+
+
+	//		//createTex(CCheat::pDevice, string("A01.dds"));
+	//		//Helpers::LogFormat("pTextureSRV (=%d) ", pTextureSRV);
+
+	//		//finish1 = clock();
+	//		//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//		//start1 = clock();
+	//		//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
+
+	//		if (/*(IndexCountPerInstance == 3234) && */pTextureSRV)
+	//		{
+	//			//Hooks::oPSSetShaderResources(pContext, 1, 1, &pTextureSRV);
+	//		}
+
+	//		//finish1 = clock();
+	//		//cout << idx++ << " GoDrawCall take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+	//		//start1 = clock();
+	//		//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
+
+
 	//	}
 	//}
-	else
-	{
-		if (bHideENV)
-		{
-			UINT64 sss = IndexCountPerInstance * 100 + Stride;
-			if (find(lstLogStrides.begin(), lstLogStrides.end(), sss) == lstLogStrides.end()) {
-				//没找到
-				lstLogStrides.push_back(sss);
-			}
-		}
-		//finish1 = clock();
-		//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
-		//start1 = clock();
-		//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
+	////finish1 = clock();
+	////cout << "return..." << (double)(finish1 - start0) / 1.00f << "\n";
+	////start1 = clock();
+	////Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d End", idx, timeGetTime() - bgtime);
 
-		if (bHideGrass &&
-			IsIn_HideList(Stride, IndexCountPerInstance, BaseVertexLocation)
-			)
-		{
-			return;
-		}
-		else
-			//if (/*(!bInList) &&*/ !((Stride == 24) && (IndexCountPerInstance == 54)) //6X
-			//&& !((Stride == 24) && (IndexCountPerInstance == 75)) //3X
-			//&& !((Stride == 24) && (IndexCountPerInstance == 72)) //
-			//)
-		{
-
-			//finish1 = clock();
-			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
-			//start1 = clock();
-			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
-
-			if ((1 == g_StartSlot) || (2 == g_StartSlot))
-			{
-				g_StartSlot = 0;
-				if (((12 == Stride) || (24 == Stride)) &&
-					IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-				{
-					//if (Is_CarOrBoat(Stride, IndexCountPerInstance))
-					//{
-					//	CheatItNew(pContext, psGreen);
-					//}
-					//else
-					{
-						if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
-						{
-							//获取指向顶点缓存的指针  
-							//Vertex* verticesPtr;
-							//verticesPtr = (Vertex*)pResource;
-
-							////把数据复制进顶点缓存  
-							//memcpy(verticesPtr, (void*)vertexs, (sizeof(Vertex) * mVertexCount));
-
-							////解锁顶点缓存  
-							//d3dDeviceContext->Unmap(md3dVertexBuffer, 0);
-							Helpers::LogBuf2Txt("DrawIdxIns_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" + std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance) + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
-						}
-						pHooksMappedResource = NULL;
-						pHooksStageBuffer = NULL;
-
-						D3D11_COMPARISON_FUNC DepthFunc000;
-						//CheatItNew(pContext, psd);
-
-						//AAA//////////////////////////////////////////////
-						//if (b2DShader)
-						//{
-						//	pContext->PSSetShader(psd, NULL, NULL); //设为色
-						//}
-						//GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-
-						//{
-						//	// Create the depth stencil state.
-						//	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-						//	pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
-						//	ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
-
-						//	//depthStencilDesc.DepthEnable = TRUE;
-						//	//depthStencilDesc.DepthEnable = FALSE;
-						//	//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-						//	//DepthFunc000 = depthStencilDesc.DepthFunc;
-						//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-						//	//depthStencilDesc.DepthFunc = D3D11_COMPARISON_NEVER;
-						//	//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-						//	//depthStencilDesc.StencilEnable = FALSE;
-						//	ID3D11Device *ppDevice;
-						//	pContext->GetDevice(&ppDevice);
-
-						pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
-						//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
-						//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
-
-						//	pContext->PSSetShader(psObscured, NULL, NULL); //设为灰色
-						//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-						//}
-						//BBB//////////////////////////////////////////////
-						pContext->RSSetState(CWcullMode);
-						//pContext->RSSetState(RSCullSolid);
-						pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
-						pContext->OMSetDepthStencilState(DSLess, 0);
-						GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-
-						{
-							//pContext->RSSetState(RSCullWireFrame);
-							if (b2DShader &&psFront)
-							{
-								{
-									pContext->PSSetShader(psFront, NULL, NULL); //设为明亮色
-								}
-							}
-							else
-								pContext->PSSetShader(pPixelShader__Old, NULL, NULL);//设色
-
-							pContext->OMSetDepthStencilState(DSGreat, 0);
-
-							//pContext->RSSetState(RSCullWireFrame);
-							GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-							//d3d11DevCon->OMSetDepthStencilState(NULL, 0);
-						}
-
-						{
-							UINT IndexCountStride = IndexCountPerInstance * 100 + Stride;
-							if (find(lstAllStrides.begin(), lstAllStrides.end(), IndexCountStride) != lstAllStrides.end()) {
-								//找到
-							}
-							else {
-								//没找到
-								lstAllStrides.push_back(IndexCountStride);
-								//Helpers::LogFormat("hkD3D11DrawIndexedInstanced lstAll2412.push_back ++++++++ size=%d (%d) ", lstAllStides.size(), IndexCountStride);
-							}
-						}
-
-						//CCC//////////////////////////////////////////////
-						//if (0)
-						//{
-						//
-						//						//效果不好，还影响性能，注释了先。还有一处
-						//						if (bTest2Draw)
-						//						//if (0)
-						//						{
-						//							if (pPixelShader__Old != NULL)
-						//							{
-						//								D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-						//								//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
-						//								ppDepthStencilState__Old->GetDesc(&depthStencilDesc);
-						//
-						//								//depthStencilDesc.DepthEnable = TRUE;
-						//								//depthStencilDesc.DepthEnable = FALSE;
-						//								//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-						//								depthStencilDesc.DepthFunc = D3D11_COMPARISON_GREATER;
-						//								//depthStencilDesc.DepthFunc = DepthFunc000;
-						//								//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-						//								//depthStencilDesc.StencilEnable = FALSE;
-						//								ID3D11Device *ppDevice;
-						//								pContext->GetDevice(&ppDevice);
-						//
-						//								ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__Old);
-						//								pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
-						//
-						//								if (b2DShader)
-						//								{
-						//									pContext->PSSetShader(psd, NULL, NULL); //设为色
-						//								}
-						//								else
-						//									pContext->PSSetShader(pPixelShader__Old, NULL, NULL);//设色
-						//							GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-						//								pPixelShader__Old = NULL;
-						//							}
-						//						}
-						//}
-
-						if (ppDepthStencilState__Old)
-						{
-							//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, pStencilRef);
-							ppDepthStencilState__Old = NULL;
-						}
-
-
-					}
-				}
-				else
-					GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-			}
-			else
-				GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
-
-			//finish1 = clock();
-			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
-			//start1 = clock();
-			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
-
-
-			//createTex(CCheat::pDevice, string("A01.dds"));
-			//Helpers::LogFormat("pTextureSRV (=%d) ", pTextureSRV);
-
-			//finish1 = clock();
-			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
-			//start1 = clock();
-			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
-
-			if (/*(IndexCountPerInstance == 3234) && */pTextureSRV)
-			{
-				//Hooks::oPSSetShaderResources(pContext, 1, 1, &pTextureSRV);
-			}
-
-			//finish1 = clock();
-			//cout << idx++ << " GoDrawCall take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
-			//start1 = clock();
-			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
-
-
-		}
-	}
-	//finish1 = clock();
-	//cout << "return..." << (double)(finish1 - start0) / 1.00f << "\n";
-	//start1 = clock();
-	//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d End", idx, timeGetTime() - bgtime);
-
-	return;
+	//return;
 }
 
 void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation)
