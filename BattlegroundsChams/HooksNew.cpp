@@ -170,7 +170,7 @@ bool bTest2Draw = true;
 bool bHideENV = false;
 bool bHideGrass = false;
 DWORD ppppp = 0;
-int ipp = 0;
+int ipp = 3;
 int gStride = 12;
 int iMin = 601;
 int iMax = 2990;
@@ -881,6 +881,52 @@ void Append2CarOrBoatLst()
 		InitListFromFiles();
 	}
 }
+
+void Append2HideLst()
+{
+	ofstream outfile;
+	outfile.open("..\\HideList.txt", ios::app);
+	if (!outfile)
+	{
+		std::cout << "打开文件失败！" << "..\\HideList.txt" << endl;
+	}
+	else if (iiiii > 0)
+	{
+		outfile << std::dec << iiiii << std::endl;
+		outfile.close();
+		std::cout << std::dec << iiiii << " 写入文件完成！" << "..\\HideList.txt" << endl;
+
+		InitListFromFiles();
+	}
+}
+
+void W_SHIFT_KeyUp()
+{
+	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGo, bCheat);
+	keybd_event(87, 0, KEYEVENTF_KEYUP, 0);
+	keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGo, bCheat);
+}
+
+
+void SHIFT_W_KeyDown()
+{
+	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGo, bCheat);
+	keybd_event(VK_SHIFT, 0, 0, 0);
+	keybd_event(87, 0, 0, 0);
+	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGo, bCheat);
+}
+
+
+void Dbl_Key_()
+{
+	keybd_event(192, 0, 0, 0);
+	keybd_event(192, 0, KEYEVENTF_KEYUP, 0);
+	Sleep(50);
+	keybd_event(192, 0, 0, 0);
+	keybd_event(192, 0, KEYEVENTF_KEYUP, 0);
+}
+
 /*
 当前视图：
 看到的
@@ -1010,7 +1056,7 @@ void Thread_KeysSwitch(PVOID param)
 			b2DShader = !b2DShader;
 		}
 
-		if (GetAsyncKeyState(VK_DELETE) & 1)
+		//if (GetAsyncKeyState(VK_DELETE) & 1)
 		{
 			//ppDepthStencilState__Old = NULL;
 			//ppDepthStencilState__New = NULL;
@@ -1057,8 +1103,38 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(VK_DOWN) & 1)
 		{
-			//bLog2Txt_DOWN = true;
-			bVideo4Rec_PAUSE = !bVideo4Rec_PAUSE;
+			bVideo4Rec_SCROL = true;
+			bVideo4Rec_PAUSE = true;
+			//红色回退
+			if (lstAllStrides.size() > 0)
+			{
+			nnnn2:
+				iPos++;
+				if (iPos < 0)
+				{
+					iPos = 0;
+				}
+				else if (iPos >= lstAllStrides.size())
+				{
+					iPos = 0;
+				}
+
+
+				iiiii = lstAllStrides.at(iPos);
+				g_iCurStride = iiiii % 100;
+				g_iCurIndexCount = iiiii / 100;;
+				//Helpers::LogFormat("%d %d-%d %d %ld", iPos, iStride, iIndexCount, lstAll2412.size(), lstAll2412.at(iPos));
+				//if (!IsNotIn_ExcludeList(g_iCurStride, g_iCurIndexCount))
+				//{
+				//	goto nnnn2;
+				//}
+			}
+		}
+		if (GetAsyncKeyState(VK_END) & 1)
+		{
+			Append2HideLst();
+			bVideo4Rec_SCROL = false;
+			bVideo4Rec_PAUSE = false;
 		}
 		if (GetAsyncKeyState(VK_PRIOR) & 1)
 		{
@@ -1072,7 +1148,36 @@ void Thread_KeysSwitch(PVOID param)
 			bVideo4Rec_SCROL = false;
 			bVideo4Rec_PAUSE = false;
 		}
+		if (GetAsyncKeyState(83) & 1) //'S' KEY
+		{
+			bGo = false;
+			W_SHIFT_KeyUp();
+			bCheat = true;
+		}
+		if (GetAsyncKeyState(VK_ESCAPE) & 1)
+		{
+			Dbl_Key_();
+		}
+		if (GetAsyncKeyState(70) & 1) //'F' KEY
+		{
+			Dbl_Key_();
+		}
 
+		if (GetAsyncKeyState(VK_DELETE) & 1)
+		{
+			bGo = !bGo;
+			if (bGo)
+			{
+				bCheat = false;
+				SHIFT_W_KeyDown();
+			}
+			else
+			{
+				W_SHIFT_KeyUp();
+				bCheat = true;
+			}
+
+		}
 
 		//if (GetAsyncKeyState(VK_RETURN) & 1)
 		//{
@@ -2935,7 +3040,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	if (!psBlue)
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psBack)
-		hr = GenerateShader(CCheat::pDevice, &psBack, 0.4f, 0.4f, 0.25f);
+		hr = GenerateShader(CCheat::pDevice, &psBack, 0.6f, 0.6f, 0.5f);
 
 	RGB3 ccc;
 	ccc.r = 0.94f;
@@ -3097,7 +3202,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
 			if (bVideo4Rec_PAUSE)
 			{
-				pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'ENTER'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+				pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'PageUp[原色]/Down[绿色]'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
 			}
 		}
 	}
