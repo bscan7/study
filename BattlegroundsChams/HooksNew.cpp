@@ -153,6 +153,7 @@ std::vector<UINT64> lstAllStrides;
 std::vector<UINT64> lstAvatar2412;
 std::vector<UINT64> lstEqupm2412;
 std::vector<UINT64> lstExcludeAll;
+std::vector<UINT64> lstIncludeAll;
 std::vector<UINT64> lstHideList;
 std::vector<UINT64> lstCarOrBoat;
 //std::vector<int> lstRed24;
@@ -601,6 +602,16 @@ void InitListFromFiles()
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstNot2412 << " << g_NotRedListFName.c_str() << endl;
 
+		lstIncludeAll.clear();
+		fin.open("..\\V2_Include01.txt");  //打开文件
+											  //string ReadLine;
+		while (getline(fin, ReadLine))  //逐行读取，直到结束
+		{
+			lstIncludeAll.push_back(atoi(ReadLine.c_str()));
+		}
+		fin.close();
+		std::cout << "逐行读取文件完成！ lstIncludeAll << " << "..\\V2_Include01.txt" << endl;
+
 		lstHideList.clear();
 		fin.open("..\\HideList.txt");  //打开文件
 									   //string ReadLine;
@@ -882,6 +893,24 @@ void Append2CarOrBoatLst()
 	}
 }
 
+void Append2IncludeLst()
+{
+	ofstream outfile;
+	outfile.open("..\\V2_Include01.txt", ios::app);
+	if (!outfile)
+	{
+		std::cout << "打开文件失败！" << "..\\V2_Include01.txt" << endl;
+	}
+	else if (iiiii > 0)
+	{
+		outfile << std::dec << iiiii << std::endl;
+		outfile.close();
+		std::cout << std::dec << iiiii << " 写入文件完成！" << "..\\V2_Include01.txt" << endl;
+
+		InitListFromFiles();
+	}
+}
+
 void Append2HideLst()
 {
 	ofstream outfile;
@@ -1129,6 +1158,12 @@ void Thread_KeysSwitch(PVOID param)
 				//	goto nnnn2;
 				//}
 			}
+		}
+		if (GetAsyncKeyState(VK_INSERT) & 1)
+		{
+			Append2IncludeLst();
+			bVideo4Rec_SCROL = false;
+			bVideo4Rec_PAUSE = false;
 		}
 		if (GetAsyncKeyState(VK_END) & 1)
 		{
@@ -1391,6 +1426,19 @@ bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
 	// && (IndexCount != 3234)
 	// && (IndexCount != 5124)
 	// );
+}
+
+bool IsIn_IncludeList(UINT Stride, UINT IndexCount)
+{
+	UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	if (find(lstIncludeAll.begin(), lstIncludeAll.end(), IndexCountStride) != lstIncludeAll.end()) {
+		//找到
+			return true;
+	}
+	else {
+		//没找到
+		return false;
+	}
 }
 
 bool Is_CarOrBoat(UINT Stride, UINT IndexCount)
@@ -3810,7 +3858,9 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	//New...
 	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
-	if ((Stride == 24) && (psFront) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+	if (((Stride == 24) && (psFront) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
+		|| IsIn_IncludeList(Stride, IndexCountPerInstance)
+		)
 	{
 		//pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
 		//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
