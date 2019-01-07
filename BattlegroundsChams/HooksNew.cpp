@@ -2097,11 +2097,12 @@ void InitForHook(IDXGISwapChain* pSwapChain)
 
 	// use the back buffer address to create the render target
 	//if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&RenderTargetTexture))))
-	if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
-	{
-		CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
-		RenderTargetTexture->Release();
-	}
+
+	//if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
+	//{
+	//	CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
+	//	RenderTargetTexture->Release();
+	//}
 
 	InitListFromFiles();
 	//tmppp(CCheat::pContext);
@@ -2880,6 +2881,7 @@ bool IsCenterRed()
 }
 
 UINT64 lastCount = 0;
+UINT64 lastWIDTH = 0;
 HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
 {
 	iFrames++;
@@ -3059,6 +3061,18 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		pssrStartSlot = 1;
 	}
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 1 usedTime = ", timeGetTime() - bgtime);
+
+	if (lastWIDTH != (int)viewport.Width)
+	{
+		if (SUCCEEDED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&RenderTargetTexture)))
+		{
+			SAFE_RELEASE(RenderTargetView);
+			CCheat::pDevice->CreateRenderTargetView(RenderTargetTexture, NULL, &RenderTargetView);
+			RenderTargetTexture->Release();
+		}
+
+		lastWIDTH = (int)viewport.Width;
+	}
 	//call before you draw
 	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
 																			 //draw
@@ -3575,7 +3589,7 @@ void GoDrawCall(UINT InstanceCount, UINT StartInstanceLocation, ID3D11DeviceCont
 			{
 				//if ((Stride == 24) || (Stride == 12))
 				{
-					Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]]", g_iCurStride, g_iCurIndexCount);
+					Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]] BaseVertexLocation=[%d]", g_iCurStride, g_iCurIndexCount, BaseVertexLocation);
 					pContext->PSSetShader(psRed, NULL, NULL);
 				}
 			}
