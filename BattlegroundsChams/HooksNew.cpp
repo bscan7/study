@@ -156,6 +156,7 @@ std::vector<UINT64> lstExcludeAll;
 std::vector<UINT64> lstIncludeAll;
 std::vector<UINT64> lstHideList;
 std::vector<UINT64> lstCarOrBoat;
+std::vector<UINT64> lstHeader;
 //std::vector<int> lstRed24;
 //std::vector<int> lstBase12;
 //std::vector<int> lstRed12;
@@ -631,6 +632,16 @@ void InitListFromFiles()
 		}
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstCarOrBoat << ..\\CarOrBoatList.txt" << endl;
+
+		lstHeader.clear();
+		fin.open("..\\HeaderList.txt");  //打开文件
+											//string ReadLine;
+		while (getline(fin, ReadLine))  //逐行读取，直到结束
+		{
+			lstHeader.push_back(atoi(ReadLine.c_str()));
+		}
+		fin.close();
+		std::cout << "逐行读取文件完成！ lstHeader << ..\\HeaderList.txt" << endl;
 	}
 }
 
@@ -1445,6 +1456,18 @@ bool Is_CarOrBoat(UINT Stride, UINT IndexCount)
 {
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
 	if (find(lstCarOrBoat.begin(), lstCarOrBoat.end(), IndexCountStride) != lstCarOrBoat.end()) {
+		//找到
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool Is_Header(UINT Stride, UINT IndexCount)
+{
+	UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	if (find(lstHeader.begin(), lstHeader.end(), IndexCountStride) != lstHeader.end()) {
 		//找到
 		return true;
 	}
@@ -3882,7 +3905,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 				
 				if (Is_CarOrBoat(Stride, IndexCountPerInstance))
 				{
-					pContext->PSSetShader(psGreen, NULL, NULL); //设为明亮色
+					pContext->PSSetShader(psGreen, NULL, NULL); //设为绿色
+				} 
+				else if (Is_Header(Stride, IndexCountPerInstance))
+				{
+					pContext->PSSetShader(psBlue, NULL, NULL); //设为蓝色
 				} 
 				else
 				{
