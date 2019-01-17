@@ -3287,7 +3287,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
 			if (bVideo4Rec_PAUSE)
 			{
-				pFontWrapper->DrawString(CCheat::pContext, L"如果中心红，或者红区是要排除的对象，按'PageUp[原色]/Down[绿色]'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+				pFontWrapper->DrawString(CCheat::pContext, L"如果红区物体是要找的，按'PageUp[原色]/Down[绿色]/End[隐藏]/Insert[高亮]'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
 			}
 		}
 	}
