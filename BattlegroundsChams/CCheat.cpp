@@ -827,7 +827,7 @@ void CCheat::Initialise()
 	Helpers::Log("Cheat _beginthread(Thread_AutoShootIfCenter, 0, NULL);");
 	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
 	Helpers::Log("Cheat Thread_DrawCrossOnCenter");
-	_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
+	//_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC
 	DXGI_SWAP_CHAIN_DESC scd;
