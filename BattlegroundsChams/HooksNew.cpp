@@ -3894,6 +3894,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 	if (((Stride == 24) && (psFront) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 		|| IsIn_IncludeList(Stride, IndexCountPerInstance)
+		|| Is_Header(Stride, IndexCountPerInstance)
 		)
 	{
 		//pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
