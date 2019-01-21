@@ -3880,6 +3880,16 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		return;
 	}
 
+	if (bHideGrass && IsIn_HideList(Stride, IndexCountPerInstance, BaseVertexLocation))
+	{
+		return;
+	}
+
+	if ((Stride == gStride) && bHideENV)
+	{
+		return;
+	}
+
 	//New...
 	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 	if (((Stride == 24) && (psFront) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
@@ -3939,12 +3949,6 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//}
 
 			return;
-	}
-	else if ((Stride == gStride)  && bHideENV)
-		return;
-	else if (bHideGrass && IsIn_HideList(Stride, IndexCountPerInstance, BaseVertexLocation))
-	{
-		return;
 	}
 	else
 		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, Stride);
