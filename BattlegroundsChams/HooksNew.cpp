@@ -3292,6 +3292,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		}
 	}
 
+	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
+
 	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{
 		Helpers::LogFormat("hkD3D11Present 一帧查红色同步+++++++++++++");
@@ -3304,7 +3306,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		CCheat::pContext->End(pEventQuery); // 在 pushbuffer 中插入一个篱笆
 		while (CCheat::pContext->GetData(pEventQuery, NULL, 0, 0) == S_FALSE) {} // 自旋等待事件结束
 
-		Sleep(100);//等渲染的延迟
+		//Sleep(100);//等渲染的延迟
 		Helpers::LogFormat("hkD3D11Present 一帧查红色开始+++++++++++++");
 		if (!IsCenterRed() || (iiiii == 0))
 		{//当前帧，中心不是红色
@@ -3382,7 +3384,6 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	}
 
 	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
-	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 
 	//iFrames++;
 	//(UINT *)CaptureFrame(SHOOT_AREA_RADII, true);
