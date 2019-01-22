@@ -176,126 +176,126 @@ void Thread_DrawCrossOnCenter(PVOID param)
 #define SEARCH_AREA  100
 int pp = 0;
 
-void AutoShootIfCenter(PVOID param)
-{
-	UINT * ptPixels = nullptr;
-	RECT lpRect, lpShootRect;
-	//while (1)
-	//{
-		//Sleep(100);
-
-		//if (!bCrossDraw)
-		//{
-		//	continue;
-		//}
-		::GetWindowRect(g_hWnd, &lpRect);
-		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
-		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
-		point.x = nFullWidth / 2;
-		point.y = nFullHeight / 2;
-		*/
-
-		//HDC	hClientDC = ::GetDC(g_hWnd);
-
-		//为屏幕创建设备描述表
-		if (!hScrDC)
-		{
-			hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
-		}
-		//为屏幕设备描述表创建兼容的内存设备描述表
-		if (!hMemDC)
-		{
-			hMemDC = CreateCompatibleDC(hScrDC);
-		}
-
-		int iW = lpRect.right - lpRect.left;
-		int iH = lpRect.bottom - lpRect.top;
-		int iCenterX = iW / 2 + lpRect.left;
-		int iCenterY = iH / 2 + lpRect.top;
-
-		lpShootRect.top = iCenterY - SHOOT_AREA_RADII;
-		lpShootRect.bottom = iCenterY + SHOOT_AREA_RADII;
-		lpShootRect.left = iCenterX - SHOOT_AREA_RADII;
-		lpShootRect.right = iCenterX + SHOOT_AREA_RADII;
-		// 确保选定区域不为空矩形
-		if (IsRectEmpty(&lpShootRect))
-			return /*NULL*/;
-
-		HPEN hPen;
-		HPEN hPenOld;
-		//hdc = BeginPaint(hWnd, &ps);
-		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 0));
-		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
-
-		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.top, NULL);
-		LineTo(hScrDC, lpShootRect.right, lpShootRect.top);
-		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.bottom, NULL);
-		LineTo(hScrDC, lpShootRect.right, lpShootRect.bottom);
-
-		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.top, NULL);
-		LineTo(hScrDC, lpShootRect.left, lpShootRect.bottom);
-		MoveToEx(hScrDC, lpShootRect.right, lpShootRect.top, NULL);
-		LineTo(hScrDC, lpShootRect.right, lpShootRect.bottom);
-
-		SelectObject(hScrDC, hPenOld);
-		DeleteObject(hPen);
-
-		// 初始化BITMAPINFO信息，以便使用CreateDIBSection
-		BITMAPINFO RGB32BitsBITMAPINFO;
-		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
-		RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		RGB32BitsBITMAPINFO.bmiHeader.biWidth = SHOOT_AREA_RADII * 2;
-		RGB32BitsBITMAPINFO.bmiHeader.biHeight = SHOOT_AREA_RADII * 2;
-		RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
-		RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
-
-		if (!DirectBitmap)
-		{
-			DirectBitmap = CreateDIBSection(hMemDC,
-				(BITMAPINFO *)&RGB32BitsBITMAPINFO,
-				DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
-		}
-		HBITMAP    hBitmap, hOldBitmap;
-		// 把新位图选到内存设备描述表中
-		hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
-
-		BitBlt(hMemDC, 0, 0, SHOOT_AREA_RADII * 2, SHOOT_AREA_RADII * 2,
-			hScrDC, lpShootRect.left, lpShootRect.top, SRCCOPY);
-
-		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
-		// 替换颜色  
-		for (int i = ((SHOOT_AREA_RADII * 2 * SHOOT_AREA_RADII * 2) - 1); i >= 0; i--)
-		{
-			if (!ptPixels)
-			{
-				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
-				break;
-			}
-			std::cout << ptPixels[i] << " ";
-			//ptPixels[i]; //0xff 29 27 21 红绿蓝
-			if (   (ptPixels[i] == 0xff000080)
-				|| (ptPixels[i] == 0xff800000)
-				|| (ptPixels[i] == 0xff734c19)
-				)
-			{
-				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
-				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
-				std::cout << "==============+-+-+-+- 射击射击射击 i=" << i << " idx=" << pp << std::endl;
-
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-				Sleep(10); 
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-				//bDoneOnShoot = false;
-				break;
-			}
-			//bDoneOnShoot = true;
-		}
-		std::cout << std::endl;
-		pp++;
-		hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
-
-	//}
-}
+//void AutoShootIfCenter(PVOID param)
+//{
+//	UINT * ptPixels = nullptr;
+//	RECT lpRect, lpShootRect;
+//	//while (1)
+//	//{
+//		//Sleep(100);
+//
+//		//if (!bCrossDraw)
+//		//{
+//		//	continue;
+//		//}
+//		::GetWindowRect(g_hWnd, &lpRect);
+//		/*			int nFullWidth = GetSystemMetrics(SM_CXSCREEN);
+//		int nFullHeight = GetSystemMetrics(SM_CYSCREEN);
+//		point.x = nFullWidth / 2;
+//		point.y = nFullHeight / 2;
+//		*/
+//
+//		//HDC	hClientDC = ::GetDC(g_hWnd);
+//
+//		//为屏幕创建设备描述表
+//		if (!hScrDC)
+//		{
+//			hScrDC = CreateDC(L"DISPLAY", NULL, NULL, NULL);
+//		}
+//		//为屏幕设备描述表创建兼容的内存设备描述表
+//		if (!hMemDC)
+//		{
+//			hMemDC = CreateCompatibleDC(hScrDC);
+//		}
+//
+//		int iW = lpRect.right - lpRect.left;
+//		int iH = lpRect.bottom - lpRect.top;
+//		int iCenterX = iW / 2 + lpRect.left;
+//		int iCenterY = iH / 2 + lpRect.top;
+//
+//		lpShootRect.top = iCenterY - SHOOT_AREA_RADII;
+//		lpShootRect.bottom = iCenterY + SHOOT_AREA_RADII;
+//		lpShootRect.left = iCenterX - SHOOT_AREA_RADII;
+//		lpShootRect.right = iCenterX + SHOOT_AREA_RADII;
+//		// 确保选定区域不为空矩形
+//		if (IsRectEmpty(&lpShootRect))
+//			return /*NULL*/;
+//
+//		HPEN hPen;
+//		HPEN hPenOld;
+//		//hdc = BeginPaint(hWnd, &ps);
+//		hPen = CreatePen(PS_SOLID, 1, RGB(0, 174, 0));
+//		hPenOld = (HPEN)SelectObject(hScrDC, hPen);
+//
+//		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.top, NULL);
+//		LineTo(hScrDC, lpShootRect.right, lpShootRect.top);
+//		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.bottom, NULL);
+//		LineTo(hScrDC, lpShootRect.right, lpShootRect.bottom);
+//
+//		MoveToEx(hScrDC, lpShootRect.left, lpShootRect.top, NULL);
+//		LineTo(hScrDC, lpShootRect.left, lpShootRect.bottom);
+//		MoveToEx(hScrDC, lpShootRect.right, lpShootRect.top, NULL);
+//		LineTo(hScrDC, lpShootRect.right, lpShootRect.bottom);
+//
+//		SelectObject(hScrDC, hPenOld);
+//		DeleteObject(hPen);
+//
+//		// 初始化BITMAPINFO信息，以便使用CreateDIBSection
+//		BITMAPINFO RGB32BitsBITMAPINFO;
+//		ZeroMemory(&RGB32BitsBITMAPINFO, sizeof(BITMAPINFO));
+//		RGB32BitsBITMAPINFO.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+//		RGB32BitsBITMAPINFO.bmiHeader.biWidth = SHOOT_AREA_RADII * 2;
+//		RGB32BitsBITMAPINFO.bmiHeader.biHeight = SHOOT_AREA_RADII * 2;
+//		RGB32BitsBITMAPINFO.bmiHeader.biPlanes = 1;
+//		RGB32BitsBITMAPINFO.bmiHeader.biBitCount = 32;
+//
+//		if (!DirectBitmap)
+//		{
+//			DirectBitmap = CreateDIBSection(hMemDC,
+//				(BITMAPINFO *)&RGB32BitsBITMAPINFO,
+//				DIB_RGB_COLORS, (void **)&ptPixels, NULL, 0);
+//		}
+//		HBITMAP    hBitmap, hOldBitmap;
+//		// 把新位图选到内存设备描述表中
+//		hOldBitmap = (HBITMAP)SelectObject(hMemDC, DirectBitmap);
+//
+//		BitBlt(hMemDC, 0, 0, SHOOT_AREA_RADII * 2, SHOOT_AREA_RADII * 2,
+//			hScrDC, lpShootRect.left, lpShootRect.top, SRCCOPY);
+//
+//		std::cout << "==============i" <<  "==============idx=" << pp << std::endl;
+//		// 替换颜色  
+//		for (int i = ((SHOOT_AREA_RADII * 2 * SHOOT_AREA_RADII * 2) - 1); i >= 0; i--)
+//		{
+//			if (!ptPixels)
+//			{
+//				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
+//				break;
+//			}
+//			std::cout << ptPixels[i] << " ";
+//			//ptPixels[i]; //0xff 29 27 21 红绿蓝
+//			if (   (ptPixels[i] == 0xff000080)
+//				|| (ptPixels[i] == 0xff800000)
+//				|| (ptPixels[i] == 0xff734c19)
+//				)
+//			{
+//				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
+//				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
+//				std::cout << "==============+-+-+-+- 射击射击射击 i=" << i << " idx=" << pp << std::endl;
+//
+//				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+//				Sleep(10); 
+//				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+//				//bDoneOnShoot = false;
+//				break;
+//			}
+//			//bDoneOnShoot = true;
+//		}
+//		std::cout << std::endl;
+//		pp++;
+//		hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
+//
+//	//}
+//}
 
 BOOL SaveDcToBMP(BYTE *pBmpBuffer,
 	HBITMAP hbitmapSave,
@@ -329,7 +329,13 @@ void AutoCenterAndShoot(PVOID param)
 		*/
 
 		//捕获屏幕选定区域
+		Helpers::LogFormat("----===  CaptureFrame( ========");
 		ptPixels = (UINT *)CaptureFrame(SEARCH_AREA, false);
+		Helpers::LogFormat("----===  CaptureFrame) ========0x%x", ptPixels);
+		if (ptPixels == NULL)
+		{
+			return;
+		}
 
 		//判断中心点区域
 		int iTmp = SEARCH_AREA - SHOOT_AREA_RADII;
@@ -354,6 +360,8 @@ void AutoCenterAndShoot(PVOID param)
 					|| (ptPixels[i] % 0x1000000 == 0x800000)
 					|| (ptPixels[i] % 0x1000000 == 0x790000)
 					|| (ptPixels[i] % 0x1000000 == 0x810000)
+					|| (ptPixels[i] % 0x1000000 == 0x6A)
+					|| (ptPixels[i] % 0x1000000 == 0x6A0000)
 					)
 				{
 					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
@@ -385,17 +393,23 @@ void AutoCenterAndShoot(PVOID param)
 				|| (ptPixels[i] % 0x1000000 == 0x800000)
 				|| (ptPixels[i] % 0x1000000 == 0x790000)
 				|| (ptPixels[i] % 0x1000000 == 0x810000)
-				) 
+				|| (ptPixels[i] % 0x1000000 == 0x6A)
+				|| (ptPixels[i] % 0x1000000 == 0x6A0000)
+				)
 				|| (ptPixels[i] % 0x1000000 == 0x404040))
 			{
 				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
-				std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE x=" << std::dec << SEARCH_AREA - (iEdgeLen - i % (iEdgeLen)) << " y=" << SEARCH_AREA - (i / (iEdgeLen)) << " iX=" << (iEdgeLen - i % (iEdgeLen)) << " iY=" << (i / (iEdgeLen)) << std::endl;
+				int offX = SEARCH_AREA - (iEdgeLen - i % (iEdgeLen));
+				int offY = SEARCH_AREA - (i / (iEdgeLen));
+				//std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE x=" << std::dec << offX << " y=" << offY << " iX=" << (iEdgeLen - i % (iEdgeLen)) << " iY=" << (i / (iEdgeLen)) << std::endl;
+				std::cout << "==============+-+-+-+- MOUSEEVENTF_MOVE(" << std::dec << offX / 4 << ", " << (offY) / 4 << ")" << std::endl;
+				//std::cout << "==============+-+-+-+- ::SetCursorPos(" << std::dec << iCenterX - offX << ", " << iCenterY - offY << ")" << std::endl;
 
-				::SetCursorPos(iCenterX - (SEARCH_AREA - (iEdgeLen - i % (iEdgeLen))),
-					iCenterY - (SEARCH_AREA - (i / (iEdgeLen)))
-				);
-				//mouse_event(MOUSEEVENTF_MOVE, (SEARCH_AREA-(iEdgeLen - i % (iEdgeLen)))/4, (SEARCH_AREA - (i / (iEdgeLen))) /4, 0, NULL);
+				/*::SetCursorPos(iCenterX - offX,
+					iCenterY - (offY)
+				);*/
+				mouse_event(MOUSEEVENTF_MOVE, offX /4, (offY) /4, 0, NULL);
 				//Sleep(5);
 				//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				//Sleep(5);
@@ -411,8 +425,9 @@ void AutoCenterAndShoot(PVOID param)
 			}
 			//bDoneOnShoot = true;
 		}
-		std::cout << std::endl;
+		//std::cout << std::endl;
 		pp++;
+		std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- AutoCenterAndShoot Return。。。" << std::endl;
 }
 
 void AutoCenterAndShoot_Old(PVOID param)

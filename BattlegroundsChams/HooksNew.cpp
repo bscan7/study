@@ -2593,6 +2593,7 @@ bool IsCenterRed_Old()//DC截屏，效率差
 //--------------------------------------------------------------------------------------
 BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 {
+	Helpers::LogFormat("-----------------CaptureFrame 1");
 	//::GetWindowRect(g_hWnd, &g_lpRect);
 	//RECT lpRect;
 	//int iW = g_lpRect.right - g_lpRect.left;
@@ -2618,17 +2619,25 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 	ID3D11Device *d3d11Device;
 	pMainContext->GetDevice(&d3d11Device);
 
+	Helpers::LogFormat("-----------------CaptureFrame 11 0x%x", d3d11Device);
 	ID3D11RenderTargetView *ppRenderTargetViews11;
 	pMainContext->OMGetRenderTargets(1, &ppRenderTargetViews11, 0);
+	if (ppRenderTargetViews11 == NULL)
+	{
+		return NULL;
+	}
 
+	Helpers::LogFormat("-----------------CaptureFrame 111 0x%x", ppRenderTargetViews11);
 	// Retrieve RT resource
 	ID3D11Resource *pRTResource;
 	ppRenderTargetViews11->GetResource(&pRTResource);
 
+	Helpers::LogFormat("-----------------CaptureFrame 1111 0x%x", pRTResource);
 	// Retrieve a Texture2D interface from resource
 	ID3D11Texture2D* RTTexture;
 	pRTResource->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&RTTexture);
 
+	Helpers::LogFormat("-----------------CaptureFrame 11111");
 	// Check if RT is multisampled or not
 	D3D11_TEXTURE2D_DESC    TexDesc;
 	RTTexture->GetDesc(&TexDesc);
@@ -2684,6 +2693,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 		pMainContext->CopyResource(g_pCaptureTexture, pRTResource);
 	}
 
+	Helpers::LogFormat("-----------------CaptureFrame 2");
 
 	{
 		////////////////////////////////
@@ -2697,6 +2707,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 		g_pCaptureTexture->GetDesc(&desc);
 		D3D11_MAPPED_SUBRESOURCE resource;
 		UINT subresource = D3D11CalcSubresource(0, 0, 0);
+		Helpers::LogFormat("-----------------CaptureFrame 3");
 		pMainContext->Map(g_pCaptureTexture, subresource, D3D11_MAP_READ, 0, &resource);
 
 		UINT lBmpRowPitch = TexDesc.Width * 4;
@@ -2716,6 +2727,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 
 		pMainContext->Unmap(g_pCaptureTexture, subresource);
 		long g_captureSize = minRowPitch*desc.Height;
+		Helpers::LogFormat("-----------------CaptureFrame 4");
 
 		DWORD dOutBufLen = iRadii * 2 * iRadii * 2 * 4;
 		int nW = iRadii * 2;
@@ -2733,7 +2745,9 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 			nW = TexDesc.Width;
 		}
 		outBuffer = new BYTE[dOutBufLen];
+		Helpers::LogFormat("-----------------new BYTE[%d] =< 0x%x >, ", dOutBufLen, outBuffer);
 		memset(outBuffer, 0, dOutBufLen);
+		//Helpers::LogFormat("-----------------iFrames = %d < %d >,< %d >, ", iFrames, hTop, hBottom);
 		//Copying to BYTE buffer 
 		//memcpy(outBuffer, (void*)pBuf, g_captureSize);
 		//Helpers::LogFormat("-----------------iFrames = %d < %d >,< %d >, ", iFrames, hTop, hBottom);
@@ -2798,6 +2812,11 @@ bool IsCenterRed()
 
 	//捕获屏幕选定区域
 	ptPixels = (UINT *)CaptureFrame(SHOOT_AREA_RADII, false);
+
+	if (ptPixels == NULL)
+	{
+		return false;
+	}
 
 	//对内存进行颜色比对
 	//// 选定区域坐标
@@ -2992,7 +3011,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	if (bShoot)
 	{
-		std::cout << "hkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
+		std::cout << "\r\nhkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
 		PulseEvent(g_Event_Shoot);
 	}
 	//SaveMapToFile();
