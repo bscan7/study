@@ -692,6 +692,7 @@ ID3D11PixelShader* psFront = NULL;
 ID3D11PixelShader* psBlue = NULL;
 ID3D11PixelShader* psRed0 = NULL;
 ID3D11PixelShader* psBack = NULL;
+ID3D11PixelShader* psEnemyInBack = NULL;
 ID3D11ShaderResourceView* ShaderResourceView;
 
 void Thread_fileWatcher(PVOID param)
@@ -1198,7 +1199,7 @@ void Thread_KeysSwitch(PVOID param)
 		{
 			bGo = false;
 			W_SHIFT_KeyUp();
-			bCheat = true;
+			ipp = 3;
 		}
 		if (GetAsyncKeyState(VK_ESCAPE) & 1)
 		{
@@ -1214,13 +1215,15 @@ void Thread_KeysSwitch(PVOID param)
 			bGo = !bGo;
 			if (bGo)
 			{
-				bCheat = false;
+				//bCheat = false;
+				ipp = 4;
 				SHIFT_W_KeyDown();
 			}
 			else
 			{
 				W_SHIFT_KeyUp();
-				bCheat = true;
+				//bCheat = true;
+				ipp = 3;
 			}
 
 		}
@@ -3133,6 +3136,8 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		hr = GenerateShader(CCheat::pDevice, &psBlue, 0.0f, 0.0f, 0.5f);
 	if (!psBack)
 		hr = GenerateShader(CCheat::pDevice, &psBack, 0.6f, 0.6f, 0.5f);
+	if (!psEnemyInBack)
+		hr = GenerateShader(CCheat::pDevice, &psEnemyInBack, 0.5f, 0.3f, 0.2f);
 
 	RGB3 ccc;
 	ccc.r = 0.94f;
@@ -3926,7 +3931,21 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		//BBB//////////////////////////////////////////////
 		pContext->RSSetState(CWcullMode);
 		//pContext->RSSetState(RSCullSolid);
-		pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
+
+		if (b2DShader &&psBack)
+		{
+			if (Is_CarOrBoat(Stride, IndexCountPerInstance))
+			{
+				pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
+			}
+			else if (Is_Header(Stride, IndexCountPerInstance))
+			{
+				pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
+			}
+			else
+				pContext->PSSetShader(psEnemyInBack, NULL, NULL); //设为遮挡色
+		}
+
 		pContext->OMSetDepthStencilState(DSLess, 0);
 		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
