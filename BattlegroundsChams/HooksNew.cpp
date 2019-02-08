@@ -2148,8 +2148,8 @@ void InitForHook(IDXGISwapChain* pSwapChain)
 
 	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	dssDesc.DepthEnable = true;
-	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	//dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	//dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dssDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSLess);
 
