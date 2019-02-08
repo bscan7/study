@@ -2165,6 +2165,12 @@ void InitForHook(IDXGISwapChain* pSwapChain)
 	dssDesc.DepthFunc = D3D11_COMPARISON_GREATER;
 	CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSGreat);
 
+	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	dssDesc.DepthEnable = true;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dssDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSAlways);
+
 	//create font
 	HRESULT hResult = FW1CreateFactory(FW1_VERSION, &pFW1Factory);
 	hResult = pFW1Factory->CreateFontWrapper(CCheat::pDevice, L"Tahoma", &pFontWrapper);
@@ -3915,6 +3921,22 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		return;
 	}
 
+	//D3D11_DEPTH_STENCIL_DESC depthStencilDesc2;
+	//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
+	//ppDepthStencilState__Old->GetDesc(&depthStencilDesc2);
+
+	//if (depthStencilDesc2.DepthFunc == D3D11_COMPARISON_GREATER_EQUAL &&
+	//	depthStencilDesc2.DepthWriteMask == D3D11_DEPTH_WRITE_MASK_ALL && IndexCountPerInstance==2478)
+	//{
+	//	depthStencilDesc2.DepthFunc == D3D11_COMPARISON_NEVER;
+	//	//depthStencilDesc2.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	//	ID3D11Device *ppDevice;
+	//	pContext->GetDevice(&ppDevice);
+	//	ppDevice->CreateDepthStencilState(&depthStencilDesc2, &ppDepthStencilState__Old);
+	//	pContext->OMSetDepthStencilState(ppDepthStencilState__Old, 0);
+	//	//return;
+	//}
+
 	//New...
 	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
 	if (((Stride == 24) && (psFront) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
@@ -3947,7 +3969,8 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 				pContext->PSSetShader(psEnemyInBack, NULL, NULL); //ÉèÎªÕÚµ²É«
 		}
 
-		pContext->OMSetDepthStencilState(DSLess, 0);
+		//pContext->OMSetDepthStencilState(DSLess, 0);
+		pContext->OMSetDepthStencilState(DSAlways, 0);
 		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
 			//pContext->RSSetState(RSCullWireFrame);
@@ -3995,7 +4018,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	return;
 
-
+							
 	//if ((((Stride == gStride) /*|| IsIn_HideList(Stride, IndexCountPerInstance)*/) && bHideENV
 	//	/*&&(
 	//	(IndexCountPerInstance <= iMin) ||
