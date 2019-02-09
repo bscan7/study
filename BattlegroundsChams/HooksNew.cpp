@@ -2167,6 +2167,7 @@ void InitForHook(IDXGISwapChain* pSwapChain)
 
 	ZeroMemory(&dssDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	dssDesc.DepthEnable = true;
+	//dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dssDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
 	CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSAlways);
@@ -3925,16 +3926,22 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
 	//ppDepthStencilState__Old->GetDesc(&depthStencilDesc2);
 
-	//if (depthStencilDesc2.DepthFunc == D3D11_COMPARISON_GREATER_EQUAL &&
-	//	depthStencilDesc2.DepthWriteMask == D3D11_DEPTH_WRITE_MASK_ALL && IndexCountPerInstance==2478)
+	////pContext->RSSetState(CWcullMode);
+	//if (/*depthStencilDesc2.DepthFunc == D3D11_COMPARISON_GREATER_EQUAL &&
+	//	depthStencilDesc2.DepthWriteMask == D3D11_DEPTH_WRITE_MASK_ALL &&*/ IndexCountPerInstance==2478)
 	//{
-	//	depthStencilDesc2.DepthFunc == D3D11_COMPARISON_NEVER;
+	//	//depthStencilDesc2.DepthFunc == D3D11_COMPARISON_NEVER;
 	//	//depthStencilDesc2.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	//	ID3D11Device *ppDevice;
-	//	pContext->GetDevice(&ppDevice);
-	//	ppDevice->CreateDepthStencilState(&depthStencilDesc2, &ppDepthStencilState__Old);
-	//	pContext->OMSetDepthStencilState(ppDepthStencilState__Old, 0);
+	//	//ID3D11Device *ppDevice;
+	//	//pContext->GetDevice(&ppDevice);
+	//	//ppDevice->CreateDepthStencilState(&depthStencilDesc2, &ppDepthStencilState__Old);
+	//	//pContext->OMSetDepthStencilState(ppDepthStencilState__Old, 0);
 	//	//return;
+	//	//pContext->RSSetState(RSCullWireFrame);
+	//	pContext->OMSetDepthStencilState(DSGreat, 0);
+
+	//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, Stride);
+	//	return;
 	//}
 
 	//New...
