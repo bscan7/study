@@ -3964,6 +3964,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 		if (b2DShader &&psBack)
 		{
+			//CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL);
 			if (Is_CarOrBoat(Stride, IndexCountPerInstance))
 			{
 				pContext->PSSetShader(psBack, NULL, NULL); //ÉèÎª»ÒÉ«
