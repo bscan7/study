@@ -45,10 +45,16 @@ ID3D11DepthStencilView* depthStencilView;
 ID3D11Texture2D* depthStencilBuffer;
 ID3D11VertexShader* VS;
 ID3D11PixelShader* PS;
+ID3D11VertexShader* VS33;
+ID3D11PixelShader* PS33;
 ID3D11PixelShader* D2D_PS;
 ID3D10Blob* D2D_PS_Buffer;
 ID3D10Blob* VS_Buffer;
 ID3D10Blob* PS_Buffer;
+ID3D10Blob* VS_Buffer33;
+ID3D10Blob* PS_Buffer33;
+ID3D11Buffer* triangleVertBuffer33;
+
 ID3D11InputLayout* vertLayout;
 ID3D11Buffer* cbPerObjectBuffer;
 ID3D11BlendState* d2dTransparency;
@@ -311,6 +317,18 @@ struct cbPerFrame
 };
 
 cbPerFrame constbuffPerFrame;
+
+//顶点结构体以及顶点布局（输入布局）
+struct Vertex33
+{
+	Vertex33() {}
+	Vertex33(float x, float y, float z,
+		float cr, float cg, float cb, float ca)
+		:pos(x, y, z), color(cr, cg, cb, ca) {}
+	XMFLOAT3 pos;
+	XMFLOAT4 color;
+};
+
 
 struct Vertex	//Overloaded Vertex Structure
 {
@@ -2184,6 +2202,36 @@ bool InitScene()
 	createTex(d3d11Device, ("white_4x4.dds"));
 	//createTex(d3d11Device, ("yellow_4x4.dds"));
 
+	//编译着色器33
+	hr = D3DX11CompileFromFile(L"Effects3.fx", 0, 0, "VS", "vs_4_0", 0, 0, 0, &VS_Buffer33, 0, 0);
+	hr = D3DX11CompileFromFile(L"Effects3.fx", 0, 0, "PS", "ps_4_0", 0, 0, 0, &PS_Buffer33, 0, 0);
+
+	//创建着色器对象33
+	hr = d3d11Device->CreateVertexShader(VS_Buffer33->GetBufferPointer(), VS_Buffer33->GetBufferSize(), NULL, &VS33);
+	hr = d3d11Device->CreatePixelShader(VS_Buffer33->GetBufferPointer(), VS_Buffer33->GetBufferSize(), NULL, &PS33);
+
+	//创建顶点缓冲
+	Vertex33 v[] = {
+		Vertex33(0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f),
+		Vertex33(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f),
+		Vertex33(-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f),
+	};
+
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof(Vertex33) * 3;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA vertexBufferData;
+	ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
+	vertexBufferData.pSysMem = v;
+	hr = d3d11Device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &triangleVertBuffer33);
+
+
 	//Set Vertex and Pixel Shaders
 	d3d11DevCon->VSSetShader(VS, 0, 0);
 	d3d11DevCon->PSSetShader(PS, 0, 0);
@@ -3067,7 +3115,8 @@ void DrawScene()
 
 	//RenderText(L"FPS: ", fps);
 
-	CaptureFrame();
+	
+	//CaptureFrame();//放开可以捕获屏幕
 
 	//ID3D11Texture2D *BackBuffer110;
 	//hr = SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&BackBuffer110);
@@ -3114,6 +3163,16 @@ void DrawScene()
 	//	}
 	//	pSurface->Release();
 	//}
+
+	////////////////////////////////////////////////////////////////////////////【
+	//设置顶点缓冲
+	/*UINT*/ stride = sizeof(Vertex33);
+	/*UINT*/ offset = 0;
+	d3d11DevCon->IASetVertexBuffers(0, 1, &triangleVertBuffer33, &stride, &offset);
+	//画三角形
+	d3d11DevCon->Draw(3, 0);
+
+	////////////////////////////////////////////////////////////////////////////】
 
 	//Present the backbuffer to the screen
 	SwapChain->Present(0, 0);
