@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="16">
+  <Forms>
+    <CETrainer Class="TTrainerForm" Encoding="Ascii85">eN#)v):ZrTY!bf.!=p*t(k;M=N:!{ciB%puWLrrzRjiDnlmjr]cEt;+C;u5m2Y?9DhFzC1Om]ds+N$Vm)5@hc=C/e@pZwJXfW!w6[Xtsx7fc.UwR8}PPIp2!*8-drG-iCh)B;at61g%z4Tdjxt^3K]fraQwb6Jd9(;j,.6=zBp;UoEV3MAy3S#I=xUuMU4EZ6+s#:5tXNv0SpPzhlQcm(}OCAcmJC(4kELK00YUq.?yWq^h1F_=lZHBSYz0kBJaObaGl^E_#z3?13O)clJjK7?kL3u^Eh*pxGXPM8Raaxu$EPeS;IDVEo#)MI:9Z]/6,Z9;yX/xCj@.FPxfjn:a8pdTF)_A;%iQX6a1HukHqe;BEkZ.jbh[[Bm9ciE4AoqqiJ]K)H_Ow*2/DmS]Lb_)tzFoGqWvtjTIKEZuC@Lw3x?vmIHhLvc:bhdCnH(!(pkaS_bp%n81T/5#;o=L+_xlzf5G-bjYN8{K^3ZdWVxlLMkD;--Te!mUp[uKQ!cOSf%s+*W@A:UO=RE,l?.^.8Em.{,JL!1Af[CZUFXET:RYqXtSQ5Yq-,w0SQuiu)p4:q=@3#rzgO@?qlL9g1([vdZ3ou8(#EdYN3</CETrainer>
+  </Forms>
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript>--TRAINERGENERATORSTART--
+--这是自动生成的代码. 请在个区域内个修改代码
+--如果你重新生成修改器, 获取删除和重写代码
+
+--Uncomment the following line if this is a Cheat Table format trainer and you don't want CE to show (Tip, save as .CETRAINER alternatively)
+--hideAllCEWindows()
+
+RequiredCEVersion=6.3
+if (getCEVersion==nil) or (getCEVersion()&lt;RequiredCEVersion) then
+  messageDialog('Please install Cheat Engine '..RequiredCEVersion, mtError, mbOK)
+  closeCE()
+end
+addresslist=AOBScan("00 00 00 00 01 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F")
+print('Found: '..addresslist.getCount())
+print('addresslist[1]: '..addresslist[1])
+print(byteTableToDword(stringToByteTable(addresslist[1])))
+ local bt = stringToByteTable(addresslist[1])
+ for i, v in ipairs(bt) do
+   print(i - 1, string.format('%02X', v))
+ end
+aaa=getCurrentMemscan()
+memrec0=addresslist.getMemoryRecordByID(1)
+if memrec0==nil then print('memrec0 is nil')
+else print('memrec0 is',memrec0) end
+
+messageDialog('Found: '..addresslist.getCount()..readFloat(tonumber(addresslist[1])-20), mtError, mbOK)
+
+control_setVisible(CETrainer_SEPERATOR, false)
+
+strings_add(getAutoAttachList(), "NemuHeadless.exe")
+gBeepOnAction=false
+form_show(CETrainer)
+function AboutClick()
+  showMessage(gAboutText)
+end
+gAboutText=[[This trainer was made by Cheat 
+Engine
+www.cheatengine.org]]
+
+function CloseClick()
+  closeCE()
+  return caFree --onClick doesn't care, but onClose would like a result
+end
+
+--TRAINERGENERATORSTOP--
+</LuaScript>
+</CheatTable>
