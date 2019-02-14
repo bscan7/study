@@ -12,6 +12,7 @@
 #include <mutex>
 #include "resource.h"
 #include "gloabls.h"
+#include "memSearch.h"
 using namespace std;
 
 ID3D11Device *CCheat::pDevice = NULL;
@@ -956,6 +957,7 @@ void CCheat::Initialise()
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstancedIndirect),	Hooks::hkD3D11DrawIndexedInstancedIndirect);
 
 	//InitForHook(CCheat::pSwapChain);
+	SearchAvator();
 	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
 }
 
