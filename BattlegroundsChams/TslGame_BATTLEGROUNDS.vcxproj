@@ -201,6 +201,7 @@
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Hooks.h" />
     <ClInclude Include="mainxxx.h" />
+    <ClInclude Include="memSearch.h" />
     <ClInclude Include="SDK.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
