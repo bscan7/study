@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FangDa", "ZoomDesk\FangDa.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "profapi", "profapi\profapi.vcxproj", "{6D7CA939-DF5C-4888-A583-0AA80C42F277}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testApp", "testApp\testApp.vcxproj", "{2A8355C7-8E0F-477E-A5A0-7267B25DF476}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -95,6 +97,14 @@ Global
 		{6D7CA939-DF5C-4888-A583-0AA80C42F277}.Release|x64.Build.0 = Release|x64
 		{6D7CA939-DF5C-4888-A583-0AA80C42F277}.Release|x86.ActiveCfg = Release|Win32
 		{6D7CA939-DF5C-4888-A583-0AA80C42F277}.Release|x86.Build.0 = Release|Win32
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Debug|x64.ActiveCfg = Debug|x64
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Debug|x64.Build.0 = Debug|x64
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Debug|x86.ActiveCfg = Debug|Win32
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Debug|x86.Build.0 = Debug|Win32
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Release|x64.ActiveCfg = Release|x64
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Release|x64.Build.0 = Release|x64
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Release|x86.ActiveCfg = Release|Win32
+		{2A8355C7-8E0F-477E-A5A0-7267B25DF476}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

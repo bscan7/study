@@ -3,7 +3,32 @@
   <Forms>
     <CETrainer Class="TTrainerForm" Encoding="Ascii85">eN#/x):ZrSWE{r;7,7{4mK^ex7HZ=Ei9NA8KvyWXl6ay;8AWM[yKx5:OsCi22*I@aJEe5x]DDMJ=;,0M0_3o0KAcgiSuMG}P/j)!a,qGFd_^j$cRb/sa%G%9z?cjE,;G2Wb!Ar0$B}EG+3=Rld)ascHJ7G=M0V}FnZ!cvxEHpM:4H9_bG54/X{s54Rg^]?i5m#lAflKQTTz;42nv#u8KT+(@#!X[TM$?R(.]J6U@$aqgybuop(U(}YC,(Xpvpy{UP@Dw#N(5i%x{3!WV4SK%x[b5$2G6*X_@^fr!OrGE1$A=rYo-D2n3C-cyEl75sI@G8edbIO_3C[Fb2:tjPH-ez8^SFOvI^zZo0?[G+@4m:GkQEh3#nb;?/PRBH6GdcazWPlANkJzikZgUp2dhR}XGrxeCBARXibx4pOb3Pt_z/Px*T[J03vq9JX;Pn^yFOGI}Y6r6?k=g}zbowsPUY^rfJP?kE)5^{JU)H_$smrG3ydzWGE7JWFz#WYYm^@+rsno_Y@YyfjZ{2eslfE6A_c%hOta9c#VvkSte9=.?YAZLy$l+4}h:+{,X2HVeRC</CETrainer>
   </Forms>
-  <CheatEntries/>
+  <CheatEntries>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"无描述"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <VariableType>Array of byte</VariableType>
+      <ByteLength>44</ByteLength>
+      <Address>41C25F10</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"无描述"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <VariableType>Array of byte</VariableType>
+      <ByteLength>44</ByteLength>
+      <Address>474E8130</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"无描述"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <VariableType>Array of byte</VariableType>
+      <ByteLength>44</ByteLength>
+      <Address>475EFF30</Address>
+    </CheatEntry>
+  </CheatEntries>
   <UserdefinedSymbols/>
   <Comments>关于表格信息:
 </Comments>
@@ -14,15 +39,16 @@
 --Uncomment the following line if this is a Cheat Table format trainer and you don't want CE to show (Tip, save as .CETRAINER alternatively)
 --hideAllCEWindows()
 
-function sleep(n)
-    if n &gt; 0 then os.execute("ping -n " .. tonumber(n + 1) .. " localhost &gt; NUL") end
-end
-
+--function sleep(n)
+  --  if n &gt; 0 then os.execute("ping -n " .. tonumber(n + 1) .. " localhost &gt; NUL") end
+--end
 RequiredCEVersion=6.3
 if (getCEVersion==nil) or (getCEVersion()&lt;RequiredCEVersion) then
   messageDialog('Please install Cheat Engine '..RequiredCEVersion, mtError, mbOK)
   closeCE()
 end
+print('readFloat(0x00123ABC)')
+
 addresslist=AOBScan("00 00 00 00 01 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F")
 print('Found: '..addresslist.getCount())
 --print('addresslist[1]: '..addresslist[1])
@@ -56,7 +82,7 @@ a = {}
 
         print(string.format("%08X", tonumber(addresslist[i], 16)))
         print(string.format("%08X", tonumber(addresslist[i], 16)-20))
-        print(tostring(readFloat(tonumber(addresslist[i], 16)-20)))
+        print(tostring(readFloat(tonumber(addresslist[i], 16)-152)))
         --print(string.format("%08X", readDword(tonumber(addresslist[i], 16)-16)))
     end
 --[[    for k, v in pairs(addresslist) do
@@ -67,7 +93,7 @@ a = {}
     end
     print('=====: '..addresslist.getCount())
     print('=====: '..#a)
-    sleep(1)
+    Sleep(1000)
         iOff = 1;
     for i = addresslist.getCount()-1, 0,-1 do
         dw = readBytes(tonumber(addresslist[i], 16)-20, 1)
@@ -90,14 +116,18 @@ a = {}
     end
     print('Found2: '..addresslist.getCount())
     print('=====: '..#a)
+    --print(' = '..readFloat(tonumber(addresslist[i])-152))
     for k, v in pairs(a) do
         print(k .. " : " .. v)
     end
 
     for i = 0, addresslist.getCount()-1 do
-        print('addresslist['..tostring(i)..']: '..addresslist[i])
-     end
-
+        --print('addresslist['..tostring(i)..']: '..addresslist[i]..' = '..readFloat(addresslist[i]..'-152'))
+        print('addresslist['..tostring(i)..']: '..addresslist[i]..' = '..tostring(readFloat(tonumber(addresslist[i], 16)-152)))
+        print('x='..' ['..string.format("%08X", tonumber(addresslist[i], 16)-152)..']: '..tostring(readFloat(tonumber(addresslist[i], 16)-152)))
+        print('y='..' ['..string.format("%08X", tonumber(addresslist[i], 16)-148)..']: '..tostring(readFloat(tonumber(addresslist[i], 16)-148)))
+        print('z='..' ['..string.format("%08X", tonumber(addresslist[i], 16)-144)..']: '..tostring(readFloat(tonumber(addresslist[i], 16)-144)))
+    end
 --[[
  local bt = stringToByteTable(addresslist[1])
  for i, v in ipairs(bt) do

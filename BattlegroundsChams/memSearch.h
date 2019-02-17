@@ -1,7 +1,7 @@
 // MemRepair.cpp : 定义控制台应用程序的入口点。  
 //  
 
-#include "stdafx.h"  
+//#include "stdafx.h"  
 #include <Windows.h>  
 #include<fstream>
 #include<sstream>
@@ -14,7 +14,7 @@ HANDLE g_hProcess;
 DWORD g_arList[1024];
 DWORD g_nListCnt;
 
-ofstream fout("memDmp.hex", ios::out | ios::binary);;
+//ofstream fout("memDmp.hex", ios::out | ios::binary);;
 
 BOOL CompareAPage(DWORD dwBaseAddr, DWORD dwValue)
 {
@@ -61,6 +61,7 @@ BOOL CompareAPage(DWORD dwBaseAddr, BYTE* pBytes, UINT uLen)
 	BOOL bRead = ::ReadProcessMemory(g_hProcess, (LPVOID)dwBaseAddr, arBytes, 4096, NULL);
 	if (bRead == FALSE)
 	{
+		printf("::ReadProcessMemory..Failed\n");
 		return FALSE;
 	}
 	if (1)
@@ -126,7 +127,7 @@ BOOL FindFirst(DWORD dwValue, int iLen = -1)
 		}
 	}
 
-	fout.close();
+	//fout.close();
 
 	return TRUE;
 }
@@ -193,7 +194,7 @@ BOOL WriteMemory(DWORD dwAddr, DWORD dwValue)
 }
 int SearchAvator(INT PID=NULL)
 {
-	PID = 28012;
+	//PID = 28012;
 	int g_nNum = 13333;
 	g_nListCnt = 0;
 	memset(g_arList, 0, sizeof(g_arList));
@@ -218,25 +219,28 @@ int SearchAvator(INT PID=NULL)
 	} 
 	else
 	{
+		printf("GetLastError()=%d\n", ::GetLastError());
 		g_hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
+		//g_hProcess = OpenProcess(PROCESS_VM_READ, FALSE, PID);
+		//g_hProcess = OpenProcess(PROCESS_VM_WRITE, FALSE, PID);
 		printf("[@@@@@@@@@@@@@@@@@@@@@@@@] g_hProcess = %d\n", g_hProcess);
 		printf("GetLastError()=%d\n", ::GetLastError());
 	}
 
 //Test
 	//byte byteArray[10] = { 0x78 ,0x03 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 };
-#define BYTELEN  4
+#define BYTELEN  64
 
 	byte byteArray[BYTELEN] = { 
-		 0x00 ,0x00 ,0x00 ,0x00 /*,0x01 ,0x00 ,0x00 ,0x00 ,0xFF ,0xFF ,0xFF ,0xFF ,0x00 ,0x00 ,0x00 ,0x00 
+		 0x00 ,0x00 ,0x00 ,0x00 ,0x01 ,0x00 ,0x00 ,0x00 ,0xFF ,0xFF ,0xFF ,0xFF ,0x00 ,0x00 ,0x00 ,0x00 
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 
-		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x80 ,0x3F*/ };
-	printf("[@@@@First search] byte[64]:\n");
+		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x80 ,0x3F };
+	printf("[@@---------<<First search] byte[64]:0x%08x\n", byteArray);
 	//FindFirst((DWORD)byteArray, BYTELEN);
 	//打印结果  
 	ShowList();
-	printf("[@@@@First search]		g_nListCnt=%d\n", g_nListCnt);
+	printf("[@@--------->>First search]		g_nListCnt=%d\n", g_nListCnt);
 /*	;
 	//输入查找值  
 	int iVal = 19710214;

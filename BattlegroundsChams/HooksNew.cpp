@@ -95,6 +95,24 @@ static HWND hOutWnd = NULL;
 //static int iIndexCnt = 0;
 std::list<std::string> sHideList;
 
+DWORD GetCurrentActiveWindowsProcessId()
+{
+	HWND hWnd = ::GetForegroundWindow();
+	DWORD processId = 0;
+
+
+	GetWindowThreadProcessId(hWnd, &processId);
+	//Helpers::LogFormat("--------(%d)---------(%d) ", hWnd, processId);
+	return processId;
+}
+
+BOOL HasFocus() {
+	DWORD active_process = GetCurrentActiveWindowsProcessId();
+	DWORD current_process = ::GetCurrentProcessId();
+	//Helpers::LogFormat("--------(%d)---------HasFocus(%d) ", active_process, current_process);
+
+	return current_process == active_process;
+}
 ////    对应Unicode的调试输出  
 //inline void MyTraceW(LPCTSTR strFormat, ...)
 //{
@@ -152,11 +170,11 @@ std::vector<UINT64> lstLogStrides;
 std::vector<UINT64> lstAllStrides;
 std::vector<UINT64> lstAvatar2412;
 std::vector<UINT64> lstEqupm2412;
-std::vector<UINT64> lstExcludeAll;
-std::vector<UINT64> lstIncludeAll;
+std::vector<UINT64> lstExcludeList;
+std::vector<UINT64> lstIncludeList;
 std::vector<UINT64> lstHideList;
-std::vector<UINT64> lstCarOrBoat;
-std::vector<UINT64> lstHeader;
+std::vector<UINT64> lstCarOrBoatList;
+std::vector<UINT64> lstHeaderList;
 //std::vector<int> lstRed24;
 //std::vector<int> lstBase12;
 //std::vector<int> lstRed12;
@@ -593,22 +611,22 @@ void InitListFromFiles()
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstEqupm2412 << ..\\equpmList.txt" << endl;
 
-		lstExcludeAll.clear();
+		lstExcludeList.clear();
 		fin.open(g_NotRedListFName.c_str());  //打开文件
 											  //string ReadLine;
 		while (getline(fin, ReadLine))  //逐行读取，直到结束
 		{
-			lstExcludeAll.push_back(atoi(ReadLine.c_str()));
+			lstExcludeList.push_back(atoi(ReadLine.c_str()));
 		}
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstNot2412 << " << g_NotRedListFName.c_str() << endl;
 
-		lstIncludeAll.clear();
+		lstIncludeList.clear();
 		fin.open("..\\V2_Include01.txt");  //打开文件
 											  //string ReadLine;
 		while (getline(fin, ReadLine))  //逐行读取，直到结束
 		{
-			lstIncludeAll.push_back(atoi(ReadLine.c_str()));
+			lstIncludeList.push_back(atoi(ReadLine.c_str()));
 		}
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstIncludeAll << " << "..\\V2_Include01.txt" << endl;
@@ -623,22 +641,22 @@ void InitListFromFiles()
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstHideList << ..\\HideList.txt" << endl;
 
-		lstCarOrBoat.clear();
+		lstCarOrBoatList.clear();
 		fin.open("..\\CarOrBoatList.txt");  //打开文件
 											//string ReadLine;
 		while (getline(fin, ReadLine))  //逐行读取，直到结束
 		{
-			lstCarOrBoat.push_back(atoi(ReadLine.c_str()));
+			lstCarOrBoatList.push_back(atoi(ReadLine.c_str()));
 		}
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstCarOrBoat << ..\\CarOrBoatList.txt" << endl;
 
-		lstHeader.clear();
+		lstHeaderList.clear();
 		fin.open("..\\HeaderList.txt");  //打开文件
 											//string ReadLine;
 		while (getline(fin, ReadLine))  //逐行读取，直到结束
 		{
-			lstHeader.push_back(atoi(ReadLine.c_str()));
+			lstHeaderList.push_back(atoi(ReadLine.c_str()));
 		}
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstHeader << ..\\HeaderList.txt" << endl;
@@ -872,6 +890,14 @@ void Append2Txt(string sTxtLine)
 
 void Append2ExcludeLst()
 {
+	if (iiiii <= 0)
+		return;
+	if (find(lstExcludeList.begin(), lstExcludeList.end(), iiiii) != lstExcludeList.end()) {
+		//找到
+		std::cout << "列表里已经有了！ " << g_NotRedListFName.c_str() << endl;
+		return;
+	}
+
 	ofstream outfile;
 	outfile.open(g_NotRedListFName.c_str(), ios::app);
 	if (!outfile)
@@ -889,6 +915,14 @@ void Append2ExcludeLst()
 }
 void Append2CarOrBoatLst()
 {
+	if (iiiii <= 0)
+		return ;
+	if ( find(lstCarOrBoatList.begin(), lstCarOrBoatList.end(), iiiii) != lstCarOrBoatList.end()) {
+		//找到
+		std::cout << "列表里已经有了！ " << "..\\CarOrBoatList.txt" << endl;
+		return ;
+	}
+
 	ofstream outfile;
 	outfile.open("..\\CarOrBoatList.txt", ios::app);
 	if (!outfile)
@@ -907,6 +941,14 @@ void Append2CarOrBoatLst()
 
 void Append2IncludeLst()
 {
+	if (iiiii <= 0)
+		return;
+	if (find(lstIncludeList.begin(), lstIncludeList.end(), iiiii) != lstIncludeList.end()) {
+		//找到
+		std::cout << "列表里已经有了！ " << "..\\V2_Include01.txt" << endl;
+		return;
+	}
+
 	ofstream outfile;
 	outfile.open("..\\V2_Include01.txt", ios::app);
 	if (!outfile)
@@ -925,6 +967,14 @@ void Append2IncludeLst()
 
 void Append2HideLst()
 {
+	if (iiiii <= 0)
+		return;
+	if (find(lstHideList.begin(), lstHideList.end(), iiiii) != lstHideList.end()) {
+		//找到
+		std::cout << "列表里已经有了！ " << "..\\HideList.txt" << endl;
+		return;
+	}
+
 	ofstream outfile;
 	outfile.open("..\\HideList.txt", ios::app);
 	if (!outfile)
@@ -941,21 +991,37 @@ void Append2HideLst()
 	}
 }
 
+void W_KeyUp()
+{
+	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	keybd_event(87, 0, KEYEVENTF_KEYUP, 0);
+	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+}
+
+
+void W_KeyDown()
+{
+	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	keybd_event(87, 0, 0, 0);
+	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+}
+
+
 void W_SHIFT_KeyUp()
 {
-	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGo, bCheat);
+	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoFast, bCheat);
 	keybd_event(87, 0, KEYEVENTF_KEYUP, 0);
 	keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
-	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGo, bCheat);
+	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoFast, bCheat);
 }
 
 
 void SHIFT_W_KeyDown()
 {
-	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGo, bCheat);
+	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoFast, bCheat);
 	keybd_event(VK_SHIFT, 0, 0, 0);
 	keybd_event(87, 0, 0, 0);
-	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGo, bCheat);
+	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoFast, bCheat);
 }
 
 
@@ -1006,6 +1072,13 @@ void Thread_KeysSwitch(PVOID param)
 	int iBW_Pos = 0;
 	while (!bStoped)
 	{
+		//Helpers::LogFormat("--------Thread_KeysSwitch---------HasFocus(%d) ", HasFocus()); 
+
+		if (!HasFocus())
+		{
+			Sleep(100);
+			continue;
+		}
 		if (GetAsyncKeyState(VK_HOME) & 1)
 		{
 			CCheat::Release();
@@ -1197,7 +1270,7 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(83) & 1) //'S' KEY
 		{
-			bGo = false;
+			bGoFast = false;
 			W_SHIFT_KeyUp();
 			ipp = 3;
 		}
@@ -1212,8 +1285,8 @@ void Thread_KeysSwitch(PVOID param)
 
 		if (GetAsyncKeyState(VK_DELETE) & 1)
 		{
-			bGo = !bGo;
-			if (bGo)
+			bGoFast = !bGoFast;
+			if (bGoFast)
 			{
 				//bCheat = false;
 				ipp = 4;
@@ -1228,6 +1301,23 @@ void Thread_KeysSwitch(PVOID param)
 
 		}
 
+		if (GetAsyncKeyState(VK_OEM_MINUS) & 1)
+		{
+			bGo = !bGo;
+			if (bGo)
+			{
+				//bCheat = false;
+				ipp = 4;
+				W_KeyDown();
+			}
+			else
+			{
+				W_KeyUp();
+				//bCheat = true;
+				ipp = 3;
+			}
+
+		}
 		//if (GetAsyncKeyState(VK_RETURN) & 1)
 		//{
 		//	//lstRed24.clear();
@@ -1408,7 +1498,7 @@ Stride=12 IndexCount=14136 汽车
 bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
 {
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
-	if (find(lstExcludeAll.begin(), lstExcludeAll.end(), IndexCountStride) != lstExcludeAll.end()) {
+	if (find(lstExcludeList.begin(), lstExcludeList.end(), IndexCountStride) != lstExcludeList.end()) {
 		//找到
 		return false;
 	}
@@ -1445,7 +1535,7 @@ bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
 bool IsIn_IncludeList(UINT Stride, UINT IndexCount)
 {
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
-	if (find(lstIncludeAll.begin(), lstIncludeAll.end(), IndexCountStride) != lstIncludeAll.end()) {
+	if (find(lstIncludeList.begin(), lstIncludeList.end(), IndexCountStride) != lstIncludeList.end()) {
 		//找到
 			return true;
 	}
@@ -1458,7 +1548,7 @@ bool IsIn_IncludeList(UINT Stride, UINT IndexCount)
 bool Is_CarOrBoat(UINT Stride, UINT IndexCount)
 {
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
-	if (find(lstCarOrBoat.begin(), lstCarOrBoat.end(), IndexCountStride) != lstCarOrBoat.end()) {
+	if (find(lstCarOrBoatList.begin(), lstCarOrBoatList.end(), IndexCountStride) != lstCarOrBoatList.end()) {
 		//找到
 		return true;
 	}
@@ -1470,7 +1560,7 @@ bool Is_CarOrBoat(UINT Stride, UINT IndexCount)
 bool Is_Header(UINT Stride, UINT IndexCount)
 {
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
-	if (find(lstHeader.begin(), lstHeader.end(), IndexCountStride) != lstHeader.end()) {
+	if (find(lstHeaderList.begin(), lstHeaderList.end(), IndexCountStride) != lstHeaderList.end()) {
 		//找到
 		return true;
 	}
@@ -3177,7 +3267,10 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		lastWIDTH = (int)viewport.Width;
 	}
 	//call before you draw
-	CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
+	if (RenderTargetView)
+	{
+		CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL); //?????? 1 
+	}
 																			 //draw
 																			 //if (pFontWrapper)
 																			 //{
@@ -3314,12 +3407,39 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		www += std::to_wstring(iPos);
 		www += L"/";
 		www += std::to_wstring(lstAllStrides.size());
-		if (pFontWrapper)
+		if (pFontWrapper && RenderTargetView)
 		{
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
 			if (bVideo4Rec_PAUSE)
 			{
 				pFontWrapper->DrawString(CCheat::pContext, L"如果红区物体是要找的，按'PageUp[原色]/Down[绿色]/End[隐藏]/Insert[高亮]'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
+
+				UINT64 iTmp = g_iCurIndexCount*100 + g_iCurStride;
+
+				if (find(lstCarOrBoatList.begin(), lstCarOrBoatList.end(), iTmp) != lstCarOrBoatList.end()) {
+					//找到
+					www += L" lstCarOrBoatList 找到：";
+					www += std::to_wstring(iTmp);
+					pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 30, 16.0f, 126.0f, 0xffff1612, FW1_RESTORESTATE);
+				}
+				if (find(lstIncludeList.begin(), lstIncludeList.end(), iTmp) != lstIncludeList.end()) {
+					//找到
+					www += L" lstIncludeList 找到：";
+					www += std::to_wstring(iTmp);
+					pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 30, 16.0f, 156.0f, 0xffff1612, FW1_RESTORESTATE);
+				}
+				if (find(lstExcludeList.begin(), lstExcludeList.end(), iTmp) != lstExcludeList.end()) {
+					//找到
+					www += L" lstExcludeAll 找到：";
+					www += std::to_wstring(iTmp);
+					pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 30, 16.0f, 186.0f, 0xffff1612, FW1_RESTORESTATE);
+				}
+				if (find(lstHeaderList.begin(), lstHeaderList.end(), iTmp) != lstHeaderList.end()) {
+					//找到
+					www += L" lstHeaderList 找到：";
+					www += std::to_wstring(iTmp);
+					pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 30, 16.0f, 216.0f, 0xffff1612, FW1_RESTORESTATE);
+				}
 			}
 		}
 	}

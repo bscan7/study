@@ -741,7 +741,7 @@ void CCheat::Initialise()
 	//HWND hWnd = FindWindowA(NULL, "engine");
 	while (!g_hWnd)
 	{
-		g_hWnd = FindWindowA(NULL, "Lesson 4 - Begin Drawing");
+		//g_hWnd = FindWindowA(NULL, "Lesson 4 - Begin Drawing");
 		if (!g_hWnd)
 		{
 			g_hWnd = FindWindowA(NULL, "BlueStacks App Player");
