@@ -993,35 +993,33 @@ void Append2HideLst()
 
 void W_KeyUp()
 {
-	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(87, 0, KEYEVENTF_KEYUP, 0);
-	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
 void W_KeyDown()
 {
-	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(87, 0, 0, 0);
-	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
-void W_SHIFT_KeyUp()
+void SHIFT_KeyUp()
 {
-	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoFast, bCheat);
-	keybd_event(87, 0, KEYEVENTF_KEYUP, 0);
+	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
-	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
-void SHIFT_W_KeyDown()
+void SHIFT_KeyDown()
 {
-	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(VK_SHIFT, 0, 0, 0);
-	keybd_event(87, 0, 0, 0);
-	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoFast, bCheat);
+	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
@@ -1270,9 +1268,12 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(83) & 1) //'S' KEY
 		{
-			bGoFast = false;
-			W_SHIFT_KeyUp();
-			ipp = 3;
+			if (bGoAuto)
+			{
+				ipp = 3;
+			}
+			bGoAuto = false;
+			SHIFT_KeyUp();
 		}
 		if (GetAsyncKeyState(VK_ESCAPE) & 1)
 		{
@@ -1285,26 +1286,28 @@ void Thread_KeysSwitch(PVOID param)
 
 		if (GetAsyncKeyState(VK_DELETE) & 1)
 		{
-			bGoFast = !bGoFast;
-			if (bGoFast)
+			bGoAuto = !bGoAuto;
+			if (bGoAuto)
 			{
 				//bCheat = false;
 				ipp = 4;
-				SHIFT_W_KeyDown();
+				SHIFT_KeyDown();
+				W_KeyDown();
 			}
 			else
 			{
-				W_SHIFT_KeyUp();
+				SHIFT_KeyUp();
+				W_KeyUp();
 				//bCheat = true;
 				ipp = 3;
 			}
 
 		}
 
-		if (GetAsyncKeyState(VK_OEM_MINUS) & 1)
+		if (GetAsyncKeyState(VK_OEM_MINUS) & 1) //'-' KEY
 		{
-			bGo = !bGo;
-			if (bGo)
+			bGoAuto = !bGoAuto;
+			if (bGoAuto)
 			{
 				//bCheat = false;
 				ipp = 4;

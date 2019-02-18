@@ -3,8 +3,8 @@
 //bool bLogTxt = false;
 bool bVideo4Rec_SCROL = false; //触发FRAPS录制视频，同时逐个物体显示红色。用于记录分析
 bool bVideo4Rec_PAUSE = false; //暂停
-bool bGoFast = false; //
-bool bGo = false; //
+bool bGoAuto = false; //
+//bool bGo = false; //
 
 //    对应Unicode的调试输出  
 inline void MyTraceW(LPCTSTR strFormat, ...)

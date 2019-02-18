@@ -125,7 +125,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y $(TargetPath) M:\TxGameAssistant\UI\profapi.dll</Command>
+      <Command>copy /Y $(TargetPath) D:\Tools\TxGameAssistant\UI\D3Dhhhhh.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
