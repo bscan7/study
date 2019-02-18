@@ -28,6 +28,11 @@
 //
 //	return 0;
 //}
+struct Vec3
+{
+	float x, y, z/* = 1.0f*/;
+};
+
 
 int main()
 {
@@ -97,7 +102,16 @@ int main()
 	printf("maxCPU.pid=%d CPU: %.2f%%\n", maxcpuProcessID, maxcpu);
 	//Sleep(2000);
 
+	//SearchMatrix(maxcpuProcessID);
 	SearchAvator(maxcpuProcessID);
+
+	Vec3 avatorPos; //对象坐标
+	float ViewWorld[4][4];
+	float ViewW = ViewWorld[0][3] * avatorPos.x + ViewWorld[1][3] * avatorPos.y + ViewWorld[2][3] * avatorPos.z + ViewWorld[3][3];
+	/*距离1*/float  dstc1 = ViewW / 100;
+
+	printf("dstc1: %.2f\n", dstc1);
+
 	Sleep(20000);
 	return 0;
 }

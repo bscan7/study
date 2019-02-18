@@ -61,7 +61,7 @@ BOOL CompareAPage(DWORD dwBaseAddr, BYTE* pBytes, UINT uLen)
 	BOOL bRead = ::ReadProcessMemory(g_hProcess, (LPVOID)dwBaseAddr, arBytes, 4096, NULL);
 	if (bRead == FALSE)
 	{
-		printf("::ReadProcessMemory..Failed\n");
+		//printf("::ReadProcessMemory..Failed\n");
 		return FALSE;
 	}
 	if (1)
@@ -237,7 +237,7 @@ int SearchAvator(INT PID=NULL)
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x80 ,0x3F };
 	printf("[@@---------<<First search] byte[64]:0x%08x\n", byteArray);
-	//FindFirst((DWORD)byteArray, BYTELEN);
+	FindFirst((DWORD)byteArray, BYTELEN);
 	//打印结果  
 	ShowList();
 	printf("[@@--------->>First search]		g_nListCnt=%d\n", g_nListCnt);
@@ -270,5 +270,40 @@ int SearchAvator(INT PID=NULL)
 	//}
 
 	//::CloseHandle(g_hProcess);
+	return 0;
+}
+
+int SearchMatrix(INT PID=NULL)
+{
+	//PID = 28012;
+	g_nListCnt = 0;
+	memset(g_arList, 0, sizeof(g_arList));
+
+	if (PID == NULL)
+	{
+		g_hProcess = ::GetCurrentProcess();
+	} 
+	else
+	{
+		printf("GetLastError()=%d\n", ::GetLastError());
+		g_hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
+		printf("[@@@@@@@@@@@@@@@@@@@@@@@@] g_hProcess = %d\n", g_hProcess);
+		printf("GetLastError()=%d\n", ::GetLastError());
+	}
+
+//Test
+	//byte byteArray[10] = { 0x78 ,0x03 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 };
+#define BYTELEN2  44
+
+	byte byteArray[BYTELEN2] = { 
+		 0x00 ,0x07 ,0x80 ,0x3f ,0x00 ,0x00 ,0x80 ,0x3f ,0x00 ,0x00 ,0x80 ,0x3f ,0x00 ,0x00 ,0x80 ,0x3f 
+		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x80 ,0x3f ,0x00 ,0x00 ,0x00 ,0x00 
+		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x80 ,0x3f ,0x00 ,0x00 ,0x80 ,0x3f
+		 };
+	printf("[@@---------<<First search] byte[%d]:0x%08x\n", BYTELEN2, byteArray);
+	FindFirst((DWORD)byteArray, BYTELEN2);
+	//打印结果  
+	ShowList();
+	printf("[@@--------->>First search]		g_nListCnt=%d\n", g_nListCnt);
 	return 0;
 }
