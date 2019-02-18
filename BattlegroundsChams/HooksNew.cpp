@@ -1268,11 +1268,8 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(83) & 1) //'S' KEY
 		{
-			if (bGoAuto)
-			{
-				ipp = 3;
-			}
 			bGoAuto = false;
+			W_KeyUp();
 			SHIFT_KeyUp();
 		}
 		if (GetAsyncKeyState(VK_ESCAPE) & 1)
@@ -1296,8 +1293,8 @@ void Thread_KeysSwitch(PVOID param)
 			}
 			else
 			{
-				SHIFT_KeyUp();
 				W_KeyUp();
+				SHIFT_KeyUp();
 				//bCheat = true;
 				ipp = 3;
 			}
