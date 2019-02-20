@@ -1299,7 +1299,7 @@ void Thread_KeysSwitch(PVOID param)
 			{
 				ipp = 3;
 				bGoAuto = false;
-				W_KeyUp();
+				//W_KeyUp();
 				SHIFT_KeyUp();
 			}
 		}
