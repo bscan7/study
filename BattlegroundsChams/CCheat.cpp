@@ -957,7 +957,7 @@ void CCheat::Initialise()
 	Helpers::HookFunction(reinterpret_cast<PVOID*>(&Hooks::oDrawIndexedInstancedIndirect),	Hooks::hkD3D11DrawIndexedInstancedIndirect);
 
 	//InitForHook(CCheat::pSwapChain);
-	SearchAvator();
+	//SearchAvator();
 	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
 }
 

@@ -1020,33 +1020,33 @@ void Append2HideLst()
 
 void W_KeyUp()
 {
-	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("W_KeyUp[--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(87, 0, KEYEVENTF_KEYUP, 0);
-	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("W_KeyUp]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
 void W_KeyDown()
 {
-	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("W_KeyDown[--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(87, 0, 0, 0);
-	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("W_KeyDown]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
 void SHIFT_KeyUp()
 {
-	Helpers::LogFormat("2A--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("SHIFT_KeyUp[--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
-	Helpers::LogFormat("2B--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("SHIFT_KeyUp]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
 void SHIFT_KeyDown()
 {
-	Helpers::LogFormat("1a--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("SHIFT_KeyDown[--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 	keybd_event(VK_SHIFT, 0, 0, 0);
-	Helpers::LogFormat("1b--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	Helpers::LogFormat("SHIFT_KeyDown]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
 
@@ -1124,10 +1124,24 @@ void Thread_KeysSwitch(PVOID param)
 			}
 		}
 
-		if (GetAsyncKeyState(VK_NUMPAD0) & 1)
+		//if (GetKeyState(VK_NUMPAD0) < 0)
+		//{
+		//	Helpers::LogFormat("VK_NUMPAD0VK_NUMPAD0");
+		//}
+		if (//((GetAsyncKeyState(VK_NUMPAD0) & 1) && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) ||
+			(GetAsyncKeyState(VK_NUMPAD0) & 1))
 		{
 			ipp = ipp++ % 4;
+			Helpers::LogFormat("VK_NUMPAD0 pressed-----ipp = %d---bGo = %d bCheat = %d ", ipp, bGoAuto, bCheat);
 		}
+		//if ((GetAsyncKeyState(VK_SHIFT) & 0x8000))
+		//{
+		//	Helpers::LogFormat("VK_SHIFT");
+		//}
+		//if ((GetKeyState(VK_SHIFT) & 0x8000))
+		//{
+		//	Helpers::LogFormat("VK_SHIFT GetKeyState");
+		//}
 		if (GetAsyncKeyState(VK_NUMPAD1) & 1)
 		{
 			sHideList.clear();
@@ -1293,26 +1307,6 @@ void Thread_KeysSwitch(PVOID param)
 			bVideo4Rec_SCROL = false;
 			bVideo4Rec_PAUSE = false;
 		}
-		if (GetAsyncKeyState(83) & 1) //'S' KEY
-		{
-			if (bGoAuto)
-			{
-				ipp = 3;
-				bGoAuto = false;
-				W_KeyUp();
-				SHIFT_KeyUp();
-			}
-		}
-		if (GetAsyncKeyState(87) & 1) //'W' KEY
-		{
-			if (bGoAuto)
-			{
-				ipp = 3;
-				bGoAuto = false;
-				//W_KeyUp();
-				SHIFT_KeyUp();
-			}
-		}
 		if (GetAsyncKeyState(VK_ESCAPE) & 1)
 		{
 			Dbl_Key_();
@@ -1342,7 +1336,8 @@ void Thread_KeysSwitch(PVOID param)
 
 		}
 
-		if (GetAsyncKeyState(VK_OEM_MINUS) & 1) //'-' KEY
+		//if (GetAsyncKeyState(VK_OEM_MINUS) & 1) //'-' KEY
+		if (GetAsyncKeyState(88) & 1) //'X' KEY
 		{
 			bGoAuto = !bGoAuto;
 			if (bGoAuto)
@@ -1359,6 +1354,26 @@ void Thread_KeysSwitch(PVOID param)
 			}
 
 		}
+		if (GetAsyncKeyState(83) & 1) //'S' KEY
+		{
+			if (bGoAuto)
+			{
+				ipp = 3;
+				bGoAuto = false;
+				W_KeyUp();
+				SHIFT_KeyUp();
+			}
+		}
+		//if (GetAsyncKeyState(87) & 1) //'W' KEY
+		//{
+		//	if (bGoAuto)
+		//	{
+		//		ipp = 3;
+		//		bGoAuto = false;
+		//		//W_KeyUp();
+		//		SHIFT_KeyUp();
+		//	}
+		//}
 		//if (GetAsyncKeyState(VK_RETURN) & 1)
 		//{
 		//	//lstRed24.clear();
