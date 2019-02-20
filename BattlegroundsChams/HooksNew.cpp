@@ -892,6 +892,33 @@ void Append2ExcludeLst()
 {
 	if (iiiii <= 0)
 		return;
+
+	if (find(lstIncludeList.begin(), lstIncludeList.end(), iiiii) != lstIncludeList.end()) {
+		//找到
+		lstIncludeList.erase(find(lstIncludeList.begin(), lstIncludeList.end(), iiiii));
+		//std::cout << "列表里已经有了！ " << "..\\V2_Include01.txt" << endl;
+
+		ofstream outfile;
+		outfile.open("..\\V2_Include01.txt", ios::ate | ios::out);
+		if (!outfile)
+		{
+			std::cout << "打开文件失败！" << "..\\V2_Include01.txt" << endl;
+		}
+		else if (iiiii > 0)
+		{
+			for (vector<UINT64>::iterator iter = lstIncludeList.begin(); iter != lstIncludeList.end(); iter++)
+			{
+				outfile << std::dec << *iter << std::endl;
+
+			}
+			outfile.close();
+			std::cout << std::dec << iiiii << " 写入文件完成！" << "..\\V2_Include01.txt" << endl;
+			InitListFromFiles();
+		}
+		return;
+	}
+
+
 	if (find(lstExcludeList.begin(), lstExcludeList.end(), iiiii) != lstExcludeList.end()) {
 		//找到
 		std::cout << "列表里已经有了！ " << g_NotRedListFName.c_str() << endl;
@@ -1268,9 +1295,23 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(83) & 1) //'S' KEY
 		{
-			bGoAuto = false;
-			W_KeyUp();
-			SHIFT_KeyUp();
+			if (bGoAuto)
+			{
+				ipp = 3;
+				bGoAuto = false;
+				W_KeyUp();
+				SHIFT_KeyUp();
+			}
+		}
+		if (GetAsyncKeyState(87) & 1) //'W' KEY
+		{
+			if (bGoAuto)
+			{
+				ipp = 3;
+				bGoAuto = false;
+				//W_KeyUp();
+				SHIFT_KeyUp();
+			}
 		}
 		if (GetAsyncKeyState(VK_ESCAPE) & 1)
 		{

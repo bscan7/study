@@ -6,6 +6,8 @@
 #include<fstream>
 #include<sstream>
 #include <iosfwd>
+#include <MMSystem.h>
+#pragma comment(lib, "winmm.lib") //timeGetTime
 using namespace std;
 
 //BOOL FindFirst(DWORD dwValue);
@@ -13,6 +15,7 @@ using namespace std;
 HANDLE g_hProcess;
 DWORD g_arList[1024];
 DWORD g_nListCnt;
+DWORD dSearchedLen;
 
 //ofstream fout("memDmp.hex", ios::out | ios::binary);;
 
@@ -28,6 +31,7 @@ BOOL CompareAPage(DWORD dwBaseAddr, DWORD dwValue)
 		return FALSE;
 	}
 
+	dSearchedLen += 4096;
 	DWORD *pdw;
 	for (int i = 0; i<4096 - 4; i++)
 	{
@@ -68,7 +72,7 @@ BOOL CompareAPage(DWORD dwBaseAddr, BYTE* pBytes, UINT uLen)
 	{
 		//fout.write((char*)arBytes, 4096);
 	}
-
+	dSearchedLen += 4096;
 	BYTE *pdw;
 	for (int i = 0; i<4096 - 4; i++)
 	{
@@ -103,6 +107,7 @@ BOOL FindFirst(DWORD dwValue, int iLen = -1)
 	OSVERSIONINFO versionInfo = { 0 };
 	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
+	printf("GetLastError()=%d\n", ::GetLastError());
 	::GetVersionEx(&versionInfo);
 	if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) //win98  
 	{
@@ -113,7 +118,8 @@ BOOL FindFirst(DWORD dwValue, int iLen = -1)
 		dwBase = 64 * 1024; // 64KB  
 	}
 
-	
+	printf("GetLastError()=%d\n", ::GetLastError());
+	dSearchedLen = 0;
 	//从开始地址到2GB的空间查找  
 	for (; dwBase<2 * dwOneGB; dwBase += dwOnePage)
 	{
@@ -126,7 +132,9 @@ BOOL FindFirst(DWORD dwValue, int iLen = -1)
 			CompareAPage(dwBase, (BYTE*)dwValue, iLen);
 		}
 	}
+	printf("GetLastError()=%d\n", ::GetLastError());
 
+	printf("总共搜索了：%d 字节内存\n", dSearchedLen);
 	//fout.close();
 
 	return TRUE;
@@ -236,11 +244,14 @@ int SearchAvator(INT PID=NULL)
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 
 		,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x80 ,0x3F };
-	printf("[@@---------<<First search] byte[64]:0x%08x\n", byteArray);
+	printf("[@@---------<<开始 First search] byte[64]:0x%08x\n", byteArray);
+	DWORD astime = timeGetTime();		//auto_shoot
 	FindFirst((DWORD)byteArray, BYTELEN);
+	printf("[@@--------->>耗时：%d\n", timeGetTime() - astime);
+
 	//打印结果  
 	ShowList();
-	printf("[@@--------->>First search]		g_nListCnt=%d\n", g_nListCnt);
+	printf("[@@--------->>结束 First search]		g_nListCnt=%d\n", g_nListCnt);
 /*	;
 	//输入查找值  
 	int iVal = 19710214;
