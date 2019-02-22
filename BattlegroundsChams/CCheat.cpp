@@ -1054,7 +1054,7 @@ void CCheat::Initialise()
 
 	//InitForHook(CCheat::pSwapChain);
 	//SearchAvator();
-	SearchInAows();
+	//SearchInAows();
 	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
 }
 

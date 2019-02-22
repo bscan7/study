@@ -2387,7 +2387,7 @@ HRESULT GenerateShader(ID3D11Device* pD3DDevice, ID3D11PixelShader** pShader, fl
 		// 如果ps编译失败，输出错误信息.
 		if (d3dErrorMsgBlob)
 		{
-			Helpers::Log("D3DCompile error 。。。");
+			Helpers::LogFormat("D3DCompile error 。。。%d", ::GetLastError());
 		}
 		// 如果没有任何错误消息，可能是shader文件丢失.
 		else
