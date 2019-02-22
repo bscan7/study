@@ -28,11 +28,6 @@
 //
 //	return 0;
 //}
-struct Vec3
-{
-	float x, y, z/* = 1.0f*/;
-};
-
 
 int main()
 {

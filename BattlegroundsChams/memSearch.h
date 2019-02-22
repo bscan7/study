@@ -10,6 +10,216 @@
 #pragma comment(lib, "winmm.lib") //timeGetTime
 using namespace std;
 
+
+#define DIRECTORY_TABLE_BASE	0x028
+
+int PTESize;
+UINT_PTR PAGE_SIZE_LARGE;
+UINT_PTR MAX_PDE_POS;
+UINT_PTR MAX_PTE_POS;
+
+struct PTEStruct
+{
+	unsigned P : 1; // present (1 = present)
+	unsigned RW : 1; // read/write
+	unsigned US : 1; // user/supervisor
+	unsigned PWT : 1; // page-level write-through
+	unsigned PCD : 1; // page-level cache disabled
+	unsigned A : 1; // accessed
+	unsigned Reserved : 1; // dirty
+	unsigned PS : 1; // page size (0 = 4-KB page)
+	unsigned G : 1; // global page
+	unsigned A1 : 1; // available 1 aka copy-on-write
+	unsigned A2 : 1; // available 2/ is 1 when paged to disk
+	unsigned A3 : 1; // available 3
+	unsigned PFN : 20; // page-frame number
+};
+
+void InitMemSafe()
+{
+#ifndef AMD64
+	ULONG cr4reg;
+	//determine if PAE is used
+	cr4reg = (ULONG)__readcr4();
+	if ((cr4reg & 0x20) == 0x20)
+	{
+		PTESize = 8; //pae
+		PAGE_SIZE_LARGE = 0x200000;
+		MAX_PDE_POS = 0xC0604000;
+		MAX_PTE_POS = 0xC07FFFF8;
+	}
+	else
+	{
+		PTESize = 4;
+		PAGE_SIZE_LARGE = 0x400000;
+		MAX_PDE_POS = 0xC0301000;
+		MAX_PTE_POS = 0xC03FFFFC;
+	}
+#else
+	PTESize = 8; //pae
+	PAGE_SIZE_LARGE = 0x200000;
+	MAX_PTE_POS = 0xFFFFF6FFFFFFFFF8ULL;
+	MAX_PDE_POS = 0xFFFFF6FB7FFFFFF8ULL;
+#endif
+}
+
+BOOLEAN IsAddressSafe(UINT_PTR StartAddress)
+//BOOLEAN MmIsAddressValid(UINT_PTR StartAddress)
+{
+#ifdef AMD64
+	//cannonical check. Bits 48 to 63 must match bit 47
+	UINT_PTR toppart = (StartAddress >> 47);
+	if (toppart & 1)
+	{
+		//toppart must be 0x1ffff
+		if (toppart != 0x1ffff)
+			return FALSE;
+	}
+	else
+	{
+		//toppart must be 0
+		if (toppart != 0)
+			return FALSE;
+
+	}
+#endif
+	//PDT+PTE judge
+	{
+#ifdef AMD64
+		UINT_PTR kernelbase = 0x7fffffffffffffffULL;
+		if (StartAddress < kernelbase)
+		{
+			return TRUE;
+		}
+		else
+		{
+			PHYSICAL_ADDRESS physical;
+			physical.QuadPart = 0;
+			physical = MmGetPhysicalAddress((PVOID)StartAddress);
+			return (physical.QuadPart != 0);
+		}
+		return TRUE; //for now untill I ave figure out the win 4 paging scheme
+#else
+		ULONG kernelbase = 0x7ffe0000;
+		UINT_PTR PTE, PDE;
+		struct PTEStruct *x;
+		if (StartAddress < kernelbase)
+		{
+			return TRUE;
+		}
+		PTE = (UINT_PTR)StartAddress;
+		PTE = PTE / 0x1000 * PTESize + 0xc0000000;
+		//now check if the address in PTE is valid by checking the page table directory at 0xc0300000 (same location as CR3 btw)
+		PDE = PTE / 0x1000 * PTESize + 0xc0000000; //same formula
+		x = (struct PTEStruct *)PDE;
+		if ((x->P == 0) && (x->A2 == 0))
+		{
+			//Not present or paged, and since paging in this area isn't such a smart thing to do just skip it
+			//perhaps this is only for the 4 mb pages, but those should never be paged out, so it should be 1
+			//bah, I've got no idea what this is used for
+			return FALSE;
+		}
+		if (x->PS == 1)
+		{
+			//This is a 4 MB page (no pte list)
+			//so, (startaddress/0x400000*0x400000) till ((startaddress/0x400000*0x400000)+(0x400000-1) ) ) is specified by this page
+		}
+		else //if it's not a 4 MB page then check the PTE
+		{
+			//still here so the page table directory agreed that it is a usable page table entry
+			x = (PTEStruct *)(PVOID)PTE;
+			if ((x->P == 0) && (x->A2 == 0))
+				return FALSE; //see for explenation the part of the PDE
+		}
+		return TRUE;
+#endif
+	}
+
+}
+
+UINT32 idTarget = 0;
+//PEPROCESS epTarget = NULL;
+UINT32 idGame = 0;
+//PEPROCESS epGame = NULL;
+UINT32 rw_len = 0;
+UINT64 base_addr = 0;
+
+
+//ULONG64 Get64bitValue(PVOID p)
+//{
+//	if (MmIsAddressValid(p) == FALSE)
+//		return 0;
+//	return *(PULONG64)p;
+//}
+//
+//ULONG32 Get32bitValue(PVOID p)
+//{
+//	if (MmIsAddressValid(p) == FALSE)
+//		return 0;
+//	return *(PULONG32)p;
+//}
+//
+//
+//void KReadProcessMemory(IN PEPROCESS Process, IN PVOID Address, IN UINT32 Length, OUT PVOID Buffer)
+//{
+//	ULONG64 pDTB = 0, OldCr3 = 0, vAddr = 0;
+//	//Get DTB
+//	pDTB = Get64bitValue((UCHAR*)Process + DIRECTORY_TABLE_BASE);
+//	if (pDTB == 0)
+//	{
+//		DbgPrint("[x64Drv] Can not get PDT");
+//		return;
+//	}
+//	//Record old cr3 and set new cr3
+//	_disable();
+//	OldCr3 = __readcr3();
+//	__writecr3(pDTB);
+//	_enable();
+//	//Read process memory
+//	if (MmIsAddressValid(Address))
+//	{
+//		RtlCopyMemory(Buffer, Address, Length);
+//		DbgPrint("[x64Drv] Date read: %ld", *(PDWORD)Buffer);
+//	}
+//	//Restore old cr3
+//	_disable();
+//	__writecr3(OldCr3);
+//	_enable();
+//}
+//
+//void KWriteProcessMemory(IN PEPROCESS Process, IN PVOID Address, IN UINT32 Length, IN PVOID Buffer)
+//{
+//	ULONG64 pDTB = 0, OldCr3 = 0, vAddr = 0;
+//	//Get DTB
+//	pDTB = Get64bitValue((UCHAR*)Process + DIRECTORY_TABLE_BASE);
+//	if (pDTB == 0)
+//	{
+//		DbgPrint("[x64Drv] Can not get PDT");
+//		return;
+//	}
+//	//Record old cr3 and set new cr3
+//	_disable();
+//	OldCr3 = __readcr3();
+//	__writecr3(pDTB);
+//	_enable();
+//	//Read process memory
+//	if (MmIsAddressValid(Address))
+//	{
+//		RtlCopyMemory(Address, Buffer, Length);
+//		DbgPrint("[x64Drv] Date wrote.");
+//	}
+//	//Restore old cr3
+//	_disable();
+//	__writecr3(OldCr3);
+//	_enable();
+//}
+
+struct Vec3
+{
+	float x, y, z/* = 1.0f*/;
+};
+
+
 //BOOL FindFirst(DWORD dwValue);
 //BOOL FindNext(DWORD dwValue);
 HANDLE g_hProcess;
@@ -56,6 +266,24 @@ BOOL CompareAPage(DWORD dwBaseAddr, DWORD dwValue)
 	return TRUE;
 }
 
+HMODULE hAOW = LoadLibraryA("aow_exe.exe");
+
+typedef int(_cdecl *Exporter1)(HANDLE hProcess, LPCVOID lpBaseAddress, LPVOID lpBuffer, DWORD nSize, LPDWORD lpNumberOfBytesRead);
+
+BOOL aowReadProcessMemory(HANDLE g_hProcess, LPCVOID lpBaseAddress, LPVOID lpBuffer, DWORD nSize, LPDWORD lpNumberOfBytesRead)
+{
+	BOOL i = FALSE;
+	if (hAOW != NULL)
+	{
+		Exporter1 Ex = (Exporter1)GetProcAddress(hAOW, "_ReadProcessMemory@20");
+		//char cOutput[MAX_PATH] = { 0 };
+		i = Ex(g_hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesRead);
+
+		printf("aowReadProcessMemory......%d", i);
+	}
+	return i;
+}
+
 BOOL CompareAPage(DWORD dwBaseAddr, BYTE* pBytes, UINT uLen)
 {
 	//printf("\r\ndwBaseAddr=%d, dwValue=%d", dwBaseAddr,  dwValue);
@@ -63,6 +291,7 @@ BOOL CompareAPage(DWORD dwBaseAddr, BYTE* pBytes, UINT uLen)
 	//读取一页内存  
 	BYTE arBytes[4096];
 	BOOL bRead = ::ReadProcessMemory(g_hProcess, (LPVOID)dwBaseAddr, arBytes, 4096, NULL);
+	//BOOL bRead = aowReadProcessMemory(g_hProcess, (LPVOID)dwBaseAddr, arBytes, 4096, NULL);
 	if (bRead == FALSE)
 	{
 		//printf("::ReadProcessMemory..Failed\n");
@@ -231,7 +460,7 @@ int SearchAvator(INT PID=NULL)
 		g_hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
 		//g_hProcess = OpenProcess(PROCESS_VM_READ, FALSE, PID);
 		//g_hProcess = OpenProcess(PROCESS_VM_WRITE, FALSE, PID);
-		printf("[@@@@@@@@@@@@@@@@@@@@@@@@] g_hProcess = %d\n", g_hProcess);
+		printf("[@@@@@@@@@@@@@@@@@@@@@@@@] OpenProcess %s, g_hProcess = %d\n", g_hProcess? "成功":"失败",  g_hProcess);
 		printf("GetLastError()=%d\n", ::GetLastError());
 	}
 

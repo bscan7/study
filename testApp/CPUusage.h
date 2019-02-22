@@ -4,16 +4,16 @@
 //C++ 获取特定进程规定CPU使用率  原文：http://blog.csdn.net/liuqx97bb/article/details/52058657  
 class CPUusage {
 private:
-	typedef long long          int64_t;
-	typedef unsigned long long uint64_t;
+	//typedef long long          DWORD;
+	//typedef unsigned long long DWORD;
 	HANDLE _hProcess;
 	int _processor;    //cpu数量    
-	int64_t _last_time;         //上一次的时间    
-	int64_t _last_system_time;
+	DWORD _last_time;         //上一次的时间    
+	DWORD _last_system_time;
 
 
 	// 时间转换    
-	uint64_t file_time_2_utc(const FILETIME* ftime);
+	DWORD file_time_2_utc(const FILETIME* ftime);
 
 	// 获得CPU的核数    
 	int get_processor_number();

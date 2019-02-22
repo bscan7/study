@@ -13,6 +13,9 @@
 #include "resource.h"
 #include "gloabls.h"
 #include "memSearch.h"
+#include <tlhelp32.h>
+#include <tchar.h>
+#include "../testApp/CPUusage.h"  
 using namespace std;
 
 ID3D11Device *CCheat::pDevice = NULL;
@@ -717,6 +720,99 @@ int HotKeyId;
 void InitForHook(IDXGISwapChain* pSwapChain);
 extern std::string  g_NotRedListFName;
 
+int SearchInAows()
+{
+
+
+	DWORD needed;
+
+	HANDLE hProcess = NULL;
+	HMODULE hModule;
+	//wchar_t path[260] = _T("");
+	HANDLE hToken;
+
+
+	HANDLE  hProcessSnap = NULL;
+	PROCESSENTRY32 pe32;
+	pe32.dwSize = sizeof(PROCESSENTRY32);
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+	float maxcpu = 0.0;
+	DWORD maxcpuProcessID = 0;
+
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+	{
+		Process32First(hProcessSnap, &pe32);
+		CPUusage usg;
+		do
+		{
+
+			hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pe32.th32ProcessID);
+			if (hProcess)
+			{
+				//::EnumProcessModules(hProcess, &hModule, sizeof(hModule), &needed);
+				//::GetModuleFileNameExW(hProcess, hModule, path, sizeof(path));//进程路径
+
+			}
+			if (_tcsstr(pe32.szExeFile, L"aow_exe.exe"))
+			{
+				//for (int i = 0; i < 2; i++)
+				{
+					usg.setpid(pe32.th32ProcessID);
+					float cpu = usg.get_cpu_usage();
+					//printf("pid=%d CPU: %.2f%%\n", pe32.th32ProcessID , cpu);
+					Sleep(500);
+					
+					cpu = usg.get_cpu_usage();
+					printf("pid=%d CPU: %.2f%%\n", pe32.th32ProcessID, cpu);
+
+					if (maxcpu < cpu)
+					{
+						maxcpu = cpu;
+						maxcpuProcessID = pe32.th32ProcessID;
+					}
+
+				}
+
+			}
+			pe32.szExeFile;//进程名;
+			pe32.th32ProcessID;//进程ID;
+
+		} while (Process32Next(hProcessSnap, &pe32));
+	}
+	//if (hProcess)
+	//{
+	//	CloseHandle(hProcess);
+	//}
+
+	printf("maxCPU.pid=%d CPU: %.2f%%\n", maxcpuProcessID, maxcpu);
+
+	if (maxcpuProcessID == 0)
+	{
+		return -1;
+	}
+	//Sleep(2000);
+
+
+	//maxcpuProcessID = 89996;
+	//SearchMatrix(maxcpuProcessID);
+	//while (1)
+	{
+		SearchAvator(maxcpuProcessID);
+	}
+
+	Vec3 avatorPos; //对象坐标
+	float ViewWorld[4][4];
+	float ViewW = ViewWorld[0][3] * avatorPos.x + ViewWorld[1][3] * avatorPos.y + ViewWorld[2][3] * avatorPos.z + ViewWorld[3][3];
+	/*距离1*/float  dstc1 = ViewW / 100;
+
+	printf("dstc1: %.2f\n", dstc1);
+
+	//Sleep(20000);
+	return 0;
+}
+
+
 void CCheat::Initialise()
 {
 	/*HotKeyId = GlobalAddAtom("D3DHotKey") - 0xC000;
@@ -958,6 +1054,7 @@ void CCheat::Initialise()
 
 	//InitForHook(CCheat::pSwapChain);
 	//SearchAvator();
+	SearchInAows();
 	Helpers::Log("=========================CCheat::Initialise() Done!!!===============================");
 }
 

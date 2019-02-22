@@ -83,7 +83,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)_$(Configuration)</TargetName>
-    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;E:\Microsoft DirectX SDK (June 2010)\Include;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>N:\Detours Pro v3.0.316\include\;D:\Dev\Detours Pro v3.0.316\include;E:\Microsoft DirectX SDK (June 2010)\Include;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;F:\Strawberry\c\x86_64-w64-mingw32\include\ddk\;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;d:\tools\Visual Leak Detector\lib\Win32;N:\Detours Pro v3.0.316\lib.X86;O:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x86\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -207,6 +207,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\testApp\CPUusage.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

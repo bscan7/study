@@ -9,10 +9,10 @@ float CPUusage::get_cpu_usage()
 	FILETIME exit_time;
 	FILETIME kernel_time;
 	FILETIME user_time;
-	int64_t system_time;
-	int64_t time;
-	int64_t system_time_delta;
-	int64_t time_delta;
+	DWORD system_time;
+	DWORD time;
+	DWORD system_time_delta;
+	DWORD time_delta;
 
 	DWORD exitcode;
 
@@ -60,7 +60,7 @@ float CPUusage::get_cpu_usage()
 	return cpu;
 }
 
-CPUusage::uint64_t CPUusage::file_time_2_utc(const FILETIME* ftime)
+DWORD CPUusage::file_time_2_utc(const FILETIME* ftime)
 {
 	LARGE_INTEGER li;
 
