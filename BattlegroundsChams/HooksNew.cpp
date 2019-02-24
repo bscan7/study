@@ -38,6 +38,7 @@ ID3D11DepthStencilState *ppDepthStencilState__New = NULL;
 ID3D11DepthStencilState *ppDepthStencilState__Old = NULL;
 ID3D11PixelShader* pPixelShader__Old = NULL;
 ID3D11DeviceContext* pMainContext = NULL;
+ID3D11RenderTargetView *ppRenderTargetViews11 = NULL;
 
 UINT pStencilRef = 0;
 extern HWND g_hWnd;
@@ -203,8 +204,10 @@ int bRed = true;
 int iRed = 0;
 DWORD gggg = 0;
 DWORD cover = 0;
+UINT * g_ptPixels = nullptr;
 bool bShoot = false;
 bool bShow24 = false;
+
 ID3D11ShaderResourceView *pTextureSRV = NULL;
 
 ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
@@ -1104,6 +1107,7 @@ void Thread_KeysSwitch(PVOID param)
 			Sleep(100);
 			continue;
 		}
+
 		if (GetAsyncKeyState(VK_HOME) & 1)
 		{
 			CCheat::Release();
@@ -1363,6 +1367,12 @@ void Thread_KeysSwitch(PVOID param)
 				W_KeyUp();
 				SHIFT_KeyUp();
 			}
+		}
+		if (GetAsyncKeyState(85) & 1) //'U' KEY
+		{
+			Helpers::LogFormat("............::MOUSEEVENTF_MOVE(x=%.2f,y=%.2f  screenXX=%.2f)\n", std::round(1.0f* screenXX), std::round(1.0f* screenXX), screenXX);
+
+			mouse_event(MOUSEEVENTF_MOVE, std::round(1.0f* screenXX), std::round(1.0f* screenXX), 0, NULL);
 		}
 		//if (GetAsyncKeyState(87) & 1) //'W' KEY
 		//{
@@ -2750,7 +2760,7 @@ bool IsCenterRed_Old()//DC截屏，效率差
 //--------------------------------------------------------------------------------------
 BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 {
-	Helpers::LogFormat("-----------------CaptureFrame 1");
+	//Helpers::LogFormat("-----------------CaptureFrame 1");
 	//::GetWindowRect(g_hWnd, &g_lpRect);
 	//RECT lpRect;
 	//int iW = g_lpRect.right - g_lpRect.left;
@@ -2766,35 +2776,35 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 	BYTE* outBuffer = NULL;
 	std::wstring wsBMP_Filename = L"strCaptureFilename_";
 	wsBMP_Filename += std::to_wstring(iFrames);
-	wsBMP_Filename += L".bmp";
+	wsBMP_Filename += L".raw.bmp";
 
 	std::string wsRAW_Filename = "strCaptureFilename_";
 	wsRAW_Filename += std::to_string(iFrames);
-	wsRAW_Filename += ".raw.bmp";
+	wsRAW_Filename += ".raw";
 
 	HRESULT hr = 0;
 	ID3D11Device *d3d11Device;
 	pMainContext->GetDevice(&d3d11Device);
 
-	Helpers::LogFormat("-----------------CaptureFrame 11 0x%x", d3d11Device);
-	ID3D11RenderTargetView *ppRenderTargetViews11;
-	pMainContext->OMGetRenderTargets(1, &ppRenderTargetViews11, 0);
+	//Helpers::LogFormat("-----------------CaptureFrame 11 0x%x", d3d11Device);
+	//ID3D11RenderTargetView *ppRenderTargetViews11;
+	//pMainContext->OMGetRenderTargets(1, &ppRenderTargetViews11, 0);
 	if (ppRenderTargetViews11 == NULL)
 	{
 		return NULL;
 	}
 
-	Helpers::LogFormat("-----------------CaptureFrame 111 0x%x", ppRenderTargetViews11);
+	//Helpers::LogFormat("-----------------CaptureFrame 111 0x%x", ppRenderTargetViews11);
 	// Retrieve RT resource
 	ID3D11Resource *pRTResource;
 	ppRenderTargetViews11->GetResource(&pRTResource);
 
-	Helpers::LogFormat("-----------------CaptureFrame 1111 0x%x", pRTResource);
+	//Helpers::LogFormat("-----------------CaptureFrame 1111 0x%x", pRTResource);
 	// Retrieve a Texture2D interface from resource
 	ID3D11Texture2D* RTTexture;
 	pRTResource->QueryInterface(__uuidof(ID3D11Texture2D), (LPVOID*)&RTTexture);
 
-	Helpers::LogFormat("-----------------CaptureFrame 11111");
+	//Helpers::LogFormat("-----------------CaptureFrame 11111");
 	// Check if RT is multisampled or not
 	D3D11_TEXTURE2D_DESC    TexDesc;
 	RTTexture->GetDesc(&TexDesc);
@@ -2850,7 +2860,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 		pMainContext->CopyResource(g_pCaptureTexture, pRTResource);
 	}
 
-	Helpers::LogFormat("-----------------CaptureFrame 2");
+	//Helpers::LogFormat("-----------------CaptureFrame 2");
 
 	{
 		////////////////////////////////
@@ -2864,7 +2874,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 		g_pCaptureTexture->GetDesc(&desc);
 		D3D11_MAPPED_SUBRESOURCE resource;
 		UINT subresource = D3D11CalcSubresource(0, 0, 0);
-		Helpers::LogFormat("-----------------CaptureFrame 3");
+		//Helpers::LogFormat("-----------------CaptureFrame 3");
 		pMainContext->Map(g_pCaptureTexture, subresource, D3D11_MAP_READ, 0, &resource);
 
 		UINT lBmpRowPitch = TexDesc.Width * 4;
@@ -2884,7 +2894,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 
 		pMainContext->Unmap(g_pCaptureTexture, subresource);
 		long g_captureSize = minRowPitch*desc.Height;
-		Helpers::LogFormat("-----------------CaptureFrame 4");
+		//Helpers::LogFormat("-----------------CaptureFrame 4");
 
 		DWORD dOutBufLen = iRadii * 2 * iRadii * 2 * 4;
 		int nW = iRadii * 2;
@@ -2902,7 +2912,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 			nW = TexDesc.Width;
 		}
 		outBuffer = new BYTE[dOutBufLen];
-		Helpers::LogFormat("-----------------new BYTE[%d] =< 0x%x >, ", dOutBufLen, outBuffer);
+		//Helpers::LogFormat("-----------------new BYTE[%d] =< 0x%x >, ", dOutBufLen, outBuffer);
 		memset(outBuffer, 0, dOutBufLen);
 		//Helpers::LogFormat("-----------------iFrames = %d < %d >,< %d >, ", iFrames, hTop, hBottom);
 		//Copying to BYTE buffer 
@@ -2958,7 +2968,7 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false)
 	SAFE_RELEASE(RTTexture);
 
 	SAFE_RELEASE(pRTResource);
-	SAFE_RELEASE(g_pCaptureTexture);
+	//SAFE_RELEASE(g_pCaptureTexture);
 	return outBuffer;
 }
 
@@ -3095,14 +3105,14 @@ bool IsCenterRed()
 			(ptPixels[i] % 0x1000000 == 0x80)
 			|| (ptPixels[i] % 0x1000000 == 0x79)
 			|| (ptPixels[i] % 0x1000000 == 0x81)
-			|| (ptPixels[i] % 0x1000000 == 0x800000)
-			|| (ptPixels[i] % 0x1000000 == 0x790000)
-			|| (ptPixels[i] % 0x1000000 == 0x810000)
+			//|| (ptPixels[i] % 0x1000000 == 0x800000)
+			//|| (ptPixels[i] % 0x1000000 == 0x790000)
+			//|| (ptPixels[i] % 0x1000000 == 0x810000)
 			)
 		{
 			//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 			//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
-			Helpers::LogFormat("==============+-+-+-+- 射击射击射击 0x%08x", ptPixels[i]);
+			Helpers::LogFormat("==============+-+-+-+- 红红红 0x%08x", ptPixels[i]);
 			bOK = true;
 
 			break;
@@ -3166,11 +3176,6 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		lstLogStrides.clear();
 	}
 
-	if (bShoot)
-	{
-		std::cout << "\r\nhkD3D11Present =======>> PulseEvent(g_Event_Shoot)" << std::endl;
-		PulseEvent(g_Event_Shoot);
-	}
 	//SaveMapToFile();
 
 	if (bLog2Txt_DOWN)
@@ -3320,8 +3325,16 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			RenderTargetTexture->Release();
 		}
 
+		if (lastWIDTH > 0)
+		{
+			screenXX = (lastWIDTH < (int)viewport.Width) ? ((float)viewport.Width/ (float)lastWIDTH) : 1.0f;
+		}
 		lastWIDTH = (int)viewport.Width;
+
 	}
+
+	CCheat::pContext->OMGetRenderTargets(1, &ppRenderTargetViews11, 0);
+
 	//call before you draw
 	if (RenderTargetView)
 	{
@@ -3466,6 +3479,13 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		if (pFontWrapper && RenderTargetView)
 		{
 			pFontWrapper->DrawString(CCheat::pContext, www.c_str(), 40, 16.0f, 36.0f, 0xffff1612, FW1_RESTORESTATE);
+			if (bShoot)
+			{
+				pFontWrapper->DrawString(CCheat::pContext, L"射开", 30, 16.0f, 66.0f, 0xff1612ff, FW1_RESTORESTATE);
+			}
+			else
+				pFontWrapper->DrawString(CCheat::pContext, L"射关", 30, 16.0f, 66.0f, 0xff12f612, FW1_RESTORESTATE);
+
 			if (bVideo4Rec_PAUSE)
 			{
 				pFontWrapper->DrawString(CCheat::pContext, L"如果红区物体是要找的，按'PageUp[原色]/Down[绿色]/End[隐藏]/Insert[高亮]'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
@@ -3499,20 +3519,40 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			}
 		}
 	}
-
 	Hooks::oPresent(pSwapChain, SyncInterval, Flags);
 
-	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
-	{
-		Helpers::LogFormat("hkD3D11Present 一帧查红色同步+++++++++++++");
 		D3D11_QUERY_DESC pQueryDesc;
 		pQueryDesc.Query = D3D11_QUERY_EVENT;
 		pQueryDesc.MiscFlags = 0;
 		ID3D11Query *pEventQuery;
+	if (bShoot)
+	{
 		CCheat::pDevice->CreateQuery(&pQueryDesc, &pEventQuery);
-
 		CCheat::pContext->End(pEventQuery); // 在 pushbuffer 中插入一个篱笆
-		while (CCheat::pContext->GetData(pEventQuery, NULL, 0, 0) == S_FALSE) {} // 自旋等待事件结束
+		while (CCheat::pContext->GetData(pEventQuery, NULL, 0, 0) == S_FALSE) { /*Sleep(10);*/ } // 自旋等待事件结束
+
+		if (bShoot)//上面的语句会延时，导致前面的bShoot判断失效
+		{
+			std::cout << "\r\nhkD3D11Present =======>> CaptureFrame(SEARCH_AREA, false)" << std::endl;
+			g_ptPixels = (UINT *)CaptureFrame(SEARCH_AREA, false);
+		}
+		if (bShoot)//上面的语句会延时，导致前面的bShoot判断失效
+		{
+			std::cout << "\r\nhkD3D11Present =======>> PulseEvent(g_Event_Shoot) bShoot=" << bShoot << std::endl;
+			PulseEvent(g_Event_Shoot);
+		}
+	}
+	if (!bShoot)
+	{
+		g_ptPixels = nullptr;
+	}
+	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
+	{
+		Helpers::LogFormat("hkD3D11Present 一帧查红色同步+++++++++++++");
+
+		CCheat::pDevice->CreateQuery(&pQueryDesc, &pEventQuery);
+		CCheat::pContext->End(pEventQuery); // 在 pushbuffer 中插入一个篱笆
+		while (CCheat::pContext->GetData(pEventQuery, NULL, 0, 0) == S_FALSE) { Sleep(10); } // 自旋等待事件结束
 
 		//Sleep(100);//等渲染的延迟
 		Helpers::LogFormat("hkD3D11Present 一帧查红色开始+++++++++++++");
@@ -3869,7 +3909,7 @@ void GoDrawCall(UINT InstanceCount, UINT StartInstanceLocation, ID3D11DeviceCont
 			{
 				//if ((Stride == 24) || (Stride == 12))
 				{
-					Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]] BaseVertexLocation=[%d]", g_iCurStride, g_iCurIndexCount, BaseVertexLocation);
+					//Helpers::LogFormat("PSSetShader(psRed, NULL, NULL) iStride=[%d] iIndexCount=[[ %d ]] BaseVertexLocation=[%d]", g_iCurStride, g_iCurIndexCount, BaseVertexLocation);
 					pContext->PSSetShader(psRed, NULL, NULL);
 				}
 			}

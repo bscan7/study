@@ -65,6 +65,7 @@ UINT vps = 1;
 D3D11_VIEWPORT viewport;
 float ScreenCenterX;
 float ScreenCenterY;
+float screenXX = 1.0f;
 
 //vertex
 ID3D11Buffer *veBuffer;

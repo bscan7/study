@@ -1,5 +1,8 @@
 #pragma once
 #include "stdafx.h"
+#define SHOOT_AREA_RADII  6
+#define SEARCH_AREA  100
+
 
 namespace CCheat
 {

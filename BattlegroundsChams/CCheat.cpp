@@ -176,8 +176,22 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		//DeleteObject(hPen);
 	}
 }
-#define SHOOT_AREA_RADII  6
-#define SEARCH_AREA  100
+
+bool IsTargetColor(UINT ptPixels)
+{
+	return (
+		   (ptPixels % 0x1000000 == 0x000080)
+		|| (ptPixels % 0x1000000 == 0x800000)
+		|| (ptPixels % 0x1000000 == 0xF0C703)
+		|| (ptPixels % 0x1000000 == 0x03C7F0)
+		//|| (ptPixels[i] % 0x1000000 == 0x81)
+		//|| (ptPixels[i] % 0x1000000 == 0x790000)
+		//|| (ptPixels[i] % 0x1000000 == 0x810000)
+		//|| (ptPixels[i] % 0x1000000 == 0x6A)
+		//|| (ptPixels[i] % 0x1000000 == 0x6A0000)
+		);
+}
+
 int pp = 0;
 
 //void AutoShootIfCenter(PVOID param)
@@ -307,9 +321,10 @@ BOOL SaveDcToBMP(BYTE *pBmpBuffer,
 	string sBmpPath);
 
 extern bool bShoot;
+extern UINT * g_ptPixels;
+
 void AutoCenterAndShoot(PVOID param)
 {
-	UINT * ptPixels = nullptr;
 	LONG iEdgeLen = SEARCH_AREA * 2;
 	RECT lpRect, lpWatchRect;
 	//while (1)
@@ -333,10 +348,10 @@ void AutoCenterAndShoot(PVOID param)
 		*/
 
 		//捕获屏幕选定区域
-		Helpers::LogFormat("----===  CaptureFrame( ========");
-		ptPixels = (UINT *)CaptureFrame(SEARCH_AREA, false);
-		Helpers::LogFormat("----===  CaptureFrame) ========0x%x", ptPixels);
-		if (ptPixels == NULL)
+		//Helpers::LogFormat("----===  CaptureFrame( ========");
+		//g_ptPixels = (UINT *)CaptureFrame(SEARCH_AREA, false);
+		//Helpers::LogFormat("----===  CaptureFrame) ========0x%x", g_ptPixels);
+		if (g_ptPixels == NULL)
 		{
 			return;
 		}
@@ -349,7 +364,7 @@ void AutoCenterAndShoot(PVOID param)
 
 		for (int i = iTmp*SEARCH_AREA * 2 + iTmp; i <= (iTmp2*SEARCH_AREA * 2 - iTmp); i++)
 		{
-			if (!ptPixels)
+			if (!g_ptPixels)
 			{
 				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
 				break;
@@ -357,21 +372,24 @@ void AutoCenterAndShoot(PVOID param)
 			if ((i%(SEARCH_AREA * 2) >= iTmp) && 
 				(i % (SEARCH_AREA * 2) <= iTmp2))
 			{
-				if (
-					(ptPixels[i] % 0x1000000 == 0x80)
-					|| (ptPixels[i] % 0x1000000 == 0x79)
-					|| (ptPixels[i] % 0x1000000 == 0x81)
-					|| (ptPixels[i] % 0x1000000 == 0x800000)
-					|| (ptPixels[i] % 0x1000000 == 0x790000)
-					|| (ptPixels[i] % 0x1000000 == 0x810000)
-					|| (ptPixels[i] % 0x1000000 == 0x6A)
-					|| (ptPixels[i] % 0x1000000 == 0x6A0000)
-					)
+				if (IsTargetColor(g_ptPixels[i]))
 				{
 					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-					Sleep(5);
+					Sleep(1);
 					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-					std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- 射击射击射击 " << ptPixels[i] << std::endl;
+					mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					Sleep(1);
+					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+					Sleep(1);
+					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+					mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					Sleep(1);
+					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+					Sleep(1);
+					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+					mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					Sleep(1);
+					std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- 射击射击射击 " << g_ptPixels[i] << std::endl;
 					//break;
 					pp++;
 					return;
@@ -383,24 +401,15 @@ void AutoCenterAndShoot(PVOID param)
 		//判断正方形区域  
 		for (int i = 0; i<=((iEdgeLen * iEdgeLen) - 1); i++)
 		{
-			if (!ptPixels)
+			if (!g_ptPixels)
 			{
 				std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- NULL i=" << pp << std::endl;
 				break;
 			}
 			//std::cout << ptPixels[i] << " ";
 			//ptPixels[i]; //0xff 29 27 21 红绿蓝
-			if ((
-				(ptPixels[i] % 0x1000000 == 0x80)
-				|| (ptPixels[i] % 0x1000000 == 0x79)
-				|| (ptPixels[i] % 0x1000000 == 0x81)
-				|| (ptPixels[i] % 0x1000000 == 0x800000)
-				|| (ptPixels[i] % 0x1000000 == 0x790000)
-				|| (ptPixels[i] % 0x1000000 == 0x810000)
-				|| (ptPixels[i] % 0x1000000 == 0x6A)
-				|| (ptPixels[i] % 0x1000000 == 0x6A0000)
-				)
-				|| (ptPixels[i] % 0x1000000 == 0x404040))
+			if (IsTargetColor(g_ptPixels[i])
+				/*|| ( % 0x1000000 == 0x404040)*/)
 			{
 				//MyTraceA("+-+-+-+-%x 射击射击射击", ptPixels[i]);
 				//::OutputDebugStringA("+-+-+-+-瞄准瞄准瞄准瞄准");
@@ -414,7 +423,7 @@ void AutoCenterAndShoot(PVOID param)
 					iCenterY - (offY)
 				);*/
 				mouse_event(MOUSEEVENTF_MOVE, offX /4, (offY) /4, 0, NULL);
-				//Sleep(5);
+				Sleep(50);
 				//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				//Sleep(5);
 				//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
@@ -424,8 +433,14 @@ void AutoCenterAndShoot(PVOID param)
 
 			if (i == ((iEdgeLen * iEdgeLen) - 1))
 			{
-				bShoot = false;
-				Helpers::LogFormat("----=== %d * %d 区域内无色，，关闭自动射击========", iEdgeLen, iEdgeLen);
+				//Helpers::LogFormat("----=== %d * %d 区域内无色，，关闭自动射击======== bShoot=%d", iEdgeLen, iEdgeLen, bShoot);
+				//bShoot = false;
+				//g_ptPixels = nullptr;
+
+				//ofstream fout("..\\TargetColor.raw", ios::out | ios::binary);
+				//fout.write((char*)ptPixels, i+1);
+				//fout.close();
+
 			}
 			//bDoneOnShoot = true;
 		}
