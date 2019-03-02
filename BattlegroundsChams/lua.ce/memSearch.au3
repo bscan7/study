@@ -27,9 +27,9 @@ $hWnd = WinWait("Memory Operation")
 ; Get handle to Tab control
 $hTab = ControlGetHandle($hWnd, "", "[NAME:TabControl1]")
 If @error Then _Exitonerror("Failed to get handle to TAB control.")
-ConsoleWrite(@CRLF & _GUICtrlTab_GetCurFocus($hTab))
-
-Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables.
+;ConsoleWrite(@CRLF & _GUICtrlTab_GetCurFocus($hTab))
+Local $hTimer = TimerInit() ; Begin the timer and store the handle in a variable.
+Func FindIt(ByRef $sString, ByRef $iOffset, ByRef $sName) ; Swap the contents of two variables.
    ;Local $sString = "00 00 00 00 01 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F"
 
    While (_GUICtrlTab_GetCurFocus($hTab) <> 3)
@@ -39,22 +39,22 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
 
 
    ;输入搜索串
-   ConsoleWrite(@CRLF & "输入搜索串")
+   ;ConsoleWrite(@CRLF & "输入搜索串")
    ControlSetText($hWnd, "", "[NAME:TextBox5]", $sString)
    ;清空结果框
-   ConsoleWrite(@CRLF & "清空结果框")
+   ;ConsoleWrite(@CRLF & "清空结果框")
    ControlSetText($hWnd, "", "[NAME:TextBox7]", "")
 
-   ConsoleWrite(@CRLF & "ControlGetText")
+   ;ConsoleWrite(@CRLF & "ControlGetText")
    While StringLen ( ControlGetText($hWnd, "", "[NAME:TextBox7]") ) > 0
 	   Sleep(100)
    WEnd
 
-   ConsoleWrite(@CRLF & "点击Find按钮")
+   ;ConsoleWrite(@CRLF & "点击Find按钮")
    ;点击Find按钮
    ControlClick($hWnd, "", "[NAME:Button10]")
 
-   ConsoleWrite(@CRLF & "读取结果框")
+   ;ConsoleWrite(@CRLF & "读取结果框")
    $sString = ""
    While StringLen ( $sString ) <= 0
 	   Sleep(100)
@@ -66,7 +66,7 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
    Local $aArray_Base[1][2] = [["地址", "内容"]]
    ;_ArrayDisplay($aArray_Base, "2D - 2D Array")
 
-   ConsoleWrite(@CRLF & "结果框")
+   ;ConsoleWrite(@CRLF & "结果框")
    If StringInStr ($sString ,"Not Found!")  == 0 Then ;Found(17)!
 	  ;MsgBox($MB_SYSTEMMODAL, "AutoIt Example", $sString & @CRLF & "This is line 2" & @CRLF & "This is line 3")
 	  Local $aArray = StringSplit($sString, " 0x", $STR_ENTIRESPLIT) ; Pass the variable to StringSplit and using the delimiter "\n".
@@ -84,22 +84,22 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
 
 	   For $i = 1 To $aArray[0] ; Loop through the array returned by StringSplit to display the individual values.
 		  Local $sHex =  StringSplit($aArray[$i], " ", $STR_ENTIRESPLIT)[1]
-		  Local $iDec = Dec($sHex, $NUMBER_32BIT ) +$iOffset
+		  Local $iDec = Dec($sHex ) +$iOffset
 
-		  ConsoleWrite(@CRLF & @CRLF & "$aArray[" & $i & "] - " & $sHex & " - " & $iDec )
+		  ;ConsoleWrite(@CRLF & @CRLF & "$aArray[" & $i & "] - " & $sHex & " - " & $iDec )
 		   ;MsgBox($MB_SYSTEMMODAL, "", "$aArray[" & $i & "] - " & $aArray[$i])
 
-		 ConsoleWrite(@CRLF & "输入地址")
+		 ;ConsoleWrite(@CRLF & "输入地址")
 		 ControlSetText($hWnd, "", "[NAME:tbAddr]", Hex($iDec))
-		 ConsoleWrite(@CRLF & "输入Len")
+		 ;ConsoleWrite(@CRLF & "输入Len")
 		 ControlSetText($hWnd, "", "[NAME:tbSize]", "4")
-		 ConsoleWrite(@CRLF & "清空结果")
+		 ;ConsoleWrite(@CRLF & "清空结果")
 		 ControlSetText($hWnd, "", "[NAME:tbData]", "")
-		 ConsoleWrite(@CRLF & "点击Read按钮")
+		 ;ConsoleWrite(@CRLF & "点击Read按钮")
 		 ;点击Find按钮
 		 ControlClick($hWnd, "", "[NAME:Button1]")
 
-		 ConsoleWrite(@CRLF & "读取内存：")
+		 ;ConsoleWrite(@CRLF & "读取内存：")
 		 $sString = ""
 		 While StringLen ( $sString ) <= 0
 			 Sleep(100)
@@ -107,7 +107,7 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
 		  WEnd
 
 		  If StringInStr ($sString ,"00 00 00 00")  == 0 Then
-		   ConsoleWrite( $sString)
+		   ;ConsoleWrite( $sString)
 		   _ArrayAdd($aArray_Base, Hex($iDec) & "|" & $sString)
 
 		  Else
@@ -120,32 +120,35 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
 			ExitLoop
 		 EndIf
 
-		 ConsoleWrite(@CRLF & "读取内存...$i = " & $i  & " -> " &$aArray[0])
+		 ;ConsoleWrite(@CRLF & "读取内存...$i = " & $i  & " -> " &$aArray[0])
 
 	   Next
 
    EndIf
-   ConsoleWrite(@CRLF )
+   ;ConsoleWrite(@CRLF )
    ;_ArrayDisplay($aArray, "Original")
    ;_ArrayDisplay($aArray_Base, "$aArray_Base")
    _ArrayDelete($aArray_Base,0)
+
+   ConsoleWrite(@CRLF & $sName &"初选: " & UBound($aArray_Base, $UBOUND_ROWS) & "个 秒: " & TimerDiff($hTimer)/1000 & @CRLF & _ArrayToString($aArray_Base))
+
    Sleep(1000)
    Local $iRows = UBound($aArray_Base, $UBOUND_ROWS) ; Total number of rows. In this example it will be 10.
-   ConsoleWrite(@CRLF & $i & "======================================" & $iRows)
+   ;ConsoleWrite(@CRLF & "======================================" & $iRows)
     For $i = 0 To $iRows - 1
 
-		 	  ConsoleWrite(@CRLF & "输入地址")
-			   ConsoleWrite(@CRLF & $i & "======================================" & $iRows)
-			   ControlSetText($hWnd, "", "[NAME:tbAddr]", Hex(Dec($aArray_Base[$i][0], $NUMBER_32BIT )))
-			   ConsoleWrite(@CRLF & "输入Len")
+		 	  ;ConsoleWrite(@CRLF & "输入地址")
+			   ;ConsoleWrite(@CRLF & $i & "======================================" & $iRows)
+			   ControlSetText($hWnd, "", "[NAME:tbAddr]", Hex(Dec($aArray_Base[$i][0] )))
+			   ;ConsoleWrite(@CRLF & "输入Len")
 			   ControlSetText($hWnd, "", "[NAME:tbSize]", "4")
-			   ConsoleWrite(@CRLF & "清空结果")
+			   ;ConsoleWrite(@CRLF & "清空结果")
 			   ControlSetText($hWnd, "", "[NAME:tbData]", "")
-			   ConsoleWrite(@CRLF & "点击Read按钮")
+			   ;ConsoleWrite(@CRLF & "点击Read按钮")
 			   ;点击Find按钮
 			   ControlClick($hWnd, "", "[NAME:Button1]")
 
-			   ConsoleWrite(@CRLF & "读取内存：")
+			   ;ConsoleWrite(@CRLF & "读取内存：")
 			   $sString = ""
 			   While StringLen ( $sString ) <= 0
 				   Sleep(100)
@@ -153,13 +156,13 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
 				WEnd
 
 				If StringInStr ($sString ,$aArray_Base[$i][1])  == 0 Then
-				 ConsoleWrite( $sString)
+				 ;ConsoleWrite( $sString)
 				 ;_ArrayAdd($aArray_Base, Hex($iDec) & "|" & $sString)
 
 				Else
 				 _ArrayDelete($aArray_Base,$i)
 
-				 ConsoleWrite( "_ArrayDelete($aArray_Base,"&$i&")")
+				 ;ConsoleWrite( "_ArrayDelete($aArray_Base,"&$i&")")
 				 $i = $i -1
 				 $iRows = $iRows -1
 			  EndIf
@@ -173,18 +176,21 @@ Func FindIt(ByRef $sString, ByRef $iOffset) ; Swap the contents of two variables
     Return $aArray_Base
  EndFunc
 
-Local $iOffset = -20
-Local $sString = "00 00 00 00 01 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F"
+For $i = 5000 To 1 Step -1
+   Local $iOffset = -20
+   Local $sString = "00 00 00 00 01 00 00 00 FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 3F"
+   $aArray_Base1 = FindIt($sString, $iOffset, "坐标地址") ;实际坐标地址 = 此地址再 -132
+   ;_ArrayDisplay($aArray_Base1, "$aArray_Base")
+   ConsoleWrite(@CRLF & "坐标地址: " & UBound($aArray_Base1, $UBOUND_ROWS) & "个 秒: " & TimerDiff($hTimer)/1000 & @CRLF & _ArrayToString($aArray_Base1))
 
-$aArray_Base1 = FindIt($sString, $iOffset) ;实际坐标地址 = 此地址再 -132
-;_ArrayDisplay($aArray_Base1, "$aArray_Base")
-
-;矩阵地址:
-$sString = "00 00 80 3f 00 00 80 3f 00 00 80 3f 00 00 80 3f 00 00 00 00 00 00 00 00 00 00 80 3f 00 00 00 00 00 00 00 00 00 00 80 3f 00 00 80 3f"
-$iOffset = 200
-;$aArray_Base1 = FindIt($sString, $iOffset) ;实际矩阵地址 = 此地址再 + 8
-_ArrayDisplay($aArray_Base1, "$aArray_Base")
-
+   ;矩阵地址:
+   $sString = "00 00 80 3f 00 00 80 3f 00 00 80 3f 00 00 80 3f 00 00 00 00 00 00 00 00 00 00 80 3f 00 00 00 00 00 00 00 00 00 00 80 3f 00 00 80 3f"
+   $iOffset = 200
+   $aArray_Base1 = FindIt($sString, $iOffset, "矩阵地址") ;实际矩阵地址 = 此地址再 + 8
+   ;_ArrayDisplay($aArray_Base1, "$aArray_Base")
+   ConsoleWrite(@CRLF & "矩阵地址:" & _ArrayToString($aArray_Base1) & @CRLF)
+   Sleep(10000)
+Next
 
 #CS If $sString > 0 Then
 ###     MsgBox($MB_SYSTEMMODAL, "", "Value is positive.")
