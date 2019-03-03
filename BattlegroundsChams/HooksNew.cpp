@@ -75,7 +75,7 @@ int g_iSelfIdx2 = -1;
 
 UINT iFrames = 0;
 UINT iName = 0;
-stringstream g_ssCallsInFrame;
+stringstream g_Log_CallsInFrame;
 static ID3D11Texture2D* g_pCaptureTexture = NULL;
 
 bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount);
@@ -3197,14 +3197,14 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			//	outFile << (*it).second << std::endl;
 			//}
 			//string text = g_ssCallsInFrame.str();
-			outFile << g_ssCallsInFrame.str().c_str() << std::endl;
+			outFile << g_Log_CallsInFrame.str().c_str() << std::endl;
 			outfile.close();
 		}
 	}
 	bLog2Txt_DOWN = false;
 	mapBuf.clear();
-	g_ssCallsInFrame.str("");
-	g_ssCallsInFrame.clear();
+	g_Log_CallsInFrame.str("");
+	g_Log_CallsInFrame.clear();
 
 	//if (minX2 == 0 && minY2 == 0 && maxX2 == 0 && maxY2 == 0)
 	//{
@@ -3826,7 +3826,7 @@ void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID
 	{
 		return Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
 	}
-	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UpdateSubresource(" << std::hex << "0x" << pDstResource << std::dec << "," << DstSubresource << ","
+	g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UpdateSubresource(" << std::hex << "0x" << pDstResource << std::dec << "," << DstSubresource << ","
 		<< std::hex << "0x" << pDstBox << std::dec << ","
 		<< std::hex << "0x" << pSrcData << std::dec << ","
 		<< SrcRowPitch << "," << SrcDepthPitch << ")" << std::endl;;
@@ -3967,11 +3967,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 		if (!(abs(fXYZ[0]) <= 1e-6))
 		{
-			g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
-			g_ssCallsInFrame << "  x=" << std::dec << fXYZ[0];
-			g_ssCallsInFrame << "  y=" << std::dec << fXYZ[1];
-			g_ssCallsInFrame << "  z=" << std::dec << fXYZ[2];
-			g_ssCallsInFrame << std::endl;;
+			g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+			g_Log_CallsInFrame << "  x=" << std::dec << fXYZ[0];
+			g_Log_CallsInFrame << "  y=" << std::dec << fXYZ[1];
+			g_Log_CallsInFrame << "  z=" << std::dec << fXYZ[2];
+			g_Log_CallsInFrame << std::endl;;
 
 			if ((minX > fXYZ[0]) || (minX == 0))
 			{
@@ -4629,7 +4629,7 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 		mapMapBufList[pResource] = pMappedResource->pData;
 	}
 
-	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " Map(" << std::hex << "0x" << pResource << std::dec << "," << Subresource << "," << MapType << "," << MapFlags << ","
+	g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " Map(" << std::hex << "0x" << pResource << std::dec << "," << Subresource << "," << MapType << "," << MapFlags << ","
 		<< std::hex << "0x" << pMappedResource << std::dec
 		<< ") pData=" << pMappedResource->pData
 		<< " DepthPitch=" << pMappedResource->DepthPitch
@@ -4637,43 +4637,43 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 
 		<< std::endl;;
 
-
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
-
 	return;
 
-	//if ((Stride == 24))
-	{
-		g_lock.lock();
 
-		*(UINT*)(&(mapTID_PTR_DATA[to_string(::GetCurrentThreadId()) + "_" + to_string((UINT)(pMappedResource->pData))].x)) = 0x88888888;
-		g_lock.unlock();
-	}
-	if (0)
-	{
-		ofstream outfile;
-		outfile.open("..\\UnMap_Map__.txt", ios::app);
-		if (outfile)
-		{
-			outfile << ::GetCurrentThreadId() << "_" << (UINT)(pMappedResource->pData) << " MapType=" << MapType << " MapFlags=" << MapFlags << " Stride=" << Stride << std::endl;
-			outfile.close();
-		}
-	}
-	//58784_126877696  = 5  = 0 Stride = 24
-	//if ((Stride == 12) || (Stride == 24) || (Stride == 56))
-	if ((Stride == 24) && (MapType == 4) && (MapFlags == 0))
-	{
-		if ((UINT)pMappedResource->pData > 0xf)
-		{
-			mapThreadList[::GetCurrentThreadId()] = pMappedResource->pData;
-		}
-		pHooksMappedResource = pMappedResource;
-	}
-	else
-		pHooksMappedResource = NULL;
+	//UINT Stride;
+	//ID3D11Buffer *veBuffer;
+	//UINT veBufferOffset = 0;
+	//pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+	////if ((Stride == 24))
+	//{
+	//	g_lock.lock();
+
+	//	*(UINT*)(&(mapTID_PTR_DATA[to_string(::GetCurrentThreadId()) + "_" + to_string((UINT)(pMappedResource->pData))].x)) = 0x88888888;
+	//	g_lock.unlock();
+	//}
+	//if (0)
+	//{
+	//	ofstream outfile;
+	//	outfile.open("..\\UnMap_Map__.txt", ios::app);
+	//	if (outfile)
+	//	{
+	//		outfile << ::GetCurrentThreadId() << "_" << (UINT)(pMappedResource->pData) << " MapType=" << MapType << " MapFlags=" << MapFlags << " Stride=" << Stride << std::endl;
+	//		outfile.close();
+	//	}
+	//}
+	////58784_126877696  = 5  = 0 Stride = 24
+	////if ((Stride == 12) || (Stride == 24) || (Stride == 56))
+	//if ((Stride == 24) && (MapType == 4) && (MapFlags == 0))
+	//{
+	//	if ((UINT)pMappedResource->pData > 0xf)
+	//	{
+	//		mapThreadList[::GetCurrentThreadId()] = pMappedResource->pData;
+	//	}
+	//	pHooksMappedResource = pMappedResource;
+	//}
+	//else
+	//	pHooksMappedResource = NULL;
 }
 
 int SehFilter(DWORD dwExceptionCode)
@@ -4744,15 +4744,15 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 		return;
 	}
 	void * g_pMappedResourcepData = mapMapBufList[pStageBuffer];
-	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
+	g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
 
 
 	if (g_pMappedResourcepData != nullptr)
 	{
 		D3D11_BUFFER_DESC desc;
 		pStageBuffer->GetDesc(&desc);
-		g_ssCallsInFrame << " byteWid=" << desc.ByteWidth;
-		g_ssCallsInFrame << std::endl;
+		g_Log_CallsInFrame << " byteWid=" << desc.ByteWidth;
+		g_Log_CallsInFrame << std::endl;
 
 		if (desc.ByteWidth == 3632)
 		{
@@ -4783,11 +4783,11 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 			//);
 
 		}
-		g_ssCallsInFrame << std::endl;;
+		g_Log_CallsInFrame << std::endl;;
 	}
 	mapMapBufList.erase(pStageBuffer);
 
-	g_ssCallsInFrame << std::endl;
+	g_Log_CallsInFrame << std::endl;
 
 	//DWORD* xxx = (DWORD*)WorldViewCB;
 	//	if (bByteWidth == 3632)

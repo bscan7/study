@@ -158,6 +158,12 @@ Func FindIt(ByRef $sString, ByRef $iOffset, ByRef $sName) ; Swap the contents of
 				If StringInStr ($sString ,$aArray_Base[$i][1])  == 0 Then
 				 ;ConsoleWrite( $sString)
 				 ;_ArrayAdd($aArray_Base, Hex($iDec) & "|" & $sString)
+				 if ($iOffset == -20)  Then
+					 $aArray_Base[$i][0] = Hex(Dec($aArray_Base[$i][0] ) -132) & ""
+				  EndIf
+				 if ($iOffset == 200)  Then
+					 $aArray_Base[$i][0] = Hex(Dec($aArray_Base[$i][0] ) +8) & ""
+				  EndIf
 
 				Else
 				 _ArrayDelete($aArray_Base,$i)
