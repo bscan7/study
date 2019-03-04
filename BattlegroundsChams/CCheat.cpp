@@ -164,6 +164,8 @@ void Thread_DrawCrossOnCenter(PVOID param)
 					DrawPos(*iter);
 			}
 			//for_each(g_lstPositions2.begin(), g_lstPositions2.end(), DrawPos);
+
+			Helpers::LogFormat("----==g_lstPositions_COPY.size() =（%d） ======== ", g_lstPositions_COPY.size());
 		}
 		g_lstPositions_COPY.clear();
 		minX2 = 0;
