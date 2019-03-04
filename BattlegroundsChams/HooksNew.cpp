@@ -4633,13 +4633,13 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 		mapMapBufList[pResource] = pMappedResource->pData;
 	}
 
-	g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " Map(" << std::hex << "0x" << pResource << std::dec << "," << Subresource << "," << MapType << "," << MapFlags << ","
-		<< std::hex << "0x" << pMappedResource << std::dec
-		<< ") pData=" << pMappedResource->pData
-		<< " DepthPitch=" << pMappedResource->DepthPitch
-		<< " RowPitch=" << pMappedResource->RowPitch
+	//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " Map(" << std::hex << "0x" << pResource << std::dec << "," << Subresource << "," << MapType << "," << MapFlags << ","
+		//<< std::hex << "0x" << pMappedResource << std::dec
+		//<< ") pData=" << pMappedResource->pData
+		//<< " DepthPitch=" << pMappedResource->DepthPitch
+		//<< " RowPitch=" << pMappedResource->RowPitch
 
-		<< std::endl;;
+		//<< std::endl;;
 
 	return;
 
@@ -4757,15 +4757,15 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 		return;
 	}
 	void * g_pMappedResourcepData = mapMapBufList[pStageBuffer];
-	g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
+	//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
 
 
 	if (g_pMappedResourcepData != nullptr)
 	{
 		D3D11_BUFFER_DESC desc;
 		pStageBuffer->GetDesc(&desc);
-		g_Log_CallsInFrame << " byteWid=" << desc.ByteWidth;
-		g_Log_CallsInFrame << std::endl;
+		//g_Log_CallsInFrame << " byteWid=" << desc.ByteWidth;
+		//g_Log_CallsInFrame << std::endl;
 
 		if (desc.ByteWidth == 3632)
 		{
@@ -4796,11 +4796,11 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 			//);
 
 		}
-		g_Log_CallsInFrame << std::endl;;
+		//g_Log_CallsInFrame << std::endl;;
 	}
 	mapMapBufList.erase(pStageBuffer);
 
-	g_Log_CallsInFrame << std::endl;
+	//g_Log_CallsInFrame << std::endl;
 
 	//DWORD* xxx = (DWORD*)WorldViewCB;
 	//	if (bByteWidth == 3632)

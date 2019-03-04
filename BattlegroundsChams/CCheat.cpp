@@ -149,7 +149,7 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyTop,  NULL);
 		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyBottom);
 
-		if (g_lstPositions_COPY.size() > 1)
+		if (g_lstPositions_COPY.size() > 0)
 		{
 			list<XMFLOAT3>::iterator iter;
 			int ii = 0;
@@ -158,14 +158,19 @@ void Thread_DrawCrossOnCenter(PVOID param)
 				ii++;
 				if (g_iSelfIdx2 == ii)
 				{
+					Helpers::LogFormat("----g_lstPositions_COPY.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions_COPY.size(), iter->x, iter->y, iter->z);
 					DrawPos_Self(*iter);
 				}
 				else
+				{
+					Helpers::LogFormat("-My-g_lstPositions_COPY.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions_COPY.size(), iter->x, iter->y, iter->z);
 					DrawPos(*iter);
+				}
 			}
+
+			Helpers::LogFormat("\r\n");
 			//for_each(g_lstPositions2.begin(), g_lstPositions2.end(), DrawPos);
 
-			Helpers::LogFormat("----==g_lstPositions_COPY.size() =（%d） ======== ", g_lstPositions_COPY.size());
 		}
 		g_lstPositions_COPY.clear();
 		minX2 = 0;
@@ -956,7 +961,7 @@ void CCheat::Initialise()
 	Helpers::Log("Cheat _beginthread(Thread_AutoShootIfCenter, 0, NULL);");
 	_beginthread(Thread_AutoShootIfCenter, 0, NULL);
 	Helpers::Log("Cheat Thread_DrawCrossOnCenter");
-	//_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
+	_beginthread(Thread_DrawCrossOnCenter, 0, NULL);
 
 #pragma region Initialise DXGI_SWAP_CHAIN_DESC
 	DXGI_SWAP_CHAIN_DESC scd;
