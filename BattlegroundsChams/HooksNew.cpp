@@ -51,7 +51,7 @@ bool bCheat = true;
 bool bHideOne = false;
 bool b2DShader = true;
 bool bLog2Txt_F7 = false;
-bool bLog2Txt_DOWN = false;
+bool bLog2Txt_UNDEFINE = false;
 ofstream outfile;
 string  g_NotRedListFName = "";
 
@@ -59,17 +59,20 @@ ID3D11Buffer* pHooksStageBuffer = NULL;
 D3D11_MAPPED_SUBRESOURCE *pHooksMappedResource = NULL;
 static map<string, list<byte*>> mapLogList;
 static map<DWORD, void*> mapThreadList;
+
+//Map时，存放Buf的指针 及 其对应的数据指针pData
 static map<void*, void*> mapMapBufList;
 map<string, string> mapBuf;
 mutex g_lock;
 
-float fXYZ[3];
+XMFLOAT4 fPos4;
+
 list <XMFLOAT3> g_lstPositions;
 DWORD minX, minY, maxX, maxY = 0;
 int g_iSelfIdx = -1;
 DWORD dFrontColor = 0;
 
-list <XMFLOAT3> g_lstPositions2;
+list <XMFLOAT3> g_lstPositions_COPY;
 DWORD minX2, minY2, maxX2, maxY2 = 0;
 int g_iSelfIdx2 = -1;
 
@@ -3178,7 +3181,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 	//SaveMapToFile();
 
-	if (bLog2Txt_DOWN)
+	if (bLog2Txt_UNDEFINE)
 	{
 		//outfile.open("..\\Log2Txt.txt", ios::app);
 		ofstream outFile;
@@ -3201,7 +3204,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			outfile.close();
 		}
 	}
-	bLog2Txt_DOWN = false;
+	bLog2Txt_UNDEFINE = false;
 	mapBuf.clear();
 	g_Log_CallsInFrame.str("");
 	g_Log_CallsInFrame.clear();
@@ -3644,7 +3647,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 		minY2 = minY;
 		maxX2 = maxX;
 		maxY2 = maxY;
-		g_lstPositions2 = g_lstPositions;
+		g_lstPositions_COPY = g_lstPositions;
 		g_iSelfIdx2 = g_iSelfIdx;
 	}
 	g_lstPositions.clear();
@@ -3965,32 +3968,32 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		)
 	{
 
-		if (!(abs(fXYZ[0]) <= 1e-6))
+		if (!(abs(fPos4.x) <= 1e-6))
 		{
 			g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
-			g_Log_CallsInFrame << "  x=" << std::dec << fXYZ[0];
-			g_Log_CallsInFrame << "  y=" << std::dec << fXYZ[1];
-			g_Log_CallsInFrame << "  z=" << std::dec << fXYZ[2];
+			g_Log_CallsInFrame << "  x=" << std::dec << fPos4.x;
+			g_Log_CallsInFrame << "  y=" << std::dec << fPos4.y;
+			g_Log_CallsInFrame << "  z=" << std::dec << fPos4.z;
 			g_Log_CallsInFrame << std::endl;;
 
-			if ((minX > fXYZ[0]) || (minX == 0))
+			if ((minX > fPos4.x) || (minX == 0))
 			{
-				minX = fXYZ[0];
+				minX = fPos4.x;
 			}
-			if ((maxX < fXYZ[0]) || (maxX == 0))
+			if ((maxX < fPos4.x) || (maxX == 0))
 			{
-				maxX = fXYZ[0];
+				maxX = fPos4.x;
 			}
-			if ((minY > fXYZ[1]) || (minY == 0))
+			if ((minY > fPos4.y) || (minY == 0))
 			{
-				minY = fXYZ[1];
+				minY = fPos4.y;
 			}
-			if ((maxY < fXYZ[1]) || (maxY == 0))
+			if ((maxY < fPos4.y) || (maxY == 0))
 			{
-				maxY = fXYZ[1];
+				maxY = fPos4.y;
 			}
-			g_lstPositions.push_back(XMFLOAT3(fXYZ[0], fXYZ[1], fXYZ[2]));
-			if ((IndexCountPerInstance == 3234))
+			g_lstPositions.push_back(XMFLOAT3(fPos4.x, fPos4.y, fPos4.z));
+			if ((IndexCountPerInstance == 3234))//???不准确
 				g_iSelfIdx = g_lstPositions.size();
 		}
 	}
@@ -4000,9 +4003,9 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
 
 
-	fXYZ[0] = 0.0;
-	fXYZ[1] = 0.0;
-	fXYZ[2] = 0.0;
+	fPos4.x = 0.0;
+	fPos4.y = 0.0;
+	fPos4.z = 0.0;
 	//////////////////////////////////////////////////////
 	////测试代码
 	////D3D11_BUFFER_DESC pDesc;
@@ -4619,12 +4622,13 @@ void __stdcall Hooks::hkD3D11DrawIndexed(ID3D11DeviceContext* pContext, UINT Ind
 void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffer *pResource, _In_ UINT Subresource, _In_ D3D11_MAP MapType, _In_ UINT MapFlags, _Out_ D3D11_MAPPED_SUBRESOURCE *pMappedResource)
 {
 	Hooks::oMap(pContext, pResource, Subresource, MapType, MapFlags, pMappedResource);
-	//if (!bCheat)
+	if (!bCheat)
 	{
-
 		return;
 	}
-	if (pMappedResource->DepthPitch == 3840 && pMappedResource->RowPitch == 3840)
+	//  Map() 锁定常量缓冲，以便能够写入. pMappedResource
+	//	Unmap() 解锁常量缓冲.
+	if (pMappedResource->DepthPitch == 3840 && pMappedResource->RowPitch == 3840) //？？？为什么是3840，忘记了。。。
 	{
 		mapMapBufList[pResource] = pMappedResource->pData;
 	}
@@ -4736,9 +4740,18 @@ void CloneData()
 	}
 }
 
+
+/*
+21523	<0x03C9AFE8> ID3D11DeviceContext::UpdateSubresource(0x26F34EA8, 0, NULL, 0x2129D268, 0, 0)	//Buf:0x26F34EA8 size=3632
+21524	<0x03C9AFE8> ID3D11DeviceContext::UpdateSubresource(0x26F34F30, 0, NULL, 0x0F03A290, 0, 0)	//Buf:0x26F34F30 size=704
+21525	<0x03C9AFE8> ID3D11DeviceContext::VSSetConstantBuffers(0, 1, 0x1F404300 --> { 0x26F34EA8 })	//Buf:0x26F34EA8 size=3632
+21526	<0x03C9AFE8> ID3D11DeviceContext::PSSetConstantBuffers(0, 1, 0x1F4042F0 --> { 0x26F34F30 })	//Buf:0x26F34F30 size=704
+21527	<0x03C9AFE8> ID3D11DeviceContext::VSSetShader(0x26EFE788, NULL, 0)	//// V Shader: txt\VShader_asm_8732_5.0.txt
+21528	<0x03C9AFE8> ID3D11DeviceContext::PSSetShader(0x26EFE730, NULL, 0)	//// P Shader: txt\PShader_asm_6628_5.0.txt
+*/
 void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buffer* pStageBuffer, __in UINT Subresource)
 {
-	//if (!bCheat)
+	if (!bCheat)
 	{
 		Hooks::oUnMap(pContext, pStageBuffer, Subresource);
 		return;
@@ -4766,9 +4779,9 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 			//	}
 			//	g_ssCallsInFrame << std::endl;;
 			//}
-			fXYZ[0] = (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
-			fXYZ[1] = (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
-			fXYZ[2] = (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
+			fPos4.x = (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
+			fPos4.y = (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
+			fPos4.z = (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
 
 			//g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
 			//g_ssCallsInFrame << "  x=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));

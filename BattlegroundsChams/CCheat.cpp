@@ -30,7 +30,7 @@ extern list <XMFLOAT3> g_lstPositions;
 extern DWORD minX, minY, maxX, maxY;
 extern int g_iSelfIdx;
 
-extern list <XMFLOAT3> g_lstPositions2;
+extern list <XMFLOAT3> g_lstPositions_COPY;
 extern DWORD minX2, minY2, maxX2, maxY2;
 extern int g_iSelfIdx2;
 extern mutex g_lock2;
@@ -149,11 +149,11 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyTop,  NULL);
 		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyBottom);
 
-		if (g_lstPositions2.size() > 1)
+		if (g_lstPositions_COPY.size() > 1)
 		{
 			list<XMFLOAT3>::iterator iter;
 			int ii = 0;
-			for (iter = g_lstPositions2.begin(); iter != g_lstPositions2.end(); iter++)
+			for (iter = g_lstPositions_COPY.begin(); iter != g_lstPositions_COPY.end(); iter++)
 			{
 				ii++;
 				if (g_iSelfIdx2 == ii)
@@ -165,7 +165,7 @@ void Thread_DrawCrossOnCenter(PVOID param)
 			}
 			//for_each(g_lstPositions2.begin(), g_lstPositions2.end(), DrawPos);
 		}
-		g_lstPositions2.clear();
+		g_lstPositions_COPY.clear();
 		minX2 = 0;
 		minY2 = 0;
 		maxX2 = 0;
