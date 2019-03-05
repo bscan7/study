@@ -149,6 +149,7 @@ void Thread_DrawCrossOnCenter(PVOID param)
 		MoveToEx(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyTop,  NULL);
 		LineTo(hScrDC, lpRect.left + (lpRect.right - lpRect.left) / 2 + 1, yyBottom);
 
+		//Helpers::LogFormat("----g_lstPositions_COPY.size()=%d）", g_lstPositions_COPY.size());
 		if (g_lstPositions_COPY.size() > 0)
 		{
 			list<XMFLOAT3>::iterator iter;

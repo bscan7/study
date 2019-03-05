@@ -30,6 +30,7 @@ using namespace std;
 
 #pragma comment(lib, "winmm.lib") //timeGetTime
 #define INTVL  1
+#define VS_CONST_BUF_3632 3632
 
 IFW1Factory *pFW1Factory = NULL;
 IFW1FontWrapper *pFontWrapper = NULL;
@@ -3185,7 +3186,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	{
 		//outfile.open("..\\Log2Txt.txt", ios::app);
 		ofstream outFile;
-		//outFile.open("..\\3632_" + to_string(iFrames) + ".txt", ios::app);
+		//outFile.open("..\\VS_CONST_BUF_3632_" + to_string(iFrames) + ".txt", ios::app);
 		outFile.open("..\\FrameOf_" + to_string(iFrames) + ".txt", ios::app);
 		if (!outFile)
 		{
@@ -3718,9 +3719,9 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 	//	if ((*ppConstantBuffers))
 	//	{
 	//		(*ppConstantBuffers)->GetDesc(&pDesc);
-	//		if (pDesc.ByteWidth == 3632)
-	//			//Helpers::Log("VSSetConstantBuffers 3632 --------------->>>>>>>>>>>>>>> ");
-	//			Helpers::LogAddress("VSSetConstantBuffers 3632 ---------------> ", reinterpret_cast<int64_t>(*ppConstantBuffers));
+	//		if (pDesc.ByteWidth == VS_CONST_BUF_3632)
+	//			//Helpers::Log("VSSetConstantBuffers VS_CONST_BUF_3632 --------------->>>>>>>>>>>>>>> ");
+	//			Helpers::LogAddress("VSSetConstantBuffers VS_CONST_BUF_3632 ---------------> ", reinterpret_cast<int64_t>(*ppConstantBuffers));
 	//	}
 	//}
 
@@ -3823,16 +3824,65 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 	return;
 }
 
+void CopyPosition(void * pResource_Data, ID3D11Buffer* pStageBuffer)
+{
+	//Helpers::LogFormat("----g_lstPositions.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions.size(), fPos4.x, fPos4.y, fPos4.z);
+
+	if (pResource_Data != nullptr)
+	{
+		D3D11_BUFFER_DESC desc;
+		pStageBuffer->GetDesc(&desc);
+		//g_Log_CallsInFrame << " byteWid=" << desc.ByteWidth;
+		//g_Log_CallsInFrame << std::endl;
+
+	//Helpers::LogFormat("----ByteWidth.size()=%d） x=%.2f y=%.2f z=%.2f", desc.ByteWidth, fPos4.x, fPos4.y, fPos4.z);
+		if (desc.ByteWidth == VS_CONST_BUF_3632)
+		{
+			//for (int i=0;i<4;i++)
+			//{
+			//	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+
+			//	for (int b = 0; b < 16; b++)
+			//	{
+			//		g_ssCallsInFrame << "  " << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData +(i*16)+ b)));
+			//	}
+			//	g_ssCallsInFrame << std::endl;;
+			//}
+			fPos4.x = (*(float*)(((DWORD*)pResource_Data + 36)));
+			fPos4.y = (*(float*)(((DWORD*)pResource_Data + 37)));
+			fPos4.z = (*(float*)(((DWORD*)pResource_Data + 38)));
+
+			//g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+			//g_ssCallsInFrame << "  x=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
+			//g_ssCallsInFrame << "  y=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
+			//g_ssCallsInFrame << "  z=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
+			//g_ssCallsInFrame << std::endl;;
+
+			//Helpers::LogFormat("VS_CONST_BUF_3632-帧-%5d- =[%.3f,%.3f,%.3f]", iFrames, /*pConstBuf, *(xxx + 0), *(xxx + 1), *(xxx + 2),*/ 
+			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 36))),
+			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 37))),
+			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 38)))
+			//);
+
+		}
+		//g_Log_CallsInFrame << std::endl;;
+	}
+	//else
+	//	Helpers::LogFormat("pResource_Data = nullptr");
+
+}
+
 void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID3D11Resource *pDstResource, UINT DstSubresource, const D3D11_BOX *pDstBox, const void *pSrcData, UINT SrcRowPitch, UINT SrcDepthPitch)
 {
 	if (!bCheat)
 	{
 		return Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
 	}
-	g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UpdateSubresource(" << std::hex << "0x" << pDstResource << std::dec << "," << DstSubresource << ","
-		<< std::hex << "0x" << pDstBox << std::dec << ","
-		<< std::hex << "0x" << pSrcData << std::dec << ","
-		<< SrcRowPitch << "," << SrcDepthPitch << ")" << std::endl;;
+
+	//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UpdateSubresource(" << std::hex << "0x" << pDstResource << std::dec << "," << DstSubresource << ","
+	//	<< std::hex << "0x" << pDstBox << std::dec << ","
+	//	<< std::hex << "0x" << pSrcData << std::dec << ","
+	//	<< SrcRowPitch << "," << SrcDepthPitch << ")" << std::endl;;
 
 	//system("cls");
 	//int i = 0;
@@ -3842,44 +3892,50 @@ void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID
 	//	*(float*)((int)pSrcData + 32), *(float*)((int)pSrcData + 32 + 4), *(float*)((int)pSrcData + 32 + 8), *(float*)((int)pSrcData + 32 + 12),
 	//	*(float*)((int)pSrcData + 48), *(float*)((int)pSrcData + 48 + 4), *(float*)((int)pSrcData + 48 + 8), *(float*)((int)pSrcData + 48 + 12)
 	//);
+
+	Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
+
 	UINT Stride;
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
+	CopyPosition(pDstResource, veBuffer);
 	//int i = 0;
 
-	if ((Stride == 24) || (Stride == 56))
-	{
-		Helpers::LogBuf2Txt("UpdateSubresource_", pSrcData, 0xa0);
-		//system("cls");
-		//std::cout << *(float*)((int)pSrcData + 0) << " " << *(float*)((int)pSrcData + 4) << " " << *(float*)((int)pSrcData + 8) << " " << *(float*)((int)pSrcData + 12) << std::endl;
-		//std::cout << *(float*)((int)pSrcData + 16) << " " << *(float*)((int)pSrcData + 16 + 4) << " " << *(float*)((int)pSrcData + 16 + 8) << " " << *(float*)((int)pSrcData + 16 + 12) << std::endl;
-		//std::cout << *(float*)((int)pSrcData + 32) << " " << *(float*)((int)pSrcData + 32 + 4) << " " << *(float*)((int)pSrcData + 32 + 8) << " " << *(float*)((int)pSrcData + 32 + 12) << std::endl;
-		//std::cout << *(float*)((int)pSrcData + 48) << " " << *(float*)((int)pSrcData + 48 + 4) << " " << *(float*)((int)pSrcData + 48 + 8) << " " << *(float*)((int)pSrcData + 48 + 12) << std::endl;
+	//if ((Stride == 24) || (Stride == 56))
+	//{
+	//	Helpers::LogBuf2Txt("UpdateSubresource_", pSrcData, 0xa0);
+	//	//system("cls");
+	//	//std::cout << *(float*)((int)pSrcData + 0) << " " << *(float*)((int)pSrcData + 4) << " " << *(float*)((int)pSrcData + 8) << " " << *(float*)((int)pSrcData + 12) << std::endl;
+	//	//std::cout << *(float*)((int)pSrcData + 16) << " " << *(float*)((int)pSrcData + 16 + 4) << " " << *(float*)((int)pSrcData + 16 + 8) << " " << *(float*)((int)pSrcData + 16 + 12) << std::endl;
+	//	//std::cout << *(float*)((int)pSrcData + 32) << " " << *(float*)((int)pSrcData + 32 + 4) << " " << *(float*)((int)pSrcData + 32 + 8) << " " << *(float*)((int)pSrcData + 32 + 12) << std::endl;
+	//	//std::cout << *(float*)((int)pSrcData + 48) << " " << *(float*)((int)pSrcData + 48 + 4) << " " << *(float*)((int)pSrcData + 48 + 8) << " " << *(float*)((int)pSrcData + 48 + 12) << std::endl;
 
-		//for (int i = 0; i < 60; i++)
-		//{
-		//	std::cout << std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 0) << " "
-		//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 4) << " "
-		//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 8) << " "
-		//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 12) << std::endl;
+	//	//for (int i = 0; i < 60; i++)
+	//	//{
+	//	//	std::cout << std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 0) << " "
+	//	//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 4) << " "
+	//	//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 8) << " "
+	//	//		<< std::hex << std::setw(9) << std::setfill('0') << *(int*)((int)(ppConstantBuffers)+(i * 16) + 12) << std::endl;
 
-		//	//if ((*(float*)((int)(ppConstantBuffers)+(i * 16) + 0) != 0.00000000) || 
-		//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 4) != 0.00000000) ||
-		//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 8) != 0.00000000) ||
-		//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 12) != 0.00000000) )
-		//	//{
-		//	//	Helpers::LogFormat("i=%d ===%03.8f %03.8f %03.8f %03.8f", i, /*18.123456789,*/
-		//	//		*(float*)((int)(ppConstantBuffers)+(i*16) + 0),
-		//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 4),
-		//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 8),
-		//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 12)
-		//	//	);
-		//	//}
-		//}
-	}
-	return Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
+	//	//	//if ((*(float*)((int)(ppConstantBuffers)+(i * 16) + 0) != 0.00000000) || 
+	//	//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 4) != 0.00000000) ||
+	//	//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 8) != 0.00000000) ||
+	//	//	//	(*(float*)((int)(ppConstantBuffers)+(i * 16) + 12) != 0.00000000) )
+	//	//	//{
+	//	//	//	Helpers::LogFormat("i=%d ===%03.8f %03.8f %03.8f %03.8f", i, /*18.123456789,*/
+	//	//	//		*(float*)((int)(ppConstantBuffers)+(i*16) + 0),
+	//	//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 4),
+	//	//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 8),
+	//	//	//		*(float*)((int)(ppConstantBuffers)+(i * 16) + 12)
+	//	//	//	);
+	//	//	//}
+	//	//}
+	//}
+	//return Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
+
+	return;
 }
 
 void __stdcall Hooks::hkD3D11PSSetSamplers(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumSamplers, ID3D11SamplerState *const *ppSamplers)
@@ -3956,25 +4012,25 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//start1 = clock();
 	//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d", idx, timeGetTime() - bgtime);
 
-	if ((IndexCountPerInstance == 3234) ||
-		(IndexCountPerInstance == 2898) ||
-		(IndexCountPerInstance == 1878) ||
-		(IndexCountPerInstance == 1002) ||
-		(IndexCountPerInstance == 762) ||
-		(IndexCountPerInstance == 570) ||
-		(IndexCountPerInstance == 498) ||
-		(IndexCountPerInstance == 450) ||
-		(IndexCountPerInstance == 552)//整个小人
-		)
+	//if ((IndexCountPerInstance == 3234) ||
+	//	(IndexCountPerInstance == 2898) ||
+	//	(IndexCountPerInstance == 1878) ||
+	//	(IndexCountPerInstance == 1002) ||
+	//	(IndexCountPerInstance == 762) ||
+	//	(IndexCountPerInstance == 570) ||
+	//	(IndexCountPerInstance == 498) ||
+	//	(IndexCountPerInstance == 450) ||
+	//	(IndexCountPerInstance == 552)//整个小人
+	//	)
 	{
 
 		if (!(abs(fPos4.x) <= 1e-6))
 		{
-			g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
-			g_Log_CallsInFrame << "  x=" << std::dec << fPos4.x;
-			g_Log_CallsInFrame << "  y=" << std::dec << fPos4.y;
-			g_Log_CallsInFrame << "  z=" << std::dec << fPos4.z;
-			g_Log_CallsInFrame << std::endl;;
+			//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
+			//g_Log_CallsInFrame << "  x=" << std::dec << fPos4.x;
+			//g_Log_CallsInFrame << "  y=" << std::dec << fPos4.y;
+			//g_Log_CallsInFrame << "  z=" << std::dec << fPos4.z;
+			//g_Log_CallsInFrame << std::endl;;
 
 			if ((minX > fPos4.x) || (minX == 0))
 			{
@@ -3992,11 +4048,32 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			{
 				maxY = fPos4.y;
 			}
-			g_lstPositions.push_back(XMFLOAT3(fPos4.x, fPos4.y, fPos4.z));
+
+			bool bOnly = true;
+			if (g_lstPositions.size() > 0)//去除重复坐标
+			{
+				list<XMFLOAT3>::iterator iter;
+				for (iter = g_lstPositions.begin(); iter != g_lstPositions.end(); iter++)
+				{
+					if ((iter->x == fPos4.x) && (iter->y == fPos4.y) && (iter->z == fPos4.z))
+					{
+						bOnly = false;
+						break;
+					} 
+				}
+			}
+			if (bOnly)
+			{
+				//Helpers::LogFormat("g_lstPositions.push_back iStride=[%d] iIndexCount=[[ %d ]]", Stride, IndexCountPerInstance);
+				g_lstPositions.push_back(XMFLOAT3(fPos4.x, fPos4.y, fPos4.z));
+			}
+
 			if ((IndexCountPerInstance == 3234))//???不准确
 				g_iSelfIdx = g_lstPositions.size();
 		}
 	}
+	//Helpers::LogFormat("----g_lstPositions.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions.size(), fPos4.x, fPos4.y, fPos4.z);
+
 	//finish1 = clock();
 	//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
 	//start1 = clock();
@@ -4010,7 +4087,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	////测试代码
 	////D3D11_BUFFER_DESC pDesc;
 	////(cbPerObjectBuffer)->GetDesc(&pDesc);
-	////if (pDesc.ByteWidth == 3632);
+	////if (pDesc.ByteWidth == VS_CONST_BUF_3632);
 
 	//ID3D11Buffer* pConstBuf = nullptr;
 	//ID3D11Buffer* m_pCurConstBuf = nullptr;
@@ -4028,10 +4105,10 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//	//matWorldView[3][2] = matWorldView[3][2] + (aimheight*20);	//aimheight is usually done here for body parts
 
 	//	DWORD* xxx = (DWORD*)WorldViewCB;
-	//	if (bByteWidth == 3632)
+	//	if (bByteWidth == VS_CONST_BUF_3632)
 	//	{
-	//		//Helpers::Log("VSSetConstantBuffers 3632 --------------->>>>>>>>>>>>>>> ");
-	//		Helpers::LogFormat("3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36)), (*(float*)(xxx + 37)), (*(float*)(xxx + 38)), IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation);
+	//		//Helpers::Log("VSSetConstantBuffers VS_CONST_BUF_3632 --------------->>>>>>>>>>>>>>> ");
+	//		Helpers::LogFormat("VS_CONST_BUF_3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36)), (*(float*)(xxx + 37)), (*(float*)(xxx + 38)), IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation);
 
 	//		//string sTmp = "";
 	//		//for (int i = 0; i < 908; i++)
@@ -4628,7 +4705,14 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 	}
 	//  Map() 锁定常量缓冲，以便能够写入. pMappedResource
 	//	Unmap() 解锁常量缓冲.
+	//Helpers::LogFormat("----pMappedResource->DepthPitch=%d RowPitch=%d）", pMappedResource->DepthPitch, pMappedResource->RowPitch);
+
 	if (pMappedResource->DepthPitch == 3840 && pMappedResource->RowPitch == 3840) //？？？为什么是3840，忘记了。。。
+	{
+		mapMapBufList[pResource] = pMappedResource->pData;
+	}
+
+	if (pMappedResource->DepthPitch == VS_CONST_BUF_3632 && pMappedResource->RowPitch == VS_CONST_BUF_3632) //。。。
 	{
 		mapMapBufList[pResource] = pMappedResource->pData;
 	}
@@ -4742,9 +4826,9 @@ void CloneData()
 
 
 /*
-21523	<0x03C9AFE8> ID3D11DeviceContext::UpdateSubresource(0x26F34EA8, 0, NULL, 0x2129D268, 0, 0)	//Buf:0x26F34EA8 size=3632
+21523	<0x03C9AFE8> ID3D11DeviceContext::UpdateSubresource(0x26F34EA8, 0, NULL, 0x2129D268, 0, 0)	//Buf:0x26F34EA8 size=VS_CONST_BUF_3632
 21524	<0x03C9AFE8> ID3D11DeviceContext::UpdateSubresource(0x26F34F30, 0, NULL, 0x0F03A290, 0, 0)	//Buf:0x26F34F30 size=704
-21525	<0x03C9AFE8> ID3D11DeviceContext::VSSetConstantBuffers(0, 1, 0x1F404300 --> { 0x26F34EA8 })	//Buf:0x26F34EA8 size=3632
+21525	<0x03C9AFE8> ID3D11DeviceContext::VSSetConstantBuffers(0, 1, 0x1F404300 --> { 0x26F34EA8 })	//Buf:0x26F34EA8 size=VS_CONST_BUF_3632
 21526	<0x03C9AFE8> ID3D11DeviceContext::PSSetConstantBuffers(0, 1, 0x1F4042F0 --> { 0x26F34F30 })	//Buf:0x26F34F30 size=704
 21527	<0x03C9AFE8> ID3D11DeviceContext::VSSetShader(0x26EFE788, NULL, 0)	//// V Shader: txt\VShader_asm_8732_5.0.txt
 21528	<0x03C9AFE8> ID3D11DeviceContext::PSSetShader(0x26EFE730, NULL, 0)	//// P Shader: txt\PShader_asm_6628_5.0.txt
@@ -4760,53 +4844,16 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 	//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
 
 
-	if (g_pMappedResourcepData != nullptr)
-	{
-		D3D11_BUFFER_DESC desc;
-		pStageBuffer->GetDesc(&desc);
-		//g_Log_CallsInFrame << " byteWid=" << desc.ByteWidth;
-		//g_Log_CallsInFrame << std::endl;
-
-		if (desc.ByteWidth == 3632)
-		{
-			//for (int i=0;i<4;i++)
-			//{
-			//	g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
-
-			//	for (int b = 0; b < 16; b++)
-			//	{
-			//		g_ssCallsInFrame << "  " << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData +(i*16)+ b)));
-			//	}
-			//	g_ssCallsInFrame << std::endl;;
-			//}
-			fPos4.x = (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
-			fPos4.y = (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
-			fPos4.z = (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
-
-			//g_ssCallsInFrame << std::hex << "0x" << ::GetCurrentThreadId();
-			//g_ssCallsInFrame << "  x=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 36)));
-			//g_ssCallsInFrame << "  y=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 37)));
-			//g_ssCallsInFrame << "  z=" << std::dec << (*(float*)(((DWORD*)g_pMappedResourcepData + 38)));
-			//g_ssCallsInFrame << std::endl;;
-
-			//Helpers::LogFormat("3632-帧-%5d- =[%.3f,%.3f,%.3f]", iFrames, /*pConstBuf, *(xxx + 0), *(xxx + 1), *(xxx + 2),*/ 
-			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 36))),
-			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 37))),
-			//	(*(float*)(((DWORD*)g_pMappedResourcepData + 38)))
-			//);
-
-		}
-		//g_Log_CallsInFrame << std::endl;;
-	}
+	CopyPosition(g_pMappedResourcepData, pStageBuffer);
 	mapMapBufList.erase(pStageBuffer);
 
 	//g_Log_CallsInFrame << std::endl;
 
 	//DWORD* xxx = (DWORD*)WorldViewCB;
-	//	if (bByteWidth == 3632)
+	//	if (bByteWidth == VS_CONST_BUF_3632)
 	//	{
-	//		//Helpers::Log("VSSetConstantBuffers 3632 --------------->>>>>>>>>>>>>>> ");
-	//		Helpers::LogFormat("3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36))
+	//		//Helpers::Log("VSSetConstantBuffers VS_CONST_BUF_3632 --------------->>>>>>>>>>>>>>> ");
+	//		Helpers::LogFormat("VS_CONST_BUF_3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36))
 	if (0)
 	{
 		ofstream outfile;
