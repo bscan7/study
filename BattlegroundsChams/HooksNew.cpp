@@ -3895,12 +3895,15 @@ void __stdcall Hooks::hkD3D11UpdateSubresource(ID3D11DeviceContext* pContext, ID
 
 	Hooks::oUpdateSubresource(pContext, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
 
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+	if (bCrossDraw)
+	{
+		UINT Stride;
+		ID3D11Buffer *veBuffer;
+		UINT veBufferOffset = 0;
+		pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	CopyPosition(pDstResource, veBuffer);
+		CopyPosition(pDstResource, veBuffer);
+	}
 	//int i = 0;
 
 	//if ((Stride == 24) || (Stride == 56))
@@ -4707,14 +4710,17 @@ void __stdcall Hooks::hkD3D11Map(ID3D11DeviceContext* pContext, _In_ ID3D11Buffe
 	//	Unmap() 解锁常量缓冲.
 	//Helpers::LogFormat("----pMappedResource->DepthPitch=%d RowPitch=%d）", pMappedResource->DepthPitch, pMappedResource->RowPitch);
 
-	if (pMappedResource->DepthPitch == 3840 && pMappedResource->RowPitch == 3840) //？？？为什么是3840，忘记了。。。
+	if (bCrossDraw)
 	{
-		mapMapBufList[pResource] = pMappedResource->pData;
-	}
+		if (pMappedResource->DepthPitch == 3840 && pMappedResource->RowPitch == 3840) //？？？为什么是3840，忘记了。。。
+		{
+			mapMapBufList[pResource] = pMappedResource->pData;
+		}
 
-	if (pMappedResource->DepthPitch == VS_CONST_BUF_3632 && pMappedResource->RowPitch == VS_CONST_BUF_3632) //。。。
-	{
-		mapMapBufList[pResource] = pMappedResource->pData;
+		if (pMappedResource->DepthPitch == VS_CONST_BUF_3632 && pMappedResource->RowPitch == VS_CONST_BUF_3632) //。。。
+		{
+			mapMapBufList[pResource] = pMappedResource->pData;
+		}
 	}
 
 	//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " Map(" << std::hex << "0x" << pResource << std::dec << "," << Subresource << "," << MapType << "," << MapFlags << ","
@@ -4843,116 +4849,118 @@ void __stdcall Hooks::hkD3D11UnMap(ID3D11DeviceContext* pContext, __in ID3D11Buf
 	void * g_pMappedResourcepData = mapMapBufList[pStageBuffer];
 	//g_Log_CallsInFrame << std::hex << "0x" << ::GetCurrentThreadId() << std::hex << " 0x" << pContext << std::dec << " UnMap(" << std::hex << "0x" << pStageBuffer << std::dec << "," << Subresource << ")";
 
-
-	CopyPosition(g_pMappedResourcepData, pStageBuffer);
-	mapMapBufList.erase(pStageBuffer);
-
-	//g_Log_CallsInFrame << std::endl;
-
-	//DWORD* xxx = (DWORD*)WorldViewCB;
-	//	if (bByteWidth == VS_CONST_BUF_3632)
-	//	{
-	//		//Helpers::Log("VSSetConstantBuffers VS_CONST_BUF_3632 --------------->>>>>>>>>>>>>>> ");
-	//		Helpers::LogFormat("VS_CONST_BUF_3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36))
-	if (0)
+	if (bCrossDraw)
 	{
-		ofstream outfile;
-		outfile.open("..\\UnMap_Map__.txt", ios::app);
-		if (outfile)
+
+		CopyPosition(g_pMappedResourcepData, pStageBuffer);
+		mapMapBufList.erase(pStageBuffer);
+
+		//g_Log_CallsInFrame << std::endl;
+
+		//DWORD* xxx = (DWORD*)WorldViewCB;
+		//	if (bByteWidth == VS_CONST_BUF_3632)
+		//	{
+		//		//Helpers::Log("VSSetConstantBuffers VS_CONST_BUF_3632 --------------->>>>>>>>>>>>>>> ");
+		//		Helpers::LogFormat("VS_CONST_BUF_3632-帧-%5d-0X%x [0X%08x]=[%.3f,%.3f,%.3f] %d, %d, %d, %d", iFrames, pConstBuf, *(xxx + 0), /**(xxx + 1), *(xxx + 2),*/ (*(float*)(xxx + 36))
+		if (0)
 		{
-			outfile << ::GetCurrentThreadId() << "_UnMap() ";
-			g_lock.lock();
-			map<string, XMFLOAT4, DisableCompare<string>>::reverse_iterator iter;//定义一个迭代指针iter
-			for (iter = mapTID_PTR_DATA.rbegin(); iter != mapTID_PTR_DATA.rend(); iter++)
+			ofstream outfile;
+			outfile.open("..\\UnMap_Map__.txt", ios::app);
+			if (outfile)
 			{
-				if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
+				outfile << ::GetCurrentThreadId() << "_UnMap() ";
+				g_lock.lock();
+				map<string, XMFLOAT4, DisableCompare<string>>::reverse_iterator iter;//定义一个迭代指针iter
+				for (iter = mapTID_PTR_DATA.rbegin(); iter != mapTID_PTR_DATA.rend(); iter++)
 				{
-					if (*(UINT*)(&(iter->second.x)) != 0x88888888)
+					if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
 					{
-						continue;
+						if (*(UINT*)(&(iter->second.x)) != 0x88888888)
+						{
+							continue;
+						}
+						UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
+						iter->second.x = *(FLOAT*)ppp;
+						iter->second.y = *(FLOAT*)(ppp + 4);
+						iter->second.z = *(FLOAT*)(ppp + 8);
+						iter->second.w = *(FLOAT*)(ppp + 12);
+
+						outfile << iter->first << ": ";
+						outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)ppp) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)ppp) << "] ";
+						outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 4)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 4)) << "] ";
+						outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 8)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 8)) << "] ";
+						outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 12)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 12)) << "] " << std::endl;
+
+						break;
 					}
-					UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
-					iter->second.x = *(FLOAT*)ppp;
-					iter->second.y = *(FLOAT*)(ppp + 4);
-					iter->second.z = *(FLOAT*)(ppp + 8);
-					iter->second.w = *(FLOAT*)(ppp + 12);
-
-					outfile << iter->first << ": ";
-					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)ppp) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)ppp) << "] ";
-					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 4)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 4)) << "] ";
-					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 8)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 8)) << "] ";
-					outfile << std::hex << std::setw(8) << std::setfill('0') << *(int*)(&*(FLOAT*)(ppp + 12)) << "[" << std::setw(10) << std::setfill(' ') << *(float*)(&*(FLOAT*)(ppp + 12)) << "] " << std::endl;
-
-					break;
 				}
+				g_lock.unlock();
+
+				//outfile << std::endl;
+				outfile.close();
 			}
-			g_lock.unlock();
-
-			//outfile << std::endl;
-			outfile.close();
 		}
-	}
-	//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
-	//D3D11_MAPPED_SUBRESOURCE mappedResource;
-	//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
+		//锁定顶点缓存为了可以进行写入（动态缓存不能用UpdateSubResources写入）  
+		//D3D11_MAPPED_SUBRESOURCE mappedResource;
+		//(pContext->Map(pResource, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource));
 
 
-	//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		//m_immediateContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 
-	// 得到const buffer指针.  
-	//if (D3D11_MAP_WRITE_DISCARD == MapType)
-	//if ((g_StartSlot == 1) && (Stride == 24))
-	//{
-	//	UINT* p = (UINT*)pMappedResource->pData;
-	//	//Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x Slot=%d Stride=%d", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28), g_StartSlot, Stride);
-	//}
+		// 得到const buffer指针.  
+		//if (D3D11_MAP_WRITE_DISCARD == MapType)
+		//if ((g_StartSlot == 1) && (Stride == 24))
+		//{
+		//	UINT* p = (UINT*)pMappedResource->pData;
+		//	//Helpers::LogFormat("%08x %08x %08x %08x %08x %08x %08x %08x Slot=%d Stride=%d", *p, *(p + 4), *(p + 8), *(p + 12), *(p + 16), *(p + 20), *(p + 24), *(p + 28), g_StartSlot, Stride);
+		//}
 
-	UINT Stride;
-	ID3D11Buffer *veBuffer;
-	UINT veBufferOffset = 0;
-	pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
+		UINT Stride;
+		ID3D11Buffer *veBuffer;
+		UINT veBufferOffset = 0;
+		pContext->IAGetVertexBuffers(0, 1, &veBuffer, &Stride, &veBufferOffset);
 
-	//if ((Stride == 24))
-	//{
-	//	g_lock.lock();
-	//	map<string, XMFLOAT4, DisableCompare<string>>::reverse_iterator iter;//定义一个迭代指针iter
-	//	for (iter = mapTID_PTR_DATA.rbegin(); iter != mapTID_PTR_DATA.rend(); iter++)
-	//	{
-	//		if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
-	//		{
-	//			if (*(UINT*)(&(iter->second.x)) != 0x88888888)
-	//			{
-	//				continue;
-	//			}
-	//			UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
-	//			iter->second.x = *(FLOAT*)ppp;
-	//			iter->second.y = *(FLOAT*)(ppp + 4);
-	//			iter->second.z = *(FLOAT*)(ppp + 8);
-	//			iter->second.w = *(FLOAT*)(ppp + 12);
-	//			break;
-	//		}
-	//	}
-	//	g_lock.unlock();
-	//}
+		//if ((Stride == 24))
+		//{
+		//	g_lock.lock();
+		//	map<string, XMFLOAT4, DisableCompare<string>>::reverse_iterator iter;//定义一个迭代指针iter
+		//	for (iter = mapTID_PTR_DATA.rbegin(); iter != mapTID_PTR_DATA.rend(); iter++)
+		//	{
+		//		if (iter->first.find(to_string(::GetCurrentThreadId()) + "_") != std::string::npos)
+		//		{
+		//			if (*(UINT*)(&(iter->second.x)) != 0x88888888)
+		//			{
+		//				continue;
+		//			}
+		//			UINT ppp = atoll(iter->first.substr(iter->first.find("_") + 1).c_str());
+		//			iter->second.x = *(FLOAT*)ppp;
+		//			iter->second.y = *(FLOAT*)(ppp + 4);
+		//			iter->second.z = *(FLOAT*)(ppp + 8);
+		//			iter->second.w = *(FLOAT*)(ppp + 12);
+		//			break;
+		//		}
+		//	}
+		//	g_lock.unlock();
+		//}
 
-	pHooksStageBuffer = pStageBuffer;
+		pHooksStageBuffer = pStageBuffer;
 
-	if (0)
-	{
-		if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+		if (0)
 		{
-			//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
-			g_lock.lock();
+			if ((NULL != pHooksMappedResource) && (NULL != pHooksStageBuffer))
+			{
+				//Helpers::LogBuf2Txt("UnMap_" + std::to_string((UINT)::GetCurrentThreadId()) + "_" /*+ std::to_string((UINT)Stride) + "_" + std::to_string((UINT)IndexCountPerInstance)*/ + "_" + std::to_string((UINT)pHooksStageBuffer) + "_" + std::to_string((UINT)pHooksMappedResource->pData) + "_", pHooksMappedResource->pData, 0x40);
+				g_lock.lock();
 
-			CloneData();
-			//catch (...)
-			//{
-			//	printf("UnMap_ Error\n");
-			//}
-			g_lock.unlock();
+				CloneData();
+				//catch (...)
+				//{
+				//	printf("UnMap_ Error\n");
+				//}
+				g_lock.unlock();
+			}
 		}
 	}
-
 	Hooks::oUnMap(pContext, pStageBuffer, Subresource);
 	return;
 }
