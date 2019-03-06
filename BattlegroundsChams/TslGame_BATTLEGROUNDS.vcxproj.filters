@@ -141,6 +141,7 @@
     <ClInclude Include="FW1FontWrapper\FW1Precompiled.h">
       <Filter>CFW1</Filter>
     </ClInclude>
+    <ClInclude Include="resource1.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\0_rec.txt" />
@@ -151,5 +152,11 @@
     <Filter Include="CFW1">
       <UniqueIdentifier>{08c15e0a-6c94-407d-af84-c2347fc348eb}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="00TslGame_BATTLEGROUNDS.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>
