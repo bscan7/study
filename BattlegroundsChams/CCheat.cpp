@@ -84,10 +84,10 @@ BYTE* CaptureFrame(int iRadii = 0, bool bToFile = false);
 		LONG pY = lpRect.top + (lpRect.bottom - lpRect.top) * 0.2 + (((fPos3.y - minY2) / (maxY2 - minY2)) * h);
 
 		::DrawIconEx(hScrDC, pX, pY, icnB, 0, 0, 0, NULL, DI_NORMAL | DI_COMPAT);
-		//std::cout << std::dec << "[]"
-		//	<< " V=(" << minX2 << "," << maxX2 << " " << minY2 << "," << maxY2 << ")"
-		//	<< " wpos=" << lpRect.left << "," << lpRect.top << " XY=" << pX << "," << pY
-		//	<< " Len=" << g_lstPositions2.size() << std::endl;
+		std::cout << std::dec << "[]"
+			<< " V=(" << minX2 << "," << maxX2 << " " << minY2 << "," << maxY2 << ")"
+			<< " wpos=" << lpRect.left << "," << lpRect.top << " XY=" << pX << "," << pY
+			<< std::endl;
 
 		//std::cout << std::dec << "[]"
 		//	<< " fPos3.xy=(" << fPos3.x << "," << fPos3.y  << ")" << std::endl;
@@ -159,12 +159,12 @@ void Thread_DrawCrossOnCenter(PVOID param)
 				ii++;
 				if (g_iSelfIdx2 == ii)
 				{
-					Helpers::LogFormat("----g_lstPositions_COPY.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions_COPY.size(), iter->x, iter->y, iter->z);
+					Helpers::LogFormat("-自己-g_lstPositions_COPY.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions_COPY.size(), iter->x, iter->y, iter->z);
 					DrawPos_Self(*iter);
 				}
 				else
 				{
-					Helpers::LogFormat("-My-g_lstPositions_COPY.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions_COPY.size(), iter->x, iter->y, iter->z);
+					Helpers::LogFormat("----g_lstPositions_COPY.size()=%d） x=%.2f y=%.2f z=%.2f", g_lstPositions_COPY.size(), iter->x, iter->y, iter->z);
 					DrawPos(*iter);
 				}
 			}

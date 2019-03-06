@@ -4071,7 +4071,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 				g_lstPositions.push_back(XMFLOAT3(fPos4.x, fPos4.y, fPos4.z));
 			}
 
-			if ((IndexCountPerInstance == 3234))//???不准确
+			if ((IndexCountPerInstance == 3234) && (g_iSelfIdx == -1))//3234自己的模型头部的顶点数量//???不准确
 				g_iSelfIdx = g_lstPositions.size();
 		}
 	}
