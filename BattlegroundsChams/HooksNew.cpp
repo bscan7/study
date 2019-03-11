@@ -4230,7 +4230,13 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//start1 = clock();
 			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
 
-			if ((IndexCountPerInstance == 2478) && pTextureSRV)
+			if ((
+				(IndexCountPerInstance == 1110) || 
+				(IndexCountPerInstance == 2031) ||
+				(IndexCountPerInstance == 2460) || 
+				(IndexCountPerInstance == 2337) || 
+				(IndexCountPerInstance == 2478)
+				) && pTextureSRV)
 			{
 				Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
 			}
