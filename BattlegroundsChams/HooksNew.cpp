@@ -227,7 +227,7 @@ ID3D11ShaderResourceView* createTex(ID3D11Device* device, string filename)
 	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	loadInfo.Format = /*DXGI_FORMAT_BC3_UNORM;*/ DXGI_FORMAT_R8G8B8A8_UNORM;
 	loadInfo.MipLevels = D3DX11_DEFAULT; //这时会产生最大的mipmaps层
-	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
+	//loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
 
 	//ID3D11ShaderResourceView* rv = 0;
 
@@ -2348,7 +2348,7 @@ void InitForHook(IDXGISwapChain* pSwapChain)
 
 	InitListFromFiles();
 	//tmppp(CCheat::pContext);
-	createTex(CCheat::pDevice, string("A01.dds"));
+	createTex(CCheat::pDevice, string("..\\TREE01.DDS"));
 	//InitD2DScreenTexture();
 	//_beginthread(Thread_fileWatcher, 0, NULL);
 	_beginthread(Thread_KeysSwitch, 0, NULL);
@@ -4220,6 +4220,21 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	{
 		return;
 	}
+
+
+			//createTex(CCheat::pDevice, string("A01.dds"));
+			//Helpers::LogFormat("pTextureSRV (=%d) ", pTextureSRV);
+
+			//finish1 = clock();
+			//cout << idx++ << " take time(s):" << (double)(finish1 - start1) / 1.00f << "\n";
+			//start1 = clock();
+			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
+
+			if ((IndexCountPerInstance == 2478) && pTextureSRV)
+			{
+				Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
+			}
+
 
 	//D3D11_DEPTH_STENCIL_DESC depthStencilDesc2;
 	//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);
