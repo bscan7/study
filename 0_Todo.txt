@@ -5,6 +5,9 @@
 	运动+SHIFT，代码整理
 
 [todo]：
+	自动第一人称射击
+	内存泄漏
+	大地网格lst
 	坐标获取，计算
 	矩阵算法
 	Hook Global API

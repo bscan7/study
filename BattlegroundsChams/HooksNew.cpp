@@ -1124,10 +1124,13 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(VK_ADD) & 1)
 		{
+			keybd_event(86, 0, 0, 0);				//'V'down
+			keybd_event(86, 0, KEYEVENTF_KEYUP, 0); //'V'up
 			bShoot = !bShoot;
 			//red24.push_back(lst24[iPos]);
 			if (bShoot)
 			{
+
 				WinExec("cmd /C del /Q ..\\tmp\\*_Center_.*", SW_HIDE);
 			}
 		}
@@ -4230,17 +4233,24 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//start1 = clock();
 			//Helpers::LogFormat("DrawIdxed_Or_Instanced++++++++++++++++++++*=== %d usedTime = %d ", idx, timeGetTime() - bgtime);
 
-			if ((
-				(IndexCountPerInstance == 1110) || 
-				(IndexCountPerInstance == 2031) ||
-				(IndexCountPerInstance == 2460) || 
-				(IndexCountPerInstance == 2337) || 
-				(IndexCountPerInstance == 2478)
-				) && pTextureSRV)
-			{
-				Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
-			}
+	if ((
+		(IndexCountPerInstance == 1110) || 
+		(IndexCountPerInstance == 2031) ||
+		(IndexCountPerInstance == 2460) || 
+		(IndexCountPerInstance == 2337) || 
+		(IndexCountPerInstance == 2478)
+		) && pTextureSRV)
+	{//Ê÷Ä¾
+		Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
+	}
 
+	if ((IndexCountPerInstance == 5766) ||
+		(IndexCountPerInstance == 23064)||
+		(IndexCountPerInstance == 95256)
+		)
+	{//µØÃæ
+		pContext->RSSetState(RSCullWireFrame);
+	}
 
 	//D3D11_DEPTH_STENCIL_DESC depthStencilDesc2;
 	//pContext->OMGetDepthStencilState(&ppDepthStencilState__Old, &pStencilRef);

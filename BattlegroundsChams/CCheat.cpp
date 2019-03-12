@@ -330,6 +330,8 @@ BOOL SaveDcToBMP(BYTE *pBmpBuffer,
 
 extern bool bShoot;
 extern UINT * g_ptPixels;
+int offXLast = 888;
+int offYLast = 888;
 
 void AutoCenterAndShoot(PVOID param)
 {
@@ -385,18 +387,18 @@ void AutoCenterAndShoot(PVOID param)
 					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 					Sleep(1);
 					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-					mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
-					Sleep(1);
-					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-					Sleep(1);
-					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-					mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
-					Sleep(1);
-					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-					Sleep(1);
-					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-					mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
-					Sleep(1);
+					//mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					//Sleep(1);
+					//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+					//Sleep(1);
+					//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+					//mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					//Sleep(1);
+					//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+					//Sleep(1);
+					//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+					//mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					//Sleep(1);
 					std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- 射击射击射击 " << g_ptPixels[i] << std::endl;
 					//break;
 					pp++;
@@ -430,8 +432,14 @@ void AutoCenterAndShoot(PVOID param)
 				/*::SetCursorPos(iCenterX - offX,
 					iCenterY - (offY)
 				);*/
-				mouse_event(MOUSEEVENTF_MOVE, offX /4, (offY) /4, 0, NULL);
-				Sleep(50);
+
+				if ((offXLast != offX) || (offYLast != offY))
+				{
+					mouse_event(MOUSEEVENTF_MOVE, offX /4, (offY) /4, 0, NULL);
+					offXLast = offX;
+					offYLast = offY;
+				}
+				//Sleep(50);
 				//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				//Sleep(5);
 				//mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
@@ -638,7 +646,7 @@ void Thread_AutoShootIfCenter(PVOID param)
 	while (!bStoped)
 	{
 		//Helpers::LogFormat("----Thread_AutoShootIfCenter-----WaitForSingleObject(g_Event_Shoot, 500)");
-		DWORD res = WaitForSingleObject(g_Event_Shoot, 500);
+		DWORD res = WaitForSingleObject(g_Event_Shoot, 5000);
 		if (bStoped)
 		{
 			return;
