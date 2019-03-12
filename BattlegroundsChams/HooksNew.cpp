@@ -1040,6 +1040,21 @@ void W_KeyDown()
 	Helpers::LogFormat("W_KeyDown]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
 }
 
+void V_KeyUp()
+{
+	Helpers::LogFormat("W_KeyUp[--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	keybd_event(86, 0, KEYEVENTF_KEYUP, 0);
+	Helpers::LogFormat("W_KeyUp]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+}
+
+
+void V_KeyDown()
+{
+	Helpers::LogFormat("W_KeyDown[--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+	keybd_event(86, 0, 0, 0);
+	Helpers::LogFormat("W_KeyDown]--------bGo = %d bCheat = %d ", bGoAuto, bCheat);
+}
+
 
 void SHIFT_KeyUp()
 {
@@ -1124,8 +1139,9 @@ void Thread_KeysSwitch(PVOID param)
 		}
 		if (GetAsyncKeyState(VK_ADD) & 1)
 		{
-			keybd_event(86, 0, 0, 0);				//'V'down
-			keybd_event(86, 0, KEYEVENTF_KEYUP, 0); //'V'up
+			V_KeyDown();
+			V_KeyUp();
+
 			bShoot = !bShoot;
 			//red24.push_back(lst24[iPos]);
 			if (bShoot)
@@ -3140,6 +3156,7 @@ bool IsCenterRed()
 	if (ptPixels)
 	{
 		delete[](BYTE*)ptPixels;
+		ptPixels = NULL;
 	}
 	return bOK;
 }
@@ -3551,7 +3568,11 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	}
 	if (!bShoot)
 	{
-		g_ptPixels = nullptr;
+		if (g_ptPixels)
+		{
+			delete[](BYTE*)g_ptPixels;
+			g_ptPixels = NULL;
+		}
 	}
 	if (bVideo4Rec_SCROL && (lstAllStrides.size()>0) && !bVideo4Rec_PAUSE)
 	{

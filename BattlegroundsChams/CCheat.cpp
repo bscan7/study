@@ -387,7 +387,7 @@ void AutoCenterAndShoot(PVOID param)
 					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 					Sleep(1);
 					mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-					//mouse_event(MOUSEEVENTF_MOVE, 0, 2, 0, NULL);
+					mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, NULL);
 					//Sleep(1);
 					//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 					//Sleep(1);
@@ -462,6 +462,13 @@ void AutoCenterAndShoot(PVOID param)
 		}
 		//std::cout << std::endl;
 		pp++;
+
+		if (g_ptPixels)
+		{
+			delete[](BYTE*)g_ptPixels;
+			g_ptPixels = NULL;
+		}
+
 		std::cout << "!!!!!!!!!!!!!!!!!!+-+-+-+- AutoCenterAndShoot Return。。。" << std::endl;
 }
 
