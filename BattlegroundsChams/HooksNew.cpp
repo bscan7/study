@@ -3510,6 +3510,9 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			else
 				pFontWrapper->DrawString(CCheat::pContext, L"射关", 30, 16.0f, 66.0f, 0xff12f612, FW1_RESTORESTATE);
 
+			//pFontWrapper->DrawString(CCheat::pContext, L"＋○□", 100, 620.0f, 340.0f, 0xff00ff00, FW1_RESTORESTATE);
+			pFontWrapper->DrawString(CCheat::pContext, L"○", 30, ScreenCenterX-11.0f, ScreenCenterY - 20.0f, 0xff00ff00, FW1_RESTORESTATE);
+
 			if (bVideo4Rec_PAUSE)
 			{
 				pFontWrapper->DrawString(CCheat::pContext, L"如果红区物体是要找的，按'PageUp[原色]/Down[绿色]/End[隐藏]/Insert[高亮]'保存，否则'上下键'继续找", 30, 16.0f, 86.0f, 0xff1612ff, FW1_RESTORESTATE);
