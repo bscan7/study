@@ -194,6 +194,8 @@ bool bTest2Draw = true;
 //==========================================================================================================================
 bool bHideENV = false;
 bool bHideGrass = false;
+bool bWireFrame = false;
+
 DWORD ppppp = 0;
 int ipp = 3;
 int gStride = 12;
@@ -1443,9 +1445,17 @@ void Thread_KeysSwitch(PVOID param)
 			bHideGrass = !bHideGrass;
 			bHideGrass = true;
 			bHideENV = false;
+			bWireFrame = false;
+		}
+		else if (ipp == 4)
+		{
+			bWireFrame = true;
+			bHideGrass = true;
+			bHideENV = false;
 		}
 		else
 		{
+			bWireFrame = false;
 			bHideGrass = false;
 			bHideENV = false;
 		}
@@ -4268,12 +4278,15 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		Hooks::oPSSetShaderResources(pContext, 0, 1, &pTextureSRV);
 	}
 
-	if ((IndexCountPerInstance == 5766) ||
-		(IndexCountPerInstance == 23064)||
-		(IndexCountPerInstance == 95256)
-		)
-	{//地面
-		pContext->RSSetState(RSCullWireFrame);
+	if (bWireFrame)
+	{
+		if ((IndexCountPerInstance == 5766) ||
+			(IndexCountPerInstance == 23064)||
+			(IndexCountPerInstance == 95256)
+			)
+		{//地面
+			pContext->RSSetState(RSCullWireFrame);
+		}
 	}
 
 	//D3D11_DEPTH_STENCIL_DESC depthStencilDesc2;
