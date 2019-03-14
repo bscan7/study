@@ -1160,7 +1160,7 @@ void Thread_KeysSwitch(PVOID param)
 		if (//((GetAsyncKeyState(VK_NUMPAD0) & 1) && (GetAsyncKeyState(VK_SHIFT) & 0x8000)) ||
 			(GetAsyncKeyState(VK_NUMPAD0) & 1))
 		{
-			ipp = ipp++ % 4;
+			ipp = ipp++ % 5;
 			Helpers::LogFormat("VK_NUMPAD0 pressed-----ipp = %d---bGo = %d bCheat = %d ", ipp, bGoAuto, bCheat);
 		}
 		//if ((GetAsyncKeyState(VK_SHIFT) & 0x8000))
@@ -1351,7 +1351,7 @@ void Thread_KeysSwitch(PVOID param)
 			if (bGoAuto)
 			{
 				//bCheat = false;
-				ipp = 4;
+				ipp = 5;
 				SHIFT_KeyDown();
 				W_KeyDown();
 			}
@@ -1372,7 +1372,7 @@ void Thread_KeysSwitch(PVOID param)
 			if (bGoAuto)
 			{
 				//bCheat = false;
-				ipp = 4;
+				ipp = 5;
 				W_KeyDown();
 			}
 			else
