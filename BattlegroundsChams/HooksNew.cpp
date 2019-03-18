@@ -180,6 +180,7 @@ std::vector<UINT64> lstIncludeList;
 std::vector<UINT64> lstHideList;
 std::vector<UINT64> lstCarOrBoatList;
 std::vector<UINT64> lstHeaderList;
+std::vector<UINT64> lstWireFrameList;
 //std::vector<int> lstRed24;
 //std::vector<int> lstBase12;
 //std::vector<int> lstRed12;
@@ -669,6 +670,16 @@ void InitListFromFiles()
 		}
 		fin.close();
 		std::cout << "逐行读取文件完成！ lstHeader << ..\\HeaderList.txt" << endl;
+
+		lstWireFrameList.clear();
+		fin.open("..\\WireFrameList.txt");  //打开文件
+											//string ReadLine;
+		while (getline(fin, ReadLine))  //逐行读取，直到结束
+		{
+			lstWireFrameList.push_back(atoi(ReadLine.c_str()));
+		}
+		fin.close();
+		std::cout << "逐行读取文件完成！ lstHeader << ..\\WireFrameList.txt" << endl;
 	}
 }
 
@@ -1629,6 +1640,19 @@ bool IsNotIn_ExcludeList(UINT Stride, UINT IndexCount)
 	// && (IndexCount != 3234)
 	// && (IndexCount != 5124)
 	// );
+}
+
+bool IsIn_WireFrameList(UINT Stride, UINT IndexCount)
+{
+	UINT64 IndexCountStride = IndexCount * 100 + Stride;
+	if (find(lstWireFrameList.begin(), lstWireFrameList.end(), IndexCountStride) != lstWireFrameList.end()) {
+		//找到
+			return true;
+	}
+	else {
+		//没找到
+		return false;
+	}
 }
 
 bool IsIn_IncludeList(UINT Stride, UINT IndexCount)
@@ -3520,8 +3544,10 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			else
 				pFontWrapper->DrawString(CCheat::pContext, L"射关", 30, 16.0f, 66.0f, 0xff12f612, FW1_RESTORESTATE);
 
-			//pFontWrapper->DrawString(CCheat::pContext, L"＋○□", 100, 620.0f, 340.0f, 0xff00ff00, FW1_RESTORESTATE);
-			pFontWrapper->DrawString(CCheat::pContext, L"○", 30, ScreenCenterX-11.0f, ScreenCenterY - 20.0f, 0xff00ff00, FW1_RESTORESTATE);
+			//pFontWrapper->DrawString(CCheat::pContext, L"＋○□╳", 100, 620.0f, 340.0f, 0xff00ff00, FW1_RESTORESTATE);
+			//pFontWrapper->DrawString(CCheat::pContext, L"○", 30, ScreenCenterX-11.0f, ScreenCenterY - 20.0f, 0xff00ff00, FW1_RESTORESTATE);
+			//pFontWrapper->DrawString(CCheat::pContext, L"＋", 30, ScreenCenterX-15.0f, ScreenCenterY - 22.0f, 0xff008500, FW1_RESTORESTATE);
+			pFontWrapper->DrawString(CCheat::pContext, L"╳", 30, ScreenCenterX-15.0f, ScreenCenterY - 22.0f, 0xff008500, FW1_RESTORESTATE);
 
 			if (bVideo4Rec_PAUSE)
 			{
@@ -4280,9 +4306,10 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 	if (bWireFrame)
 	{
-		if ((IndexCountPerInstance == 5766) ||
+		if (/*(IndexCountPerInstance == 5766) ||
 			(IndexCountPerInstance == 23064)||
-			(IndexCountPerInstance == 95256)
+			(IndexCountPerInstance == 95256)*/
+			IsIn_WireFrameList(Stride, IndexCountPerInstance)
 			)
 		{//地面
 			pContext->RSSetState(RSCullWireFrame);
