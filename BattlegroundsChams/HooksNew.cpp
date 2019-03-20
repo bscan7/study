@@ -3547,7 +3547,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			//pFontWrapper->DrawString(CCheat::pContext, L"£«¡ð¡õ¨w", 100, 620.0f, 340.0f, 0xff00ff00, FW1_RESTORESTATE);
 			//pFontWrapper->DrawString(CCheat::pContext, L"¡ð", 30, ScreenCenterX-11.0f, ScreenCenterY - 20.0f, 0xff00ff00, FW1_RESTORESTATE);
 			//pFontWrapper->DrawString(CCheat::pContext, L"£«", 30, ScreenCenterX-15.0f, ScreenCenterY - 22.0f, 0xff008500, FW1_RESTORESTATE);
-			pFontWrapper->DrawString(CCheat::pContext, L"¨w", 30, ScreenCenterX-15.0f, ScreenCenterY - 24.0f, 0xffBBBB00, FW1_RESTORESTATE);
+			pFontWrapper->DrawString(CCheat::pContext, L"¨w", 30, ScreenCenterX-15.0f, ScreenCenterY - 24.0f, 0xffdddd00, FW1_RESTORESTATE);
 
 			if (bVideo4Rec_PAUSE)
 			{
