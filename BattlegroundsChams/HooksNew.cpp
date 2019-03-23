@@ -2383,6 +2383,24 @@ void InitForHook(IDXGISwapChain* pSwapChain)
 	//dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dssDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+
+	///////////////////////////////////////////////////////////////////
+	//dssDesc.StencilEnable = true;   //模板测试开启
+	//dssDesc.StencilReadMask = 0xff;
+	//dssDesc.StencilWriteMask = 0xff;
+	////前面设定
+	//D3D11_STENCIL_OP PPP = D3D11_STENCIL_OP_DECR;
+	//dssDesc.FrontFace.StencilFailOp = PPP;  //stencil失败 怎么更新stencil buffer
+	//dssDesc.FrontFace.StencilDepthFailOp = PPP;// stencil通过，但depth失败
+	//dssDesc.FrontFace.StencilPassOp = PPP;  //stencil通过 depth通过
+	//dssDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;   //总是能通过StencilTest
+	//														  //背面设定,在光栅化状态剔除背面时这个设定没用,但是依然要设定,不然无法创建深度(模板)状态
+	//dssDesc.BackFace.StencilFailOp = PPP;
+	//dssDesc.BackFace.StencilDepthFailOp = PPP;
+	//dssDesc.BackFace.StencilPassOp = PPP;
+	//dssDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	///////////////////////////////////////////////////////////////////
+
 	CCheat::pDevice->CreateDepthStencilState(&dssDesc, &DSAlways);
 
 	//create font
@@ -4372,7 +4390,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		}
 
 		//pContext->OMSetDepthStencilState(DSLess, 0);
-		pContext->OMSetDepthStencilState(DSAlways, 0);
+		pContext->OMSetDepthStencilState(DSAlways, 1);
 		GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
 
 			//pContext->RSSetState(RSCullWireFrame);
