@@ -1699,7 +1699,7 @@ bool IsIn_HideList(UINT Stride, UINT IndexCount, UINT BaseVertexLocation)
 	UINT64 IndexCountStride = IndexCount * 100 + Stride;
 	if (find(lstHideList.begin(), lstHideList.end(), IndexCountStride) != lstHideList.end()) {
 		//找到
-		if (BaseVertexLocation != -1495) //不是全息中心点
+		//if (BaseVertexLocation != -1495) //不是全息中心点
 		{
 			return true;
 		}
@@ -4059,6 +4059,7 @@ void GoDrawCall(UINT InstanceCount, UINT StartInstanceLocation, ID3D11DeviceCont
 		}
 	}
 
+	
 	if ((InstanceCount == 9999) && (StartInstanceLocation == 9999))
 	{
 		Hooks::oDrawIndexed(pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation);
@@ -4068,6 +4069,9 @@ void GoDrawCall(UINT InstanceCount, UINT StartInstanceLocation, ID3D11DeviceCont
 		Hooks::oDrawIndexedInstanced(pContext, IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
 	}
 }
+
+ID3D11RenderTargetView *ppRenderTargetViews_Old = NULL;
+ID3D11DepthStencilView *ppDepthStencilView_Old = NULL;
 
 void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
@@ -4363,6 +4367,10 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		|| Is_Header(Stride, IndexCountPerInstance)
 		)
 	{
+		//CCheat::pContext->OMGetRenderTargets(1, &ppRenderTargetViews_Old, &ppDepthStencilView_Old);
+
+		//CCheat::pContext->OMSetRenderTargets(1, &RenderTargetView, NULL); //?????? 1 
+
 		//pContext->PSGetShader(&pPixelShader__Old, NULL, NULL);
 		//	ppDevice->CreateDepthStencilState(&depthStencilDesc, &ppDepthStencilState__New);
 		//	pContext->OMSetDepthStencilState(ppDepthStencilState__New, pStencilRef);
@@ -4387,6 +4395,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			}
 			else
 				pContext->PSSetShader(psEnemyInBack, NULL, NULL); //设为遮挡色
+
 		}
 
 		//pContext->OMSetDepthStencilState(DSLess, 0);
@@ -4431,6 +4440,7 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 			//	}
 			//}
 
+			//CCheat::pContext->OMSetRenderTargets(1, &ppRenderTargetViews_Old, ppDepthStencilView_Old); //?????? 1 
 			return;
 	}
 	else
