@@ -41,6 +41,15 @@ ID3D11PixelShader* pPixelShader__Old = NULL;
 ID3D11DeviceContext* pMainContext = NULL;
 ID3D11RenderTargetView *ppRenderTargetViews11 = NULL;
 
+
+ID3D11RenderTargetView *ppRenderTargetViews_Old = NULL;
+ID3D11DepthStencilView *ppDepthStencilView_Old = NULL;
+
+ID3D11BlendState			*mpBlendState = NULL;
+FLOAT						mblendFactor[4];
+UINT						msampleMask = -1;
+
+
 UINT pStencilRef = 0;
 extern HWND g_hWnd;
 extern RECT g_lpRect;
@@ -3562,6 +3571,11 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 			else
 				pFontWrapper->DrawString(CCheat::pContext, L"射关", 30, 16.0f, 66.0f, 0xff12f612, FW1_RESTORESTATE);
 
+			if (mpBlendState)
+			{
+				pFontWrapper->DrawString(CCheat::pContext, L"mpBlendState != NULL", 30, 16.0f, 96.0f, 0xff1612ff, FW1_RESTORESTATE);
+			}
+
 			//pFontWrapper->DrawString(CCheat::pContext, L"＋○□╳", 100, 620.0f, 340.0f, 0xff00ff00, FW1_RESTORESTATE);
 			//pFontWrapper->DrawString(CCheat::pContext, L"○", 30, ScreenCenterX-11.0f, ScreenCenterY - 20.0f, 0xff00ff00, FW1_RESTORESTATE);
 			//pFontWrapper->DrawString(CCheat::pContext, L"＋", 30, ScreenCenterX-15.0f, ScreenCenterY - 22.0f, 0xff008500, FW1_RESTORESTATE);
@@ -3811,6 +3825,10 @@ void __stdcall Hooks::hkD3D11VSSetConstantBuffers(ID3D11DeviceContext* pContext,
 	return Hooks::oVSSetConstantBuffers(pContext, StartSlot, NumBuffers, ppConstantBuffers);
 }
 ID3D11ShaderResourceView *tmpTextureSRV = NULL;
+ID3D11ShaderResourceView *jlf_TextureSRV0 = NULL;
+ID3D11ShaderResourceView *jlf_TextureSRV1 = NULL;
+ID3D11ShaderResourceView *jlf_TextureSRV0TMP = NULL;
+ID3D11ShaderResourceView *jlf_TextureSRV1TMP = NULL;
 void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext, UINT StartSlot, UINT NumViews, ID3D11ShaderResourceView *const *ppShaderResourceViews)
 {
 	g_StartSlot = StartSlot;
@@ -3901,6 +3919,16 @@ void __stdcall Hooks::hkD3D11PSSetShaderResources(ID3D11DeviceContext* pContext,
 			Hooks::oPSSetShaderResources(pContext, StartSlot, NumViews, &tmpTextureSRV);
 		}
 	}
+///////////////////////////////////////////////////////////////////////////////////
+		if (StartSlot == 0)
+		{
+			jlf_TextureSRV0TMP = *ppShaderResourceViews;
+		}
+		if (StartSlot == 1)
+		{
+			jlf_TextureSRV1TMP = *ppShaderResourceViews;
+		}
+///////////////////////////////////////////////////////////////////////////////////
 
 	return;
 }
@@ -4070,9 +4098,6 @@ void GoDrawCall(UINT InstanceCount, UINT StartInstanceLocation, ID3D11DeviceCont
 	}
 }
 
-ID3D11RenderTargetView *ppRenderTargetViews_Old = NULL;
-ID3D11DepthStencilView *ppDepthStencilView_Old = NULL;
-
 void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
 {
 	//cout << " ===================================DrawIdxed_Or_Instanced:" << "\n";
@@ -4093,6 +4118,16 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	ID3D11Buffer *veBuffer;
 	UINT veBufferOffset = 0;
 	pContext->IAGetVertexBuffers(/*g_StartSlot*/0, 1, &veBuffer, &Stride, &veBufferOffset);
+
+
+	//替换为吉利服的/////////////////////////////////////////////////////////////////////////////////
+	if ((IndexCountPerInstance == 7434))
+	{
+		pContext->OMGetBlendState(&mpBlendState, mblendFactor, &msampleMask);
+		jlf_TextureSRV0 = jlf_TextureSRV0TMP;
+		jlf_TextureSRV1 = jlf_TextureSRV1TMP;
+	}
+	//替换为吉利服的/////////////////////////////////////////////////////////////////////////////////
 
 
 	//clock_t finish1 = clock();
@@ -4367,6 +4402,22 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 		|| Is_Header(Stride, IndexCountPerInstance)
 		)
 	{
+		if (mpBlendState)
+		{
+			//cout << "OMSetBlendState....().." << "\n";
+			//pContext->OMSetBlendState(mpBlendState, mblendFactor, msampleMask);
+		}
+
+		if (jlf_TextureSRV0)
+		{
+			//Hooks::oPSSetShaderResources(pContext, 0, 1, &jlf_TextureSRV0);
+		}
+
+		if (jlf_TextureSRV1)
+		{
+			//Hooks::oPSSetShaderResources(pContext, 1, 1, &jlf_TextureSRV1);
+		}
+
 		//CCheat::pContext->OMGetRenderTargets(1, &ppRenderTargetViews_Old, &ppDepthStencilView_Old);
 
 		//CCheat::pContext->OMSetRenderTargets(1, &RenderTargetView, NULL); //?????? 1 
