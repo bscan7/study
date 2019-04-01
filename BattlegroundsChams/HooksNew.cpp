@@ -3793,6 +3793,11 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 	}
 
 	//Helpers::Log2Txt("hkD3D11Present++++++++++++++++++++*=== 2 usedTime = ", timeGetTime() - bgtime);
+	if (RenderTargetView)
+	{
+		float bgColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+		CCheat::pContext->ClearRenderTargetView(RenderTargetView, bgColor);
+	}
 
 	return S_OK;
 }
@@ -4121,12 +4126,12 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 
 	//替换为吉利服的/////////////////////////////////////////////////////////////////////////////////
-	if ((IndexCountPerInstance == 7434))
-	{
-		pContext->OMGetBlendState(&mpBlendState, mblendFactor, &msampleMask);
-		jlf_TextureSRV0 = jlf_TextureSRV0TMP;
-		jlf_TextureSRV1 = jlf_TextureSRV1TMP;
-	}
+	//if ((IndexCountPerInstance == 7434))
+	//{
+	//	pContext->OMGetBlendState(&mpBlendState, mblendFactor, &msampleMask);
+	//	jlf_TextureSRV0 = jlf_TextureSRV0TMP;
+	//	jlf_TextureSRV1 = jlf_TextureSRV1TMP;
+	//}
 	//替换为吉利服的/////////////////////////////////////////////////////////////////////////////////
 
 
@@ -4394,6 +4399,11 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 	//	GoDrawCall(InstanceCount, StartInstanceLocation, pContext, IndexCountPerInstance, StartIndexLocation, BaseVertexLocation, Stride);
 	//	return;
 	//}
+	if (RenderTargetView)
+	{
+		//pContext->OMGetRenderTargets(1, &ppRenderTargetViews_Old, &ppDepthStencilView_Old);
+		//pContext->OMSetRenderTargets(1, &RenderTargetView, ppDepthStencilView_Old);
+	}
 
 	//New...
 	//if ((Stride != gStride) && IsNotIn_ExcludeList(Stride, IndexCountPerInstance))
@@ -4435,7 +4445,10 @@ void __stdcall DrawIdxed_Or_Instanced(ID3D11DeviceContext* pContext, UINT IndexC
 
 		if (b2DShader &&psBack)
 		{
-			//CCheat::pContext->OMSetRenderTargets(/*1*/vps, &RenderTargetView, NULL);
+			//if (RenderTargetView)
+			//{
+			//	CCheat::pContext->OMSetRenderTargets(1, &RenderTargetView, NULL);
+			//}
 			if (Is_CarOrBoat(Stride, IndexCountPerInstance))
 			{
 				pContext->PSSetShader(psBack, NULL, NULL); //设为灰色
