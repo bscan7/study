@@ -3,6 +3,7 @@
 #include <process.h>
 #include <ostream>
 #include <iostream>
+#include <psapi.h>
 
 void asmFunc(int* pAddress)
 {
@@ -21,9 +22,67 @@ void asmFunc(int* pAddress)
 	}
 }
 
+void testCall()
+{
+	//+0x15b0 = OnBnClickedOk();
+	MODULEINFO moduleinfo = { 0 };
+	GetModuleInformation(GetCurrentProcess(), GetModuleHandle(0), &moduleinfo, sizeof(moduleinfo));
+	void *px25E22 = (void*)((DWORD)moduleinfo.lpBaseOfDll + 0x15be);
+	std::cout << "！！！！！！！！！！！！！！！！！！！::px25E22=" << px25E22 << std::endl;
+
+	std::string tmp = "外部线程调用";
+	const char* p = tmp.c_str();
+
+	std::string tmp2 = "注入dll跳转onbtn内部地址执行的";
+	const char* p2 = tmp2.c_str();
+
+	__asm mov eax, px25E22;
+
+	__asm  mov eax, px25E22;
+	__asm  mov ecx, esi;
+	__asm  push lable;
+	__asm  push 0x0;
+	__asm  push p;
+	__asm  push p2;
+	__asm  push 0x0;
+	__asm  jmp eax; //call 
+	__asm  lable:
+	//__asm  add esp, 0x10;
+	return;
+}
+void btnCall()
+{
+	//卖出按钮入口 Base+0x349690;
+	MODULEINFO moduleinfo = { 0 };
+	GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(".\\TCPlugins\\AddinStock.dll"), &moduleinfo, sizeof(moduleinfo));
+	void *px25E22 = (void*)((DWORD)moduleinfo.lpBaseOfDll + 0x349690);
+	std::cout << "！！！！！！！！！！！！！！！！！！！::px25E22=" << px25E22 << std::endl;
+
+	//std::string tmp = "外部线程调用";
+	//const char* p = tmp.c_str();
+
+	//std::string tmp2 = "注入dll跳转onbtn内部地址执行的";
+	//const char* p2 = tmp2.c_str();
+
+	__asm  mov eax, px25E22;
+	__asm  mov ecx, esi;
+	__asm  push lable;
+	//__asm  push 0x0;
+	//__asm  push p;
+	//__asm  push p2;
+	//__asm  push 0x0;
+	__asm  jmp eax; //call 
+	__asm  lable:
+	//__asm  add esp, 0x10;
+	return;
+}
+
 HMODULE  Hook_Dll_Instance = NULL;
 void Thread_LoadUnloadDLL(PVOID param)
 {
+	//testCall();
+	btnCall();
+	return;
 	//Helpers::LogFormat("--------Thread_KeysSwitch---------Started ");
 	HANDLE  g_Event_UnHook = CreateEvent(NULL, FALSE, FALSE, NULL);
 
