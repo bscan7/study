@@ -55,7 +55,8 @@ void btnCall()
 	//卖出按钮入口 Base+0x349690;
 	MODULEINFO moduleinfo = { 0 };
 	GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(".\\TCPlugins\\AddinStock.dll"), &moduleinfo, sizeof(moduleinfo));
-	void *px25E22 = (void*)((DWORD)moduleinfo.lpBaseOfDll + 0x349690);
+	//void *px25E22 = (void*)((DWORD)moduleinfo.lpBaseOfDll + 0x349690);
+	void *px25E22 = (void*)((DWORD)moduleinfo.lpBaseOfDll + 0x34973f);
 	std::cout << "！！！！！！！！！！！！！！！！！！！::px25E22=" << px25E22 << std::endl;
 
 	//std::string tmp = "外部线程调用";
