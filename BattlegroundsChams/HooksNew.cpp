@@ -3573,7 +3573,7 @@ HRESULT __stdcall Hooks::hkD3D11Present(IDXGISwapChain* pSwapChain, UINT SyncInt
 
 			if (mpBlendState)
 			{
-				pFontWrapper->DrawString(CCheat::pContext, L"mpBlendState != NULL", 30, 16.0f, 96.0f, 0xff1612ff, FW1_RESTORESTATE);
+				//pFontWrapper->DrawString(CCheat::pContext, L"mpBlendState != NULL", 30, 16.0f, 96.0f, 0xff1612ff, FW1_RESTORESTATE);
 			}
 
 			//pFontWrapper->DrawString(CCheat::pContext, L"£«¡ð¡õ¨w", 100, 620.0f, 340.0f, 0xff00ff00, FW1_RESTORESTATE);
