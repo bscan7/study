@@ -207,6 +207,14 @@ int offXLast = 888;
 int offYLast = 888;
 
 
+void OneFire()
+{
+	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+	Sleep(1);
+	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+	mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, NULL); //压枪
+}
+
 BOOL ShootIf_TargetOnCenter()
 {
 	int iTmp = SEARCH_AREA - SHOOT_AREA_RADII;
@@ -226,10 +234,12 @@ BOOL ShootIf_TargetOnCenter()
 		{
 			if (IsTargetColor(g_ptPixels[i]))
 			{
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-				Sleep(1);
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-				mouse_event(MOUSEEVENTF_MOVE, 0, 1, 0, NULL); //压枪
+				OneFire();
+				OneFire();
+				OneFire();
+				OneFire();
+				OneFire();
+				OneFire();
 				//Sleep(1);
 				//mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				//Sleep(1);
