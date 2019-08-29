@@ -1125,14 +1125,25 @@ VK_F7		bLog2Txt_F7 = !bLog2Txt_F7;
 VK_F6		bHideOne = !bHideOne;
 VK_F5		pssrStartSlot++;
 VK_F3		b2DShader = !b2DShader;
-VK_DELETE
+
 VK_PAUSE	InitListFromFiles();
+
 VK_RIGHT
 VK_UP		红色回退
 VK_DOWN		bVideo4Rec_PAUSE = !bVideo4Rec_PAUSE;
-VK_RETURN	
-VK_PRIOR	[PageUp]:Append2ExcludeLst();加入排除列表，不要变色
-VK_NEXT		[PageDown]:Append2CarOrBoatLst();加入车船列表，变绿色
+VK_INSERT	Append2IncludeLst();
+VK_END		Append2HideLst();
+VK_PRIOR[PageUp]:	Append2ExcludeLst();加入排除列表，不要变色
+VK_NEXT[PageDown]:	Append2CarOrBoatLst();加入车船列表，变绿色
+
+VK_ESCAPE	双击`键
+'F' KEY		双击`键
+VK_DELETE	自动开车
+'S' KEY		取消自动开车
+VK_RETURN
+VK_RETURN
+VK_RETURN
+
 */
 
 void Thread_KeysSwitch(PVOID param)

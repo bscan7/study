@@ -41,15 +41,16 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		break;
 
 	case DLL_PROCESS_DETACH:
-		Helpers::LogFormat("\r\n--------DLL_PROCESS_		DETACH ");
+		Helpers::LogFormat("\r\n--------DLL_PROCESS_DETACH 移除移除");
 		CCheat::Release();
+		Helpers::LogFormat("\r\n--------DLL_PROCESS_DETACH 已移除。。。");
 		break;
 	case DLL_THREAD_ATTACH:
 		Helpers::LogFormat("\r\n--------DLL_线程_A TTACH ");
 		;
 		break;
 	case DLL_THREAD_DETACH:
-		Helpers::LogFormat("\r\n--------DLL_线程_		DETACH ");
+		Helpers::LogFormat("\r\n--------DLL_线程_DETACH		 移除");
 		;
 		break;
 	}
