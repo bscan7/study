@@ -1,0 +1,7 @@
+adb shell
+su
+cd /data/data
+ du -d 1 -m com.ss.android.article.lite
+
+cd /mnt/sdcard
+
