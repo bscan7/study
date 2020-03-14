@@ -2,6 +2,10 @@ adb shell
 su
 cd /data/data
  du -d 1 -m com.ss.android.article.lite
-
+alipay: 
+	rm -r /data/data/com.eg.android.AlipayGphone/cache
+	rm -r /data/data/com.eg.android.AlipayGphone/files
 cd /mnt/sdcard
+
+
 
